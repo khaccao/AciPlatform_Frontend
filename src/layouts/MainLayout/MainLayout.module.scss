@@ -1,0 +1,227 @@
+@use '../../styles/themes/variables' as *;
+
+.layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-color);
+}
+
+.sidebar {
+    width: 260px;
+    background-color: var(--surface-color);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    z-index: 100;
+
+    &.collapsed {
+        width: 80px;
+
+        .logo span,
+        .navItem span,
+        .logoutBtn span {
+            display: none;
+        }
+
+        .logo {
+            justify-content: center;
+        }
+    }
+}
+
+.sidebarHeader {
+    padding: 1.5rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--text-color);
+
+    .logoSquare {
+        width: 36px;
+        height: 36px;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-md);
+    }
+}
+
+.nav {
+    flex: 1;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+
+    &:hover {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+    }
+
+    &.active {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+}
+
+.sidebarFooter {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.logoutBtn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--danger-color);
+
+    &:hover {
+        background-color: rgba(239, 68, 68, 0.1);
+    }
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+.header {
+    height: 64px;
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.toggleBtn,
+.iconBtn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--text-muted);
+
+    &:hover {
+        background-color: var(--bg-color);
+    }
+}
+
+.searchBar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--bg-color);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-xl);
+    width: 300px;
+
+    input {
+        border: none;
+        background: transparent;
+        outline: none;
+        width: 100%;
+        font-size: 0.875rem;
+    }
+
+    color: var(--text-muted);
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.iconBtn {
+    position: relative;
+}
+
+.badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: var(--danger-color);
+    color: white;
+    font-size: 0.625rem;
+    padding: 2px 5px;
+    border-radius: 10px;
+    border: 2px solid var(--surface-color);
+}
+
+.userProfile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--border-color);
+}
+
+.userInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.userName {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.userRole {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.content {
+    padding: 2rem;
+    flex: 1;
+}

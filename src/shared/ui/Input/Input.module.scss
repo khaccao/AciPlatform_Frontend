@@ -1,0 +1,64 @@
+@use '../../../styles/themes/variables' as *;
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    width: 100%;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--input-bg);
+    transition: all 0.2s ease;
+    overflow: hidden;
+
+    &:focus-within {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    &.hasError {
+        border-color: var(--danger-color);
+
+        &:focus-within {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+    }
+}
+
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 0.75rem;
+    color: var(--text-muted);
+}
+
+.input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: var(--text-color);
+    outline: none;
+
+    &::placeholder {
+        color: var(--text-muted);
+    }
+}
+
+.errorText {
+    font-size: 0.75rem;
+    color: var(--danger-color);
+}
