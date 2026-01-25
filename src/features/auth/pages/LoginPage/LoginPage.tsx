@@ -6,16 +6,23 @@ import { Mail, Lock, LogIn } from 'lucide-react';
 import { Input } from '../../../../shared/ui/Input/Input';
 import { Button } from '../../../../shared/ui/Button/Button';
 import styles from './LoginPage.module.scss';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { loginStart, loginSuccess, loginFailure } from '../../store/auth.slice';
+import { authService } from '../../services/auth.service';
+import { toast } from 'sonner';
 
 const loginSchema = z.object({
-    username: z.string().min(3, 'Tên đăng nhập ít nhất 3 ký tự'),
-    password: z.string().min(6, 'Mật khẩu ít nhất 6 ký tự'),
+    username: z.string().min(1, 'Tên đăng nhập không được để trống'),
+    password: z.string().min(1, 'Mật khẩu không được để trống'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const LoginPage: React.FC = () => {
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+
     const {
         register,
         handleSubmit,
@@ -25,9 +32,33 @@ export const LoginPage: React.FC = () => {
     });
 
     const onSubmit = async (data: LoginFormValues) => {
-        console.log('Login data:', data);
-        // Logic to call API and dispatch to Redux
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        try {
+            dispatch(loginStart());
+            const response = await authService.login(data);
+
+            if (response.status === 200 && response.data) {
+                const { token, ...userData } = response.data;
+                dispatch(loginSuccess({
+                    user: {
+                        id: userData.id.toString(),
+                        username: userData.username,
+                        fullName: userData.fullname,
+                        email: userData.email || '',
+                        role: userData.roleName?.[0] || 'User'
+                    },
+                    token
+                }));
+                toast.success('Đăng nhập thành công!');
+                navigate('/dashboard');
+            } else {
+                dispatch(loginFailure(response.message || 'Sai tên đăng nhập hoặc mật khẩu'));
+                toast.error(response.message || 'Sai tên đăng nhập hoặc mật khẩu');
+            }
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Có lỗi xảy ra khi đăng nhập';
+            dispatch(loginFailure(message));
+            toast.error(message);
+        }
     };
 
     return (

@@ -6,7 +6,9 @@ import { User, Mail, Lock, UserPlus } from 'lucide-react';
 import { Input } from '../../../../shared/ui/Input/Input';
 import { Button } from '../../../../shared/ui/Button/Button';
 import styles from './RegisterPage.module.scss';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { authService } from '../../services/auth.service';
+import { toast } from 'sonner';
 
 const registerSchema = z.object({
     fullName: z.string().min(2, 'Họ tên ít nhất 2 ký tự'),
@@ -22,6 +24,8 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export const RegisterPage: React.FC = () => {
+    const navigate = useNavigate();
+
     const {
         register,
         handleSubmit,
@@ -31,8 +35,14 @@ export const RegisterPage: React.FC = () => {
     });
 
     const onSubmit = async (data: RegisterFormValues) => {
-        console.log('Register data:', data);
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        try {
+            const response = await authService.register(data);
+            toast.success('Đăng ký thành công! Hãy đăng nhập.');
+            navigate('/login');
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
+            toast.error(message);
+        }
     };
 
     return (

@@ -10,15 +10,14 @@ import {
     Search,
     User as UserIcon
 } from 'lucide-react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout } from '../../features/auth/store/auth.slice';
-import { RootState } from '../../store/store';
 import styles from './MainLayout.module.scss';
 
 export const MainLayout: React.FC = () => {
     const navigate = useNavigate();
-    const dispatch = useDispatch();
-    const user = useSelector((state: RootState) => state.auth.user);
+    const dispatch = useAppDispatch();
+    const user = useAppSelector((state) => state.auth.user);
     const [isSidebarOpen, setSidebarOpen] = React.useState(true);
 
     const handleLogout = () => {
