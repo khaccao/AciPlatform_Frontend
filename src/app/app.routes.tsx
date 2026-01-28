@@ -3,6 +3,12 @@ import { LoginPage } from '../features/auth/pages/LoginPage/LoginPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage/RegisterPage';
 import { MainLayout } from '../layouts/MainLayout/MainLayout';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
+import { EmployeePage } from '../features/hr/pages/EmployeePage/EmployeePage';
+import { OrganizationPage } from '../features/hr/pages/OrganizationPage/OrganizationPage';
+import { ContractPage } from '../features/hr/pages/ContractPage/ContractPage';
+import { TimekeepingPage } from '../features/hr/pages/TimekeepingPage/TimekeepingPage';
+import { SalaryPage } from '../features/hr/pages/SalaryPage/SalaryPage';
+import { SettingsPage } from '../features/settings/pages/SettingsPage/SettingsPage';
 
 export const AppRoutes = () => {
     return (
@@ -14,8 +20,18 @@ export const AppRoutes = () => {
             <Route element={<MainLayout />}>
                 <Route path="/" element={<Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/users" element={<div>User Management List (To be implemented)</div>} />
-                <Route path="/settings" element={<div>System Settings (To be implemented)</div>} />
+
+                {/* HR Module Routes */}
+                <Route path="/hr">
+                    <Route path="employees" element={<EmployeePage />} />
+                    <Route path="organization" element={<OrganizationPage />} />
+                    <Route path="contracts" element={<ContractPage />} />
+                    <Route path="timekeeping" element={<TimekeepingPage />} />
+                    <Route path="salary" element={<SalaryPage />} />
+                </Route>
+
+                <Route path="/users" element={<EmployeePage />} />
+                <Route path="/settings" element={<SettingsPage />} />
             </Route>
 
             {/* Fallback */}
