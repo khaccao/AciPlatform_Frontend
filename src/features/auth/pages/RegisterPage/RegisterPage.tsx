@@ -36,7 +36,7 @@ export const RegisterPage: React.FC = () => {
 
     const onSubmit = async (data: RegisterFormValues) => {
         try {
-            const response = await authService.register(data);
+            await authService.register(data);
             toast.success('Đăng ký thành công! Hãy đăng nhập.');
             navigate('/login');
         } catch (error: any) {

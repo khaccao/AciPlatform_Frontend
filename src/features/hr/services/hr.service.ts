@@ -15,12 +15,14 @@ import {
     type ContractType, type ContractTypeRequest,
     type ContractFile, type ContractFileRequest,
     type UserContractHistory, type UserContractHistoryRequest,
-    type TimeKeepingEntry, type TimeKeepingEntryRequest
+    type TimeKeepingEntry, type TimeKeepingEntryRequest,
+    type UserRequest, type UserViewModel
 } from '../hr.types';
 
 // Generic CRUD Service Factory (Internal use)
 const createCrudService = <T, R>(endpoint: string) => ({
     getAll: () => api.get<T[]>(`/${endpoint}`).then(res => res.data),
+    getByUser: (userId: number) => api.get<T[]>(`/${endpoint}/user/${userId}`).then(res => res.data),
     getById: (id: number) => api.get<T>(`/${endpoint}/${id}`).then(res => res.data),
     create: (data: R) => api.post<T>(`/${endpoint}`, data).then(res => res.data),
     update: (id: number, data: R) => api.put(`/${endpoint}/${id}`, data),
@@ -57,11 +59,40 @@ export const hrService = {
 };
 
 export const userService = {
-    getAll: (params: any) => api.get('/Users', { params }).then(res => res.data),
-    getById: (id: number) => api.get(`/Users/${id}`).then(res => res.data),
-    create: (data: any) => api.post('/Users', data).then(res => res.data),
-    update: (id: number, data: any) => api.put(`/Users/${id}`, data).then(res => res.data),
-    delete: (id: number) => api.delete(`/Users/${id}`).then(res => res.data),
-    getAllActive: () => api.get('/Users/getAllUserActive').then(res => res.data),
-    resetPassword: (ids: number[]) => api.post('/Users/resetPassword', ids).then(res => res.data)
+    getAll: (params: UserViewModel) => api.get<any>('/users', { params }).then(res => {
+        const rawData = res.data.data || res.data.Data || [];
+        const normalizedData = rawData.map((item: any) => ({
+            ...item,
+            id: item.id ?? item.Id,
+            username: item.username ?? item.Username,
+            fullName: item.fullName ?? item.FullName,
+            email: item.email ?? item.Email,
+            phone: item.phone ?? item.Phone,
+            departmentId: item.departmentId ?? item.DepartmentId,
+            positionDetailId: item.positionDetailId ?? item.PositionDetailId,
+            gender: item.gender ?? item.Gender,
+            birthDay: item.birthDay ?? item.BirthDay,
+            address: item.address ?? item.Address,
+            status: item.status ?? item.Status,
+            createdDate: item.createdDate ?? item.CreatedDate,
+            departmentName: item.departmentName ?? item.DepartmentName,
+            positionName: item.positionName ?? item.PositionName,
+            userRoleIds: item.userRoleIds ?? item.UserRoleIds
+        }));
+
+        return {
+            data: normalizedData,
+            totalItems: res.data.totalItems ?? res.data.TotalItems ?? 0
+        };
+    }),
+    create: (data: UserRequest) => api.post<{ message: string, userId: number }>('/users', data).then(res => res.data),
+    update: (id: number, data: UserRequest) => api.put<{ message: string }>(`/users/${id}`, data).then(res => res.data),
+    delete: (id: number) => api.delete<{ message: string }>(`/users/${id}`).then(res => res.data),
+    getAllActive: () => api.get<any>('/users/getAllUserActive').then(res => ({
+        data: res.data.data || res.data.Data || []
+    })),
+    getAllNotRole: () => api.get<any>('/users/user-not-roles').then(res => ({
+        data: res.data.data || res.data.Data || []
+    })),
+    resetPassword: (ids: number[]) => api.post('/users/resetPassword', ids).then(res => res.data)
 };

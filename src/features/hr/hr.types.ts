@@ -39,6 +39,7 @@ export interface Degree {
 }
 
 export interface DegreeRequest {
+    userId: number;
     name: string;
     school?: string;
     description?: string;
@@ -55,6 +56,7 @@ export interface Certificate {
 }
 
 export interface CertificateRequest {
+    userId: number;
     name: string;
     issuer?: string;
     issueDate?: string;
@@ -264,4 +266,52 @@ export interface TimeKeepingEntryRequest {
     checkOut?: string;
     workingHours?: number;
     note?: string;
+}
+
+export interface User {
+    id: number;
+    username: string;
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    createdDate?: string;
+    status: number;
+    userRoleIds?: string;
+    departmentId?: number;
+    positionDetailId?: number;
+    gender?: number;
+    birthDay?: string;
+    address?: string;
+    images?: string;
+    avatar?: string;
+    departmentName?: string;
+    positionName?: string;
+}
+
+export interface UserRequest {
+    username: string;
+    password?: string;
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    userRoleIds?: string;
+    departmentId?: number;
+    positionDetailId?: number;
+    gender?: number;
+    birthDay?: string;
+    address?: string;
+}
+
+export interface UserViewModel {
+    page?: number;
+    pageSize?: number;
+    searchText?: string;
+    birthday?: string;
+    gender?: number;
+    positionId?: number;
+    departmentId?: number;
+    requestPassword?: boolean;
+    quit?: boolean;
+    startDate?: string;
+    endDate?: string;
 }

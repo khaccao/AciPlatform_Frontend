@@ -410,25 +410,6 @@
     gap: 1rem;
 }
 
-.listItem {
-    background: var(--bg-color);
-    padding: 1rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-
-    h4 {
-        margin: 0 0 0.25rem 0;
-        color: var(--text-color);
-        font-size: 1rem;
-    }
-
-    p {
-        margin: 0;
-        color: var(--text-muted);
-        font-size: 0.875rem;
-    }
-}
-
 .loadingPulse {
     display: flex;
     align-items: center;
@@ -450,5 +431,133 @@
 
     100% {
         opacity: 1;
+    }
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 0.5rem;
+
+    .formGrid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .formActions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+}
+
+.listHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    h3 {
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+}
+
+.listItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-color);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+
+    &:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .itemInfo {
+        h4 {
+            margin: 0 0 0.25rem 0;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    }
+
+    .itemActions {
+        display: flex;
+        gap: 0.5rem;
+
+        button {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+
+            &:hover {
+                background: var(--surface-color);
+                color: var(--primary-color);
+            }
+
+            &:last-child:hover {
+                color: var(--danger-color);
+                background: #fef2f2;
+            }
+        }
+    }
+}
+
+.empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-style: italic;
+    background: var(--bg-color);
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--border-color);
+}
+
+.subForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .formGrid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .formActions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
     }
 }

@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../../shared/components/Button/Button';
 import { hrService } from '../../services/hr.service';
+import { Input } from '../../../../shared/ui/Input/Input';
+import { Modal } from '../../../../shared/ui/Modal/Modal';
 import styles from './SalaryPage.module.scss';
 import { toast } from 'sonner';
 import type { Allowance, SalaryType } from '../../hr.types';
@@ -22,6 +24,19 @@ export const SalaryPage: React.FC = () => {
     const [salaryTypes, setSalaryTypes] = useState<SalaryType[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'allowances' | 'salaryTypes'>('allowances');
+
+    // CRUD State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [formLoading, setFormLoading] = useState(false);
+
+    // Allowance Form
+    const [currentAllowance, setCurrentAllowance] = useState<Partial<Allowance>>({});
+    const [selectedAllowanceId, setSelectedAllowanceId] = useState<number | null>(null);
+
+    // SalaryType Form
+    const [currentSalaryType, setCurrentSalaryType] = useState<Partial<SalaryType>>({});
+    const [selectedSalaryId, setSelectedSalaryId] = useState<number | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -43,6 +58,96 @@ export const SalaryPage: React.FC = () => {
         }
     };
 
+    // Allowance Handlers
+    const handleAddAllowance = () => {
+        setIsEditing(false);
+        setCurrentAllowance({ name: '', amount: 0, code: '', description: '' });
+        setIsModalOpen(true);
+    };
+
+    const handleEditAllowance = (a: Allowance) => {
+        setIsEditing(true);
+        setSelectedAllowanceId(a.id);
+        setCurrentAllowance({ ...a });
+        setIsModalOpen(true);
+    };
+
+    const handleSaveAllowance = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setFormLoading(true);
+            if (isEditing && selectedAllowanceId) {
+                await hrService.allowances.update(selectedAllowanceId, currentAllowance as Allowance);
+                toast.success('Cập nhật phụ cấp thành công');
+            } else {
+                await hrService.allowances.create(currentAllowance as Allowance);
+                toast.success('Thêm phụ cấp thành công');
+            }
+            setIsModalOpen(false);
+            fetchData();
+        } catch (error) {
+            toast.error('Lỗi khi lưu phụ cấp');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleDeleteAllowance = async (id: number) => {
+        if (!window.confirm('Xóa phụ cấp này?')) return;
+        try {
+            await hrService.allowances.delete(id);
+            toast.success('Đã xóa');
+            fetchData();
+        } catch (error) {
+            toast.error('Không thể xóa');
+        }
+    };
+
+    // SalaryType Handlers
+    const handleAddSalaryType = () => {
+        setIsEditing(false);
+        setCurrentSalaryType({ name: '', baseAmount: 0, code: '', formula: '' });
+        setIsModalOpen(true);
+    };
+
+    const handleEditSalaryType = (s: SalaryType) => {
+        setIsEditing(true);
+        setSelectedSalaryId(s.id);
+        setCurrentSalaryType({ ...s });
+        setIsModalOpen(true);
+    };
+
+    const handleSaveSalaryType = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setFormLoading(true);
+            if (isEditing && selectedSalaryId) {
+                await hrService.salaryTypes.update(selectedSalaryId, currentSalaryType as SalaryType);
+                toast.success('Cập nhật loại lương thành công');
+            } else {
+                await hrService.salaryTypes.create(currentSalaryType as SalaryType);
+                toast.success('Thêm loại lương thành công');
+            }
+            setIsModalOpen(false);
+            fetchData();
+        } catch (error) {
+            toast.error('Lỗi khi lưu loại lương');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleDeleteSalaryType = async (id: number) => {
+        if (!window.confirm('Xóa loại lương này?')) return;
+        try {
+            await hrService.salaryTypes.delete(id);
+            toast.success('Đã xóa');
+            fetchData();
+        } catch (error) {
+            toast.error('Không thể xóa');
+        }
+    };
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     };
@@ -56,7 +161,9 @@ export const SalaryPage: React.FC = () => {
                 </div>
                 <div className={styles.actions}>
                     <Button variant="outline" icon={<PieChart size={18} />}>Thống kê</Button>
-                    <Button variant="primary" icon={<Plus size={18} />}>Thêm cấu trúc mới</Button>
+                    <Button variant="primary" icon={<Plus size={18} />} onClick={activeTab === 'allowances' ? handleAddAllowance : handleAddSalaryType}>
+                        {activeTab === 'allowances' ? 'Thêm phụ cấp' : 'Thêm loại lương'}
+                    </Button>
                 </div>
             </header>
 
@@ -109,8 +216,8 @@ export const SalaryPage: React.FC = () => {
                                                 <td className={styles.desc}>{item.description || '-'}</td>
                                                 <td className={styles.actionsColumn}>
                                                     <div className={styles.actionBtns}>
-                                                        <button className={styles.actionBtn}><Edit2 size={16} /></button>
-                                                        <button className={styles.actionBtn}><Trash2 size={16} /></button>
+                                                        <button className={styles.actionBtn} onClick={() => handleEditAllowance(item)}><Edit2 size={16} /></button>
+                                                        <button className={styles.actionBtn} onClick={() => handleDeleteAllowance(item.id)}><Trash2 size={16} /></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -124,8 +231,8 @@ export const SalaryPage: React.FC = () => {
                                                 <td className={styles.desc}>{item.formula || '-'}</td>
                                                 <td className={styles.actionsColumn}>
                                                     <div className={styles.actionBtns}>
-                                                        <button className={styles.actionBtn}><Edit2 size={16} /></button>
-                                                        <button className={styles.actionBtn}><Trash2 size={16} /></button>
+                                                        <button className={styles.actionBtn} onClick={() => handleEditSalaryType(item)}><Edit2 size={16} /></button>
+                                                        <button className={styles.actionBtn} onClick={() => handleDeleteSalaryType(item.id)}><Trash2 size={16} /></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -161,6 +268,86 @@ export const SalaryPage: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Allowance Modal */}
+            {activeTab === 'allowances' && (
+                <Modal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    title={isEditing ? 'Sửa phụ cấp' : 'Thêm phụ cấp mới'}
+                    size="md"
+                >
+                    <form onSubmit={handleSaveAllowance} className={styles.form}>
+                        <Input
+                            label="Tên phụ cấp"
+                            required
+                            value={currentAllowance.name || ''}
+                            onChange={(e) => setCurrentAllowance({ ...currentAllowance, name: e.target.value })}
+                        />
+                        <Input
+                            label="Mã phụ cấp"
+                            value={currentAllowance.code || ''}
+                            onChange={(e) => setCurrentAllowance({ ...currentAllowance, code: e.target.value })}
+                        />
+                        <Input
+                            label="Số tiền"
+                            type="number"
+                            required
+                            value={currentAllowance.amount || 0}
+                            onChange={(e) => setCurrentAllowance({ ...currentAllowance, amount: Number(e.target.value) })}
+                        />
+                        <Input
+                            label="Mô tả"
+                            value={currentAllowance.description || ''}
+                            onChange={(e) => setCurrentAllowance({ ...currentAllowance, description: e.target.value })}
+                        />
+                        <div className={styles.formActions}>
+                            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+                            <Button type="submit" variant="primary" isLoading={formLoading}>Lưu</Button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {/* SalaryType Modal */}
+            {activeTab === 'salaryTypes' && (
+                <Modal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    title={isEditing ? 'Sửa loại lương' : 'Thêm loại lương mới'}
+                    size="md"
+                >
+                    <form onSubmit={handleSaveSalaryType} className={styles.form}>
+                        <Input
+                            label="Tên loại lương"
+                            required
+                            value={currentSalaryType.name || ''}
+                            onChange={(e) => setCurrentSalaryType({ ...currentSalaryType, name: e.target.value })}
+                        />
+                        <Input
+                            label="Mã loại"
+                            value={currentSalaryType.code || ''}
+                            onChange={(e) => setCurrentSalaryType({ ...currentSalaryType, code: e.target.value })}
+                        />
+                        <Input
+                            label="Mức cơ bản"
+                            type="number"
+                            required
+                            value={currentSalaryType.baseAmount || 0}
+                            onChange={(e) => setCurrentSalaryType({ ...currentSalaryType, baseAmount: Number(e.target.value) })}
+                        />
+                        <Input
+                            label="Công thức"
+                            value={currentSalaryType.formula || ''}
+                            onChange={(e) => setCurrentSalaryType({ ...currentSalaryType, formula: e.target.value })}
+                        />
+                        <div className={styles.formActions}>
+                            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+                            <Button type="submit" variant="primary" isLoading={formLoading}>Lưu</Button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
         </div>
     );
 };

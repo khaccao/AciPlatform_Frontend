@@ -5,22 +5,34 @@ import {
     Plus,
     Search,
     Download,
-    MoreHorizontal,
     Filter,
     Clock,
-    CheckCircle
+    CheckCircle,
+    Edit2,
+    Trash2
 } from 'lucide-react';
 import { Button } from '../../../../shared/components/Button/Button';
-import { hrService } from '../../services/hr.service';
+import { hrService, userService } from '../../services/hr.service';
+import { Input } from '../../../../shared/ui/Input/Input';
+import { Select } from '../../../../shared/ui/Select/Select';
+import { Modal } from '../../../../shared/ui/Modal/Modal';
 import styles from './ContractPage.module.scss';
 import { toast } from 'sonner';
-import type { UserContractHistory, ContractType } from '../../hr.types';
+import type { UserContractHistory, ContractType, UserContractHistoryRequest, User } from '../../hr.types';
 
 export const ContractPage: React.FC = () => {
     const [contracts, setContracts] = useState<UserContractHistory[]>([]);
     const [contractTypes, setContractTypes] = useState<ContractType[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // CRUD State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [formLoading, setFormLoading] = useState(false);
+    const [currentContract, setCurrentContract] = useState<Partial<UserContractHistoryRequest>>({});
+    const [selectedContractId, setSelectedContractId] = useState<number | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -29,17 +41,80 @@ export const ContractPage: React.FC = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [contractsData, typesData] = await Promise.all([
+            const [contractsData, typesData, usersData] = await Promise.all([
                 hrService.contractHistories.getAll(),
-                hrService.contractTypes.getAll()
+                hrService.contractTypes.getAll(),
+                userService.getAllActive()
             ]);
             setContracts(contractsData);
             setContractTypes(typesData);
+            setUsers(usersData.data || []);
         } catch (error) {
             toast.error('Không thể tải dữ liệu hợp đồng');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleAddClick = () => {
+        setIsEditing(false);
+        setCurrentContract({
+            userId: 0,
+            contractTypeId: 0,
+            signedDate: new Date().toISOString().split('T')[0],
+            startDate: new Date().toISOString().split('T')[0],
+            note: ''
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleEditClick = (c: UserContractHistory) => {
+        setIsEditing(true);
+        setSelectedContractId(c.id);
+        setCurrentContract({
+            userId: c.userId,
+            contractTypeId: c.contractTypeId,
+            signedDate: c.signedDate?.split('T')[0],
+            startDate: c.startDate?.split('T')[0],
+            endDate: c.endDate?.split('T')[0],
+            note: c.note
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setFormLoading(true);
+            if (isEditing && selectedContractId) {
+                await hrService.contractHistories.update(selectedContractId, currentContract as UserContractHistoryRequest);
+                toast.success('Cập nhật hợp đồng thành công');
+            } else {
+                await hrService.contractHistories.create(currentContract as UserContractHistoryRequest);
+                toast.success('Tạo hợp đồng mới thành công');
+            }
+            setIsModalOpen(false);
+            fetchData();
+        } catch (error) {
+            toast.error('Có lỗi xảy ra khi lưu hợp đồng');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!window.confirm('Bạn có chắc chắn muốn xóa hợp đồng này?')) return;
+        try {
+            await hrService.contractHistories.delete(id);
+            toast.success('Xóa hợp đồng thành công');
+            fetchData();
+        } catch (error) {
+            toast.error('Không thể xóa hợp đồng');
+        }
+    };
+
+    const getUserName = (id: number) => {
+        return users.find(u => u.id === id)?.fullName || `NV #${id}`;
     };
 
     const getTypeName = (id: number) => {
@@ -65,7 +140,7 @@ export const ContractPage: React.FC = () => {
                 </div>
                 <div className={styles.actions}>
                     <Button variant="outline" icon={<Download size={18} />}>Xuất file</Button>
-                    <Button variant="primary" icon={<Plus size={18} />}>Ký hợp đồng mới</Button>
+                    <Button variant="primary" icon={<Plus size={18} />} onClick={handleAddClick}>Ký hợp đồng mới</Button>
                 </div>
             </header>
 
@@ -158,8 +233,8 @@ export const ContractPage: React.FC = () => {
                                             <td className={styles.id}>HD-{contract.id.toString().padStart(4, '0')}</td>
                                             <td>
                                                 <div className={styles.employeeInfo}>
-                                                    <div className={styles.avatar}>ID:{contract.userId}</div>
-                                                    <span>Nhân viên #{contract.userId}</span>
+                                                    <div className={styles.avatar}>{getUserName(contract.userId).charAt(0)}</div>
+                                                    <span>{getUserName(contract.userId)}</span>
                                                 </div>
                                             </td>
                                             <td><span className={styles.typeBadge}>{getTypeName(contract.contractTypeId)}</span></td>
@@ -172,9 +247,8 @@ export const ContractPage: React.FC = () => {
                                             </td>
                                             <td className={styles.actionsColumn}>
                                                 <div className={styles.btnGroup}>
-                                                    <button className={styles.actionBtn} title="Xem chi tiết"><FileText size={16} /></button>
-                                                    <button className={styles.actionBtn} title="Tải xuống"><Download size={16} /></button>
-                                                    <button className={styles.actionBtn} title="Thêm"><MoreHorizontal size={16} /></button>
+                                                    <button className={styles.actionBtn} title="Sửa" onClick={() => handleEditClick(contract)}><Edit2 size={16} /></button>
+                                                    <button className={styles.actionBtn} title="Xóa" onClick={() => handleDelete(contract.id)}><Trash2 size={16} /></button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -189,6 +263,67 @@ export const ContractPage: React.FC = () => {
                     </table>
                 </div>
             </div>
+
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={isEditing ? 'Sửa hợp đồng' : 'Ký hợp đồng mới'}
+                size="lg"
+            >
+                <form onSubmit={handleSave} className={styles.form}>
+                    <div className={styles.formGrid}>
+                        <Select
+                            label="Nhân viên"
+                            required
+                            options={[
+                                { label: '-- Chọn nhân viên --', value: '' },
+                                ...users.map(u => ({ label: u.fullName || u.username, value: u.id }))
+                            ]}
+                            value={currentContract.userId || ''}
+                            onChange={(e) => setCurrentContract({ ...currentContract, userId: Number(e.target.value) })}
+                        />
+                        <Select
+                            label="Loại hợp đồng"
+                            required
+                            options={[
+                                { label: '-- Chọn loại hợp đồng --', value: '' },
+                                ...contractTypes.map(t => ({ label: t.name, value: t.id }))
+                            ]}
+                            value={currentContract.contractTypeId || ''}
+                            onChange={(e) => setCurrentContract({ ...currentContract, contractTypeId: Number(e.target.value) })}
+                        />
+                        <Input
+                            label="Ngày ký"
+                            type="date"
+                            required
+                            value={currentContract.signedDate || ''}
+                            onChange={(e) => setCurrentContract({ ...currentContract, signedDate: e.target.value })}
+                        />
+                        <Input
+                            label="Ngày bắt đầu"
+                            type="date"
+                            required
+                            value={currentContract.startDate || ''}
+                            onChange={(e) => setCurrentContract({ ...currentContract, startDate: e.target.value })}
+                        />
+                        <Input
+                            label="Ngày kết thúc"
+                            type="date"
+                            value={currentContract.endDate || ''}
+                            onChange={(e) => setCurrentContract({ ...currentContract, endDate: e.target.value })}
+                        />
+                        <Input
+                            label="Ghi chú"
+                            value={currentContract.note || ''}
+                            onChange={(e) => setCurrentContract({ ...currentContract, note: e.target.value })}
+                        />
+                    </div>
+                    <div className={styles.formActions}>
+                        <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+                        <Button type="submit" variant="primary" isLoading={formLoading}>Lưu hợp đồng</Button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

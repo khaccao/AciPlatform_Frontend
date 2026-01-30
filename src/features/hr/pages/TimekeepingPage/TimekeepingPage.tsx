@@ -7,18 +7,32 @@ import {
     ArrowDownLeft,
     Watch,
     CheckCircle2,
-    XCircle
+    XCircle,
+    Edit2,
+    Trash2,
+    Plus
 } from 'lucide-react';
 import { Button } from '../../../../shared/components/Button/Button';
-import { hrService } from '../../services/hr.service';
+import { hrService, userService } from '../../services/hr.service';
+import { Input } from '../../../../shared/ui/Input/Input';
+import { Select } from '../../../../shared/ui/Select/Select';
+import { Modal } from '../../../../shared/ui/Modal/Modal';
 import styles from './TimekeepingPage.module.scss';
 import { toast } from 'sonner';
-import type { TimeKeepingEntry } from '../../hr.types';
+import type { TimeKeepingEntry, User } from '../../hr.types';
 
 export const TimekeepingPage: React.FC = () => {
     const [entries, setEntries] = useState<TimeKeepingEntry[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState<'list' | 'calendar'>('list');
+
+    // CRUD State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [formLoading, setFormLoading] = useState(false);
+    const [currentEntry, setCurrentEntry] = useState<Partial<TimeKeepingEntry>>({});
+    const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
 
     useEffect(() => {
         fetchTimekeeping();
@@ -27,13 +41,104 @@ export const TimekeepingPage: React.FC = () => {
     const fetchTimekeeping = async () => {
         try {
             setLoading(true);
-            const data = await hrService.timekeeping.getAll();
+            const [data, usersData] = await Promise.all([
+                hrService.timekeeping.getAll(),
+                userService.getAllActive()
+            ]);
             setEntries(data);
+            setUsers(usersData.data || []);
         } catch (error) {
             toast.error('Không thể tải dữ liệu chấm công');
         } finally {
             setLoading(false);
         }
+    };
+
+    const getTimeString = (dateStr?: string) => {
+        if (!dateStr) return '';
+        if (!dateStr.includes('T')) return dateStr;
+        return dateStr.split('T')[1].substring(0, 5);
+    };
+
+    const handleAddClick = () => {
+        setIsEditing(false);
+        setCurrentEntry({
+            userId: 0,
+            workDate: new Date().toISOString().split('T')[0],
+            checkIn: '08:00',
+            checkOut: '17:00'
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleEditClick = (e: TimeKeepingEntry) => {
+        setIsEditing(true);
+        setSelectedEntryId(e.id);
+        setCurrentEntry({
+            userId: e.userId,
+            workDate: e.workDate.split('T')[0],
+            checkIn: getTimeString(e.checkIn),
+            checkOut: getTimeString(e.checkOut),
+            note: e.note
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleSave = async (event: React.FormEvent) => {
+        event.preventDefault();
+        try {
+            setFormLoading(true);
+
+            // Create full ISO strings for CheckIn/CheckOut by combining workDate
+            const dateStr = currentEntry.workDate || new Date().toISOString().split('T')[0];
+
+            const formatTime = (timeStr?: string) => {
+                if (!timeStr) return undefined;
+                if (timeStr.includes('T')) return timeStr; // Already ISO
+                return `${dateStr}T${timeStr}:00`;
+            };
+
+            const dataToSave = {
+                ...currentEntry,
+                userId: Number(currentEntry.userId),
+                workDate: dateStr,
+                checkIn: formatTime(currentEntry.checkIn),
+                checkOut: formatTime(currentEntry.checkOut)
+            };
+
+            if (isEditing && selectedEntryId) {
+                await hrService.timekeeping.update(selectedEntryId, dataToSave as TimeKeepingEntry);
+                toast.success('Cập nhật chấm công thành công');
+            } else {
+                await hrService.timekeeping.create(dataToSave as TimeKeepingEntry);
+                toast.success('Thêm chấm công thành công');
+            }
+            setIsModalOpen(false);
+            fetchTimekeeping();
+        } catch (error: any) {
+            console.error('Failed to save timekeeping', error);
+            const errorMsg = error.response?.data?.errors
+                ? JSON.stringify(error.response.data.errors)
+                : (error.response?.data?.message || 'Có lỗi xảy ra khi lưu chấm công');
+            toast.error(`Lỗi: ${errorMsg}`);
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!window.confirm('Bạn có chắc chắn muốn xóa mục này?')) return;
+        try {
+            await hrService.timekeeping.delete(id);
+            toast.success('Xóa thành công');
+            fetchTimekeeping();
+        } catch (error) {
+            toast.error('Không thể xóa');
+        }
+    };
+
+    const getUserName = (id: number) => {
+        return users.find(u => u.id === id)?.fullName || `NV #${id}`;
     };
 
     const stats = [
@@ -65,6 +170,7 @@ export const TimekeepingPage: React.FC = () => {
                             Lịch
                         </button>
                     </div>
+                    <Button variant="outline" icon={<Plus size={18} />} onClick={handleAddClick}>Thêm chấm công</Button>
                     <Button variant="primary" icon={<Watch size={18} />}>Chốt công tháng</Button>
                 </div>
             </header>
@@ -118,21 +224,21 @@ export const TimekeepingPage: React.FC = () => {
                                         <tr key={entry.id}>
                                             <td>
                                                 <div className={styles.user}>
-                                                    <div className={styles.avatar}>ID:{entry.userId}</div>
-                                                    <span>Nhân viên #{entry.userId}</span>
+                                                    <div className={styles.avatar}>{getUserName(entry.userId).charAt(0)}</div>
+                                                    <span>{getUserName(entry.userId)}</span>
                                                 </div>
                                             </td>
                                             <td>{new Date(entry.workDate).toLocaleDateString('vi-VN')}</td>
                                             <td>
                                                 <div className={styles.timeInline}>
                                                     <ArrowUpRight size={14} className={styles.checkIn} />
-                                                    {entry.checkIn || '--:--'}
+                                                    {entry.checkIn ? getTimeString(entry.checkIn) : '--:--'}
                                                 </div>
                                             </td>
                                             <td>
                                                 <div className={styles.timeInline}>
                                                     <ArrowDownLeft size={14} className={styles.checkOut} />
-                                                    {entry.checkOut || '--:--'}
+                                                    {entry.checkOut ? getTimeString(entry.checkOut) : '--:--'}
                                                 </div>
                                             </td>
                                             <td className={styles.hours}>{entry.workingHours || 0}h</td>
@@ -142,6 +248,10 @@ export const TimekeepingPage: React.FC = () => {
                                                 </span>
                                             </td>
                                             <td className={styles.note}>{entry.note || '-'}</td>
+                                            <td className={styles.actions}>
+                                                <button className={styles.actionBtn} onClick={() => handleEditClick(entry)}><Edit2 size={16} /></button>
+                                                <button className={styles.actionBtn} onClick={() => handleDelete(entry.id)}><Trash2 size={16} /></button>
+                                            </td>
                                         </tr>
                                     ))
                                 ) : (
@@ -157,6 +267,56 @@ export const TimekeepingPage: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={isEditing ? 'Sửa chấm công' : 'Thêm chấm công mới'}
+                size="md"
+            >
+                <form onSubmit={handleSave} className={styles.form}>
+                    <Select
+                        label="Nhân viên"
+                        required
+                        options={[
+                            { label: '-- Chọn nhân viên --', value: '' },
+                            ...users.map(u => ({ label: u.fullName || u.username, value: u.id }))
+                        ]}
+                        value={currentEntry.userId || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, userId: Number(e.target.value) })}
+                    />
+                    <Input
+                        label="Ngày làm việc"
+                        type="date"
+                        required
+                        value={currentEntry.workDate || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, workDate: e.target.value })}
+                    />
+                    <div className={styles.formGrid}>
+                        <Input
+                            label="Giờ vào"
+                            type="time"
+                            value={currentEntry.checkIn || ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, checkIn: e.target.value })}
+                        />
+                        <Input
+                            label="Giờ ra"
+                            type="time"
+                            value={currentEntry.checkOut || ''}
+                            onChange={(e) => setCurrentEntry({ ...currentEntry, checkOut: e.target.value })}
+                        />
+                    </div>
+                    <Input
+                        label="Ghi chú"
+                        value={currentEntry.note || ''}
+                        onChange={(e) => setCurrentEntry({ ...currentEntry, note: e.target.value })}
+                    />
+                    <div className={styles.formActions}>
+                        <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+                        <Button type="submit" variant="primary" isLoading={formLoading}>Lưu</Button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };
