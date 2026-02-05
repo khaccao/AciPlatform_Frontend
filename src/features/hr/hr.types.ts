@@ -286,6 +286,7 @@ export interface User {
     avatar?: string;
     departmentName?: string;
     positionName?: string;
+    companyCode?: string;
 }
 
 export interface UserRequest {
@@ -300,6 +301,7 @@ export interface UserRequest {
     gender?: number;
     birthDay?: string;
     address?: string;
+    companyCode?: string;
 }
 
 export interface UserViewModel {
@@ -314,4 +316,11 @@ export interface UserViewModel {
     quit?: boolean;
     startDate?: string;
     endDate?: string;
+    companyCode?: string;
+}
+
+export interface Company {
+    id: number;
+    code: string;
+    name: string;
 }

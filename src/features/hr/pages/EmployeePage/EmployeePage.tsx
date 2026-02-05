@@ -22,7 +22,7 @@ import {
 import { Button } from '../../../../shared/components/Button/Button';
 import { Modal } from '../../../../shared/ui/Modal/Modal';
 import { hrService, userService } from '../../services/hr.service';
-import type { User, UserRequest, Department, PositionDetail } from '../../hr.types';
+import type { User, UserRequest, Department, PositionDetail, Company } from '../../hr.types';
 import { Input } from '../../../../shared/ui/Input/Input';
 import { Select } from '../../../../shared/ui/Select/Select';
 import styles from './EmployeePage.module.scss';
@@ -46,6 +46,7 @@ export const EmployeePage: React.FC = () => {
     // Dropdown data
     const [departments, setDepartments] = useState<Department[]>([]);
     const [positions, setPositions] = useState<PositionDetail[]>([]);
+    const [companies, setCompanies] = useState<Company[]>([]);
 
     // Detail Modal State
     const [viewingEmployee, setViewingEmployee] = useState<User | null>(null);
@@ -70,6 +71,7 @@ export const EmployeePage: React.FC = () => {
 
     // Additional dropdown data
     const [decisionTypes, setDecisionTypes] = useState<any[]>([]);
+    const [allRoles, setAllRoles] = useState<any[]>([]);
 
     const fetchEmployees = async () => {
         try {
@@ -92,14 +94,18 @@ export const EmployeePage: React.FC = () => {
 
     const fetchDropdownData = async () => {
         try {
-            const [depts, poss, dTypes] = await Promise.all([
+            const [depts, poss, dTypes, roles, comps] = await Promise.all([
                 hrService.departments.getAll(),
                 hrService.positions.getAll(),
-                hrService.decisionTypes.getAll()
+                hrService.decisionTypes.getAll(),
+                userService.getRoles(),
+                hrService.companies.getAll()
             ]);
             setDepartments(depts);
             setPositions(poss);
             setDecisionTypes(dTypes || []);
+            setAllRoles(roles?.data || roles || []);
+            setCompanies(comps);
         } catch (error) {
             console.error('Failed to fetch dropdown data', error);
         }
@@ -166,6 +172,7 @@ export const EmployeePage: React.FC = () => {
             gender: 1,
             birthDay: '',
             address: '',
+            companyCode: '',
         });
         setIsFormModalOpen(true);
     };
@@ -183,7 +190,8 @@ export const EmployeePage: React.FC = () => {
             gender: emp.gender,
             birthDay: emp.birthDay ? new Date(emp.birthDay).toISOString().split('T')[0] : '',
             address: emp.address,
-            userRoleIds: emp.userRoleIds
+            userRoleIds: emp.userRoleIds,
+            companyCode: emp.companyCode
         });
         setIsFormModalOpen(true);
     };
@@ -205,7 +213,8 @@ export const EmployeePage: React.FC = () => {
                 birthDay: currentUser.birthDay || undefined, // undefined will be stripped from JSON, backend will see null
                 address: currentUser.address,
                 userRoleIds: currentUser.userRoleIds,
-                password: currentUser.password
+                password: currentUser.password,
+                companyCode: currentUser.companyCode
             };
 
             if (isEditing && editingEmployeeId) {
@@ -706,6 +715,24 @@ export const EmployeePage: React.FC = () => {
                             value={currentUser.address || ''}
                             onChange={(e) => setCurrentUser({ ...currentUser, address: e.target.value })}
                         />
+                        <Select
+                            label="Công ty"
+                            options={[
+                                { label: '-- Chọn công ty --', value: '' },
+                                ...companies.map(c => ({ label: `${c.code} - ${c.name || ''}`, value: c.code }))
+                            ]}
+                            value={currentUser.companyCode || ''}
+                            onChange={(e) => setCurrentUser({ ...currentUser, companyCode: e.target.value })}
+                        />
+                        <Select
+                            label="Nhóm quyền"
+                            options={[
+                                { label: '-- Chọn nhóm quyền --', value: '' },
+                                ...allRoles.map(r => ({ label: r.title || r.code, value: r.id.toString() }))
+                            ]}
+                            value={currentUser.userRoleIds || ''}
+                            onChange={(e) => setCurrentUser({ ...currentUser, userRoleIds: e.target.value })}
+                        />
                     </div>
                     <div className={styles.formActions}>
                         <Button type="button" variant="outline" onClick={() => setIsFormModalOpen(false)}>Hủy</Button>
@@ -721,9 +748,9 @@ export const EmployeePage: React.FC = () => {
                 isOpen={isSubModalOpen}
                 onClose={() => setIsSubModalOpen(false)}
                 title={`${isEditingSub ? 'Sửa' : 'Thêm'} ${subModalType === 'degree' ? 'Bằng cấp/Học vị' :
-                        subModalType === 'certificate' ? 'Chứng chỉ' :
-                            subModalType === 'relative' ? 'Người thân' :
-                                subModalType === 'achievement' ? 'Thành tích' : 'Quyết định'
+                    subModalType === 'certificate' ? 'Chứng chỉ' :
+                        subModalType === 'relative' ? 'Người thân' :
+                            subModalType === 'achievement' ? 'Thành tích' : 'Quyết định'
                     }`}
                 size="md"
             >

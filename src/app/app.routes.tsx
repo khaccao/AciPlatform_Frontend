@@ -9,6 +9,9 @@ import { ContractPage } from '../features/hr/pages/ContractPage/ContractPage';
 import { TimekeepingPage } from '../features/hr/pages/TimekeepingPage/TimekeepingPage';
 import { SalaryPage } from '../features/hr/pages/SalaryPage/SalaryPage';
 import { SettingsPage } from '../features/settings/pages/SettingsPage/SettingsPage';
+import { RoleManagement } from '../features/system/pages/RoleManagement/RoleManagement';
+import { MenuManagement } from '../features/system/pages/MenuManagement/MenuManagement';
+import { TestPage } from '../features/test/pages/TestPage';
 
 export const AppRoutes = () => {
     return (
@@ -32,6 +35,18 @@ export const AppRoutes = () => {
 
                 <Route path="/users" element={<EmployeePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+
+                {/* System Routes */}
+                <Route path="/system">
+                    <Route path="roles" element={<RoleManagement />} />
+                </Route>
+
+                <Route path="/test">
+                    <Route path="demo" element={<TestPage />} />
+                </Route>
+
+                <Route path="/menus" element={<MenuManagement />} />
+                <Route path="/users" element={<EmployeePage />} />
             </Route>
 
             {/* Fallback */}

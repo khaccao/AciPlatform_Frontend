@@ -12,6 +12,7 @@ import {
     Briefcase,
     Clock,
     CreditCard,
+    Shield,
     GitBranch
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
@@ -34,6 +35,75 @@ export const MainLayout: React.FC = () => {
         return location.pathname.startsWith(path);
     };
 
+    const menus = user?.menus || [];
+
+    const IconMap: Record<string, React.ReactNode> = {
+        'dashboard': <LayoutDashboard size={20} />,
+        'hr': <Users size={20} />,
+        'hr/employees': <Users size={20} />,
+        'hr/organization': <GitBranch size={20} />,
+        'hr/contracts': <Briefcase size={20} />,
+        'hr/timekeeping': <Clock size={20} />,
+        'hr/salary': <CreditCard size={20} />,
+        'settings': <Settings size={20} />,
+        'system': <Settings size={20} />,
+        'system/roles': <Shield size={20} />,
+        'users': <Users size={20} />,
+        'menus': <MenuIcon size={20} />,
+    };
+
+    const renderMenuItems = () => {
+        // Use isParent flag or no-slash heuristic
+        // Sort by order
+        const sortedMenus = [...menus].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        // Note: The API flattens the list.
+        // We find parents first.
+        const parentMenus = sortedMenus.filter(m => {
+            // Explicit parent flag? Or root level by code convention?
+            // "dashboard" and "settings" are root. "system" should be root. 
+            // Child menus usually have "/" (e.g. "hr/employees"), but "hr" is parent.
+            // If m.menuCode has NO slash, it's likely a parent.
+            return !m.menuCode.includes('/') || m.menuCode === 'dashboard' || m.menuCode === 'settings';
+        });
+
+        return parentMenus.map(menu => {
+            // Find children: 
+            // 1. Code starts with parent code + "/"
+            // 2. OR CodeParent matches (if available in future, currently relying on code)
+            const children = sortedMenus.filter(m => m.menuCode.startsWith(`${menu.menuCode}/`) && m.menuCode !== menu.menuCode);
+            const hasChildren = children.length > 0;
+            if (hasChildren) {
+                return (
+                    <div key={menu.id} className={styles.navGroup}>
+                        <div className={styles.navGroupTitle}>{menu.name.toUpperCase()}</div>
+                        {children.map(child => (
+                            <Link
+                                key={child.id}
+                                to={`/${child.menuCode}`}
+                                className={`${styles.navItem} ${isActive(`/${child.menuCode}`) ? styles.active : ''}`}
+                            >
+                                {IconMap[child.menuCode] || <MenuIcon size={20} />}
+                                <span>{child.name}</span>
+                            </Link>
+                        ))}
+                    </div>
+                );
+            }
+
+            return (
+                <Link
+                    key={menu.id}
+                    to={`/${menu.menuCode}`}
+                    className={`${styles.navItem} ${isActive(`/${menu.menuCode}`) ? styles.active : ''}`}
+                >
+                    {IconMap[menu.menuCode] || <MenuIcon size={20} />}
+                    <span>{menu.name}</span>
+                </Link>
+            );
+        });
+    };
+
     return (
         <div className={styles.layout}>
             {/* Sidebar */}
@@ -46,42 +116,7 @@ export const MainLayout: React.FC = () => {
                 </div>
 
                 <nav className={styles.nav}>
-                    <Link to="/dashboard" className={`${styles.navItem} ${isActive('/dashboard') ? styles.active : ''}`}>
-                        <LayoutDashboard size={20} />
-                        <span>Tổng quan</span>
-                    </Link>
-
-                    <div className={styles.navGroup}>
-                        <div className={styles.navGroupTitle}>NHÂN SỰ</div>
-                        <Link to="/hr/employees" className={`${styles.navItem} ${isActive('/hr/employees') ? styles.active : ''}`}>
-                            <Users size={20} />
-                            <span>Nhân viên</span>
-                        </Link>
-                        <Link to="/hr/organization" className={`${styles.navItem} ${isActive('/hr/organization') ? styles.active : ''}`}>
-                            <GitBranch size={20} />
-                            <span>Tổ chức</span>
-                        </Link>
-                        <Link to="/hr/contracts" className={`${styles.navItem} ${isActive('/hr/contracts') ? styles.active : ''}`}>
-                            <Briefcase size={20} />
-                            <span>Hợp đồng</span>
-                        </Link>
-                        <Link to="/hr/timekeeping" className={`${styles.navItem} ${isActive('/hr/timekeeping') ? styles.active : ''}`}>
-                            <Clock size={20} />
-                            <span>Chấm công</span>
-                        </Link>
-                        <Link to="/hr/salary" className={`${styles.navItem} ${isActive('/hr/salary') ? styles.active : ''}`}>
-                            <CreditCard size={20} />
-                            <span>Lương & Phúc lợi</span>
-                        </Link>
-                    </div>
-
-                    <div className={styles.navGroup}>
-                        <div className={styles.navGroupTitle}>HỆ THỐNG</div>
-                        <Link to="/settings" className={`${styles.navItem} ${isActive('/settings') ? styles.active : ''}`}>
-                            <Settings size={20} />
-                            <span>Cài đặt</span>
-                        </Link>
-                    </div>
+                    {renderMenuItems()}
                 </nav>
 
                 <div className={styles.sidebarFooter}>

@@ -16,7 +16,7 @@ import {
     type ContractFile, type ContractFileRequest,
     type UserContractHistory, type UserContractHistoryRequest,
     type TimeKeepingEntry, type TimeKeepingEntryRequest,
-    type UserRequest, type UserViewModel
+    type UserRequest, type UserViewModel, type Company
 } from '../hr.types';
 
 // Generic CRUD Service Factory (Internal use)
@@ -52,10 +52,12 @@ export const hrService = {
     contractHistories: createCrudService<UserContractHistory, UserContractHistoryRequest>('UserContractHistories'),
 
     // Timekeeping
+    // Timekeeping
     timekeeping: {
         ...createCrudService<TimeKeepingEntry, TimeKeepingEntryRequest>('TimeKeeping'),
-        // Add specific timekeeping methods if needed
-    }
+    },
+    companies: createCrudService<Company, any>('Companies'),
+    getCompanies: () => api.get<Company[]>('/Companies').then(res => res.data)
 };
 
 export const userService = {
@@ -77,7 +79,8 @@ export const userService = {
             createdDate: item.createdDate ?? item.CreatedDate,
             departmentName: item.departmentName ?? item.DepartmentName,
             positionName: item.positionName ?? item.PositionName,
-            userRoleIds: item.userRoleIds ?? item.UserRoleIds
+            userRoleIds: item.userRoleIds ?? item.UserRoleIds,
+            companyCode: item.companyCode ?? item.CompanyCode
         }));
 
         return {
@@ -94,5 +97,6 @@ export const userService = {
     getAllNotRole: () => api.get<any>('/users/user-not-roles').then(res => ({
         data: res.data.data || res.data.Data || []
     })),
-    resetPassword: (ids: number[]) => api.post('/users/resetPassword', ids).then(res => res.data)
+    resetPassword: (ids: number[]) => api.post('/users/resetPassword', ids).then(res => res.data),
+    getRoles: () => api.get<any>('/UserRoles/list').then(res => res.data)
 };

@@ -79,11 +79,13 @@ export const LoginPage: React.FC = () => {
 
                 dispatch(loginSuccess({
                     user: {
-                        id: userData.id.toString(),
+                        id: userData.id,
                         username: userData.username,
                         fullName: userData.fullname,
-                        email: userData.email || '',
-                        role: userData.roleName?.[0] || 'User'
+                        avatar: userData.avatar,
+                        roleName: userData.roleName || [],
+                        menus: userData.menus || [],
+                        companyCode: userData.companyCode
                     },
                     token
                 }));
