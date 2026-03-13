@@ -12,6 +12,7 @@ import { SettingsPage } from '../features/settings/pages/SettingsPage/SettingsPa
 import { RoleManagement } from '../features/system/pages/RoleManagement/RoleManagement';
 import { MenuManagement } from '../features/system/pages/MenuManagement/MenuManagement';
 import { TestPage } from '../features/test/pages/TestPage';
+import { FacebookPage } from '../features/multi-channel/pages/FacebookPage/FacebookPage';
 
 export const AppRoutes = () => {
     return (
@@ -43,6 +44,11 @@ export const AppRoutes = () => {
 
                 <Route path="/test">
                     <Route path="demo" element={<TestPage />} />
+                </Route>
+
+                {/* Multi-Channel Routes */}
+                <Route path="/dakenh">
+                    <Route path="facebook" element={<FacebookPage />} />
                 </Route>
 
                 <Route path="/menus" element={<MenuManagement />} />

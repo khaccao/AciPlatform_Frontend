@@ -13,7 +13,9 @@ import {
     Clock,
     CreditCard,
     Shield,
-    GitBranch
+    GitBranch,
+    Share2,
+    Facebook
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout } from '../../features/auth/store/auth.slice';
@@ -50,6 +52,8 @@ export const MainLayout: React.FC = () => {
         'system/roles': <Shield size={20} />,
         'users': <Users size={20} />,
         'menus': <MenuIcon size={20} />,
+        'dakenh': <Share2 size={20} />,
+        'dakenh/facebook': <Facebook size={20} />,
     };
 
     const renderMenuItems = () => {
