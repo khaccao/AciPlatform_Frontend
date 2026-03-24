@@ -3,7 +3,7 @@ import type { AuthenticateModel, AuthenticateResponse } from './auth.types';
 
 export const authService = {
     login: async (data: AuthenticateModel): Promise<AuthenticateResponse> => {
-        const response = await api.post('/Auth/login', data);
+        const response = await api.post('/auth/login', data);
         return response.data;
     },
 

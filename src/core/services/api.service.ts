@@ -1,13 +1,17 @@
 import axios from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import { toast } from 'react-toastify';
+
 
 const api: AxiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+    baseURL: '/api',
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
     },
 });
+
+console.log('API base URL:', api.defaults.baseURL);
 
 api.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
@@ -37,6 +41,15 @@ api.interceptors.response.use(
         }
         return Promise.reject(error);
     }
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const message = error.response?.data?.message || error.message || "Failed!";
+    toast.error(message);
+    return Promise.reject(error);
+  }
 );
 
 export default api;

@@ -3,6 +3,7 @@ import { LoginPage } from '../features/auth/pages/LoginPage/LoginPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage/RegisterPage';
 import { MainLayout } from '../layouts/MainLayout/MainLayout';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
+import { CarsPage } from '../features/cars/pages/CarsPage';
 
 export const AppRoutes = () => {
     return (
@@ -16,6 +17,7 @@ export const AppRoutes = () => {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/users" element={<div>User Management List (To be implemented)</div>} />
                 <Route path="/settings" element={<div>System Settings (To be implemented)</div>} />
+                <Route path="/cars" element={<CarsPage />} />
             </Route>
 
             {/* Fallback */}

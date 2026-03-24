@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
     Users,
     LayoutDashboard,
@@ -8,11 +8,19 @@ import {
     Menu as MenuIcon,
     Bell,
     Search,
-    User as UserIcon
+    User as UserIcon,
+    CarFront
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout } from '../../features/auth/store/auth.slice';
 import styles from './MainLayout.module.scss';
+
+const navItems = [
+    { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Tổng quan' },
+    { to: '/users',     icon: <Users size={20} />,           label: 'Nhân viên' },
+    { to: '/cars',      icon: <CarFront size={20} />,        label: 'Vận tải' },
+    { to: '/settings',  icon: <Settings size={20} />,        label: 'Cài đặt' },
+];
 
 export const MainLayout: React.FC = () => {
     const navigate = useNavigate();
@@ -37,18 +45,16 @@ export const MainLayout: React.FC = () => {
                 </div>
 
                 <nav className={styles.nav}>
-                    <Link to="/dashboard" className={`${styles.navItem} ${styles.active}`}>
-                        <LayoutDashboard size={20} />
-                        <span>Tổng quan</span>
-                    </Link>
-                    <Link to="/users" className={styles.navItem}>
-                        <Users size={20} />
-                        <span>Nhân viên</span>
-                    </Link>
-                    <Link to="/settings" className={styles.navItem}>
-                        <Settings size={20} />
-                        <span>Cài đặt</span>
-                    </Link>
+                    {navItems.map(({ to, icon, label }) => (
+                        <NavLink
+                            key={to}
+                            to={to}
+                            className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}
+                        >
+                            {icon}
+                            <span>{label}</span>
+                        </NavLink>
+                    ))}
                 </nav>
 
                 <div className={styles.sidebarFooter}>
