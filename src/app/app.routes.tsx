@@ -14,6 +14,7 @@ import { RoleManagement } from '../features/system/pages/RoleManagement/RoleMana
 import { MenuManagement } from '../features/system/pages/MenuManagement/MenuManagement';
 import { TestPage } from '../features/test/pages/TestPage';
 import { FacebookPage } from '../features/multi-channel/pages/FacebookPage/FacebookPage';
+import { FleetManagementPage } from '../features/fleet/pages/FleetManagementPage/FleetManagementPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
@@ -65,6 +66,8 @@ export const AppRoutes = () => {
                 <Route path="/dakenh">
                     <Route path="facebook" element={<FacebookPage />} />
                 </Route>
+
+                <Route path="/fleet" element={<FleetManagementPage />} />
 
                 <Route path="/menus" element={<MenuManagement />} />
                 <Route path="/users" element={<EmployeePage />} />
