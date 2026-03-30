@@ -1,3 +1,4 @@
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '../features/auth/pages/LoginPage/LoginPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage/RegisterPage';
@@ -14,6 +15,14 @@ import { MenuManagement } from '../features/system/pages/MenuManagement/MenuMana
 import { TestPage } from '../features/test/pages/TestPage';
 import { FacebookPage } from '../features/multi-channel/pages/FacebookPage/FacebookPage';
 
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        return <Navigate to="/login" replace />;
+    }
+    return children;
+};
+
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -21,7 +30,13 @@ export const AppRoutes = () => {
             <Route path="/register" element={<RegisterPage />} />
 
             {/* Protected Routes */}
-            <Route element={<MainLayout />}>
+            <Route
+                element={
+                    <ProtectedRoute>
+                        <MainLayout />
+                    </ProtectedRoute>
+                }
+            >
                 <Route path="/" element={<Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
 

@@ -20,6 +20,8 @@ FROM nginx:stable-alpine AS production-stage
 
 # Copy the build output to Nginx default static folder
 COPY --from=build-stage /app/dist /usr/share/nginx/html
+# Copy custom Nginx config for SPA support
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
