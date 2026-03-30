@@ -32,5 +32,10 @@ export const authService = {
     requestForgotPass: async (username: string) => {
         const response = await api.post('/Auth/requestForgotPass', { username });
         return response.data;
+    },
+
+    refreshMenu: async () => {
+        const response = await api.post('/Auth/refresh');
+        return response.data;
     }
 };

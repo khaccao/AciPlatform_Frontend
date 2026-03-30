@@ -36,6 +36,28 @@ export const fleetService = {
         return response.data;
     },
 
+    // Car Fleets
+    getCarFleets: async (params?: FleetFilterParams) => {
+        const response = await api.get('/CarFleets', { params });
+        return response.data;
+    },
+    getCarFleetList: async () => {
+        const response = await api.get('/CarFleets/list');
+        return response.data;
+    },
+    createCarFleet: async (data: any) => {
+        const response = await api.post('/CarFleets', data);
+        return response.data;
+    },
+    updateCarFleet: async (id: number, data: any) => {
+        const response = await api.put(`/CarFleets/${id}`, data);
+        return response.data;
+    },
+    deleteCarFleet: async (id: number) => {
+        const response = await api.delete(`/CarFleets/${id}`);
+        return response.data;
+    },
+
     // Road Routes
     getRoadRoutes: async (params?: FleetFilterParams) => {
         const response = await api.get('/RoadRoutes', { params });
@@ -85,6 +107,42 @@ export const fleetService = {
     },
     getPoliceCheckPoints: async (id: number) => {
         const response = await api.get(`/DriverRouters/list/police-point/${id}`);
+        return response.data;
+    },
+
+    // Petrol Consumption
+    getPetrolConsumptions: async (params?: FleetFilterParams) => {
+        const response = await api.get('/PetrolConsumptions', { params });
+        return response.data;
+    },
+    createPetrol: async (data: any) => {
+        const response = await api.post('/PetrolConsumptions', data);
+        return response.data;
+    },
+    updatePetrol: async (id: number, data: any) => {
+        const response = await api.put(`/PetrolConsumptions/${id}`, data);
+        return response.data;
+    },
+    deletePetrol: async (id: number) => {
+        const response = await api.delete(`/PetrolConsumptions/${id}`);
+        return response.data;
+    },
+
+    // Police Points
+    getPoints: async (params?: FleetFilterParams) => {
+        const response = await api.get('/PoliceCheckPoints', { params });
+        return response.data;
+    },
+    createPoint: async (data: any) => {
+        const response = await api.post('/PoliceCheckPoints', data);
+        return response.data;
+    },
+    updatePoint: async (id: number, data: any) => {
+        const response = await api.put(`/PoliceCheckPoints/${id}`, data);
+        return response.data;
+    },
+    deletePoint: async (id: number) => {
+        const response = await api.delete(`/PoliceCheckPoints/${id}`);
         return response.data;
     }
 };

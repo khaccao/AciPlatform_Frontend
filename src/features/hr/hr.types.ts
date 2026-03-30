@@ -287,6 +287,7 @@ export interface User {
     departmentName?: string;
     positionName?: string;
     companyCode?: string;
+    faceImage?: string;
 }
 
 export interface UserRequest {
@@ -302,6 +303,7 @@ export interface UserRequest {
     birthDay?: string;
     address?: string;
     companyCode?: string;
+    faceImage?: string;
 }
 
 export interface UserViewModel {

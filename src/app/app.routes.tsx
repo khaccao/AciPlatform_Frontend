@@ -15,6 +15,7 @@ import { MenuManagement } from '../features/system/pages/MenuManagement/MenuMana
 import { TestPage } from '../features/test/pages/TestPage';
 import { FacebookPage } from '../features/multi-channel/pages/FacebookPage/FacebookPage';
 import { FleetManagementPage } from '../features/fleet/pages/FleetManagementPage/FleetManagementPage';
+import FaceAttendancePage from '../features/hr/pages/FaceAttendancePage/FaceAttendancePage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
@@ -47,6 +48,7 @@ export const AppRoutes = () => {
                     <Route path="organization" element={<OrganizationPage />} />
                     <Route path="contracts" element={<ContractPage />} />
                     <Route path="timekeeping" element={<TimekeepingPage />} />
+                    <Route path="face-attendance" element={<FaceAttendancePage />} />
                     <Route path="salary" element={<SalaryPage />} />
                 </Route>
 

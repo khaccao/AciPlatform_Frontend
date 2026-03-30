@@ -55,6 +55,8 @@ export const hrService = {
     // Timekeeping
     timekeeping: {
         ...createCrudService<TimeKeepingEntry, TimeKeepingEntryRequest>('TimeKeeping'),
+        processFaceAttendance: (data: { userId: number, capturedImage: string, note?: string }) => 
+            api.post('/TimeKeeping/face-attendance', data).then(res => res.data)
     },
     companies: createCrudService<Company, any>('Companies'),
     getCompanies: () => api.get<Company[]>('/Companies').then(res => res.data)
@@ -80,7 +82,8 @@ export const userService = {
             departmentName: item.departmentName ?? item.DepartmentName,
             positionName: item.positionName ?? item.PositionName,
             userRoleIds: item.userRoleIds ?? item.UserRoleIds,
-            companyCode: item.companyCode ?? item.CompanyCode
+            companyCode: item.companyCode ?? item.CompanyCode,
+            faceImage: item.faceImage ?? item.FaceImage
         }));
 
         return {
@@ -91,6 +94,7 @@ export const userService = {
     create: (data: UserRequest) => api.post<{ message: string, userId: number }>('/users', data).then(res => res.data),
     update: (id: number, data: UserRequest) => api.put<{ message: string }>(`/users/${id}`, data).then(res => res.data),
     delete: (id: number) => api.delete<{ message: string }>(`/users/${id}`).then(res => res.data),
+    updateFaceImage: (userId: number, image: string) => api.put(`/users/${userId}/face-image`, { image }).then(res => res.data),
     getAllActive: () => api.get<any>('/users/getAllUserActive').then(res => ({
         data: res.data.data || res.data.Data || []
     })),

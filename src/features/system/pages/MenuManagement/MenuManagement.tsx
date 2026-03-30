@@ -78,17 +78,23 @@ export const MenuManagement: React.FC = () => {
         e.preventDefault();
         try {
             setFormLoading(true);
+            const menuToSave = { ...currentMenu };
+            if (menuToSave.isParent) {
+                menuToSave.codeParent = "";
+            }
+            
             if (isEditing && currentMenu.id) {
-                await systemService.updateMenu(currentMenu.id, currentMenu);
+                await systemService.updateMenu(currentMenu.id, menuToSave);
                 toast.success('Cập nhật menu thành công');
             } else {
-                await systemService.createMenu(currentMenu);
+                await systemService.createMenu(menuToSave);
                 toast.success('Thêm menu mới thành công');
             }
             setIsModalOpen(false);
             fetchMenus();
-        } catch (error) {
-            toast.error('Lỗi khi lưu thông tin menu');
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || 'Lỗi khi lưu thông tin menu';
+            toast.error(errorMsg);
         } finally {
             setFormLoading(false);
         }

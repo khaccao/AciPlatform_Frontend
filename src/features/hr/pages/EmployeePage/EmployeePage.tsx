@@ -17,7 +17,9 @@ import {
     Heart,
     FileCheck,
     Trophy,
-    Gavel
+    Gavel,
+    Camera,
+    UserCheck
 } from 'lucide-react';
 import { Button } from '../../../../shared/components/Button/Button';
 import { Modal } from '../../../../shared/ui/Modal/Modal';
@@ -72,6 +74,12 @@ export const EmployeePage: React.FC = () => {
     // Additional dropdown data
     const [decisionTypes, setDecisionTypes] = useState<any[]>([]);
     const [allRoles, setAllRoles] = useState<any[]>([]);
+
+    // Face Registration State
+    const [isFaceModalOpen, setIsFaceModalOpen] = useState(false);
+    const [registeringUserId, setRegisteringUserId] = useState<number | null>(null);
+    const faceVideoRef = React.useRef<HTMLVideoElement>(null);
+    const faceCanvasRef = React.useRef<HTMLCanvasElement>(null);
 
     const fetchEmployees = async () => {
         try {
@@ -234,6 +242,42 @@ export const EmployeePage: React.FC = () => {
             toast.error(`Lỗi: ${errorMsg}`);
         } finally {
             setFormLoading(false);
+        }
+    };
+
+    const handleFaceRegisterOpen = async (userId: number) => {
+        setRegisteringUserId(userId);
+        setIsFaceModalOpen(true);
+        setTimeout(async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                if (faceVideoRef.current) {
+                    faceVideoRef.current.srcObject = stream;
+                }
+            } catch (err) {
+                toast.error("Không thể mở Camera");
+            }
+        }, 300);
+    };
+
+    const handleCaptureFace = async () => {
+        if (!faceVideoRef.current || !faceCanvasRef.current || !registeringUserId) return;
+        const canvas = faceCanvasRef.current;
+        const video = faceVideoRef.current;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d')?.drawImage(video, 0, 0);
+        const image = canvas.toDataURL('image/jpeg');
+
+        try {
+            await userService.updateFaceImage(registeringUserId, image);
+            toast.success("Đăng ký khuôn mặt thành công");
+            setIsFaceModalOpen(false);
+            const stream = video.srcObject as MediaStream;
+            stream?.getTracks().forEach(t => t.stop());
+            fetchEmployees();
+        } catch (err) {
+            toast.error("Lỗi khi lưu ảnh khuôn mặt");
         }
     };
 
@@ -400,6 +444,13 @@ export const EmployeePage: React.FC = () => {
                                         </td>
                                         <td className={styles.actionsColumn}>
                                             <div className={styles.actionBtns}>
+                                                <button 
+                                                    className={`${styles.actionBtn} ${emp.faceImage ? styles.registered : ''}`} 
+                                                    onClick={() => handleFaceRegisterOpen(emp.id)} 
+                                                    title={emp.faceImage ? "Đã đăng ký khuôn mặt" : "Đăng ký khuôn mặt"}
+                                                >
+                                                    {emp.faceImage ? <UserCheck size={18} /> : <Camera size={18} />}
+                                                </button>
                                                 <button className={styles.actionBtn} onClick={() => handleViewDetail(emp)} title="Xem hồ sơ">
                                                     <Eye size={18} />
                                                 </button>
@@ -934,6 +985,39 @@ export const EmployeePage: React.FC = () => {
                         </Button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Face Registration Modal */}
+            <Modal
+                isOpen={isFaceModalOpen}
+                onClose={() => {
+                    setIsFaceModalOpen(false);
+                    if (faceVideoRef.current) {
+                        const stream = faceVideoRef.current.srcObject as MediaStream;
+                        stream?.getTracks().forEach(t => t.stop());
+                    }
+                }}
+                title="Đăng ký Khuôn mặt Nhân viên"
+                size="md"
+            >
+                <div className={styles.faceModalContent}>
+                    <div className={styles.cameraPreview}>
+                        <video ref={faceVideoRef} autoPlay playsInline muted />
+                        <canvas ref={faceCanvasRef} style={{ display: 'none' }} />
+                        <div className={styles.focusFrame}>
+                            <div className={styles.focusCorner} />
+                            <div className={styles.focusCorner} />
+                            <div className={styles.focusCorner} />
+                            <div className={styles.focusCorner} />
+                        </div>
+                    </div>
+                    <div className={styles.faceModalActions}>
+                        <Button variant="primary" icon={<Camera size={18} />} onClick={handleCaptureFace}>
+                            Chụp ảnh & Đăng ký
+                        </Button>
+                        <p className={styles.faceNote}>Đảm bảo khuôn mặt nhân viên nằm trong khung hình và đủ ánh sáng.</p>
+                    </div>
+                </div>
             </Modal>
         </div>
     );

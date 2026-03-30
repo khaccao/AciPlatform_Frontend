@@ -15,11 +15,16 @@ import {
     Shield,
     GitBranch,
     Share2,
-    Facebook
+    Facebook,
+    RefreshCw,
+    Truck,
+    Camera
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { logout } from '../../features/auth/store/auth.slice';
+import { logout, updateUser } from '../../features/auth/store/auth.slice';
+import { authService } from '../../features/auth/services/auth.service';
 import styles from './MainLayout.module.scss';
+import { toast } from 'sonner';
 
 export const MainLayout: React.FC = () => {
     const navigate = useNavigate();
@@ -27,10 +32,28 @@ export const MainLayout: React.FC = () => {
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.auth.user);
     const [isSidebarOpen, setSidebarOpen] = React.useState(true);
+    const [isRefreshing, setIsRefreshing] = React.useState(false);
 
     const handleLogout = () => {
         dispatch(logout());
         navigate('/login');
+    };
+
+    const handleRefresh = async () => {
+        if (!user) return;
+        setIsRefreshing(true);
+        try {
+            const res = await authService.refreshMenu();
+            if (res.status === 200 && res.data.Menus) {
+                const newUser = { ...user, menus: res.data.Menus };
+                dispatch(updateUser(newUser));
+                toast.success('Đã cập nhật danh sách Menu mới nhất!');
+            }
+        } catch (error) {
+            toast.error('Lỗi khi cập nhật dữ liệu. Vui lòng thử lại sau.');
+        } finally {
+            setIsRefreshing(false);
+        }
     };
 
     const isActive = (path: string) => {
@@ -46,6 +69,7 @@ export const MainLayout: React.FC = () => {
         'hr/organization': <GitBranch size={20} />,
         'hr/contracts': <Briefcase size={20} />,
         'hr/timekeeping': <Clock size={20} />,
+        'hr/face-attendance': <Camera size={20} />,
         'hr/salary': <CreditCard size={20} />,
         'settings': <Settings size={20} />,
         'system': <Settings size={20} />,
@@ -54,6 +78,7 @@ export const MainLayout: React.FC = () => {
         'menus': <MenuIcon size={20} />,
         'dakenh': <Share2 size={20} />,
         'dakenh/facebook': <Facebook size={20} />,
+        'fleet': <Truck size={20} />,
     };
 
     const renderMenuItems = () => {
@@ -72,36 +97,47 @@ export const MainLayout: React.FC = () => {
         });
 
         return parentMenus.map(menu => {
-            // Find children: 
-            // 1. Code starts with parent code + "/"
-            // 2. OR CodeParent matches (if available in future, currently relying on code)
-            const children = sortedMenus.filter(m => m.menuCode.startsWith(`${menu.menuCode}/`) && m.menuCode !== menu.menuCode);
+            // Improved children finding:
+            // 1. Path contains parent code (e.g., child '/fleet' belongs to parent 'fleet')
+            // 2. OR child starts with parent/
+            const children = sortedMenus.filter(m => {
+                if (m.id === menu.id) return false;
+                
+                const mCode = m.menuCode.startsWith('/') ? m.menuCode.substring(1) : m.menuCode;
+                const pCode = menu.menuCode.startsWith('/') ? menu.menuCode.substring(1) : menu.menuCode;
+                
+                return mCode.startsWith(pCode) || m.menuCode === `/${pCode}`;
+            });
             const hasChildren = children.length > 0;
             if (hasChildren) {
                 return (
                     <div key={menu.id} className={styles.navGroup}>
                         <div className={styles.navGroupTitle}>{menu.name.toUpperCase()}</div>
-                        {children.map(child => (
-                            <Link
-                                key={child.id}
-                                to={`/${child.menuCode}`}
-                                className={`${styles.navItem} ${isActive(`/${child.menuCode}`) ? styles.active : ''}`}
-                            >
-                                {IconMap[child.menuCode] || <MenuIcon size={20} />}
-                                <span>{child.name}</span>
-                            </Link>
-                        ))}
+                        {children.map(child => {
+                            const cleanPath = child.menuCode.startsWith('/') ? child.menuCode : `/${child.menuCode}`;
+                            return (
+                                <Link
+                                    key={child.id}
+                                    to={cleanPath}
+                                    className={`${styles.navItem} ${isActive(cleanPath) ? styles.active : ''}`}
+                                >
+                                    {IconMap[child.menuCode] || IconMap[cleanPath.substring(1)] || <MenuIcon size={20} />}
+                                    <span>{child.name}</span>
+                                </Link>
+                            );
+                        })}
                     </div>
                 );
             }
 
+            const cleanPath = menu.menuCode.startsWith('/') ? menu.menuCode : `/${menu.menuCode}`;
             return (
                 <Link
                     key={menu.id}
-                    to={`/${menu.menuCode}`}
-                    className={`${styles.navItem} ${isActive(`/${menu.menuCode}`) ? styles.active : ''}`}
+                    to={cleanPath}
+                    className={`${styles.navItem} ${isActive(cleanPath) ? styles.active : ''}`}
                 >
-                    {IconMap[menu.menuCode] || <MenuIcon size={20} />}
+                    {IconMap[menu.menuCode] || IconMap[cleanPath.substring(1)] || <MenuIcon size={20} />}
                     <span>{menu.name}</span>
                 </Link>
             );
@@ -149,6 +185,14 @@ export const MainLayout: React.FC = () => {
                     </div>
 
                     <div className={styles.headerRight}>
+                        <button 
+                            className={`${styles.iconBtn} ${isRefreshing ? styles.spinning : ''}`} 
+                            onClick={handleRefresh}
+                            disabled={isRefreshing}
+                            title="Làm mới menu"
+                        >
+                            <RefreshCw size={20} />
+                        </button>
                         <button className={styles.iconBtn}>
                             <Bell size={20} />
                             <span className={styles.badge}>3</span>
