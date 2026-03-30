@@ -93,7 +93,7 @@ export const FacebookPage = () => {
         }
     };
 
-    const handleCreatePost = async (isScheduled = false) => {
+    const handleCreatePost = async () => {
         if (!postForm.selectedPage) {
             toast.error('Vui lòng chọn Fanpage');
             return;
@@ -364,7 +364,7 @@ export const FacebookPage = () => {
                         <div style={{ display: 'flex', gap: 16, marginTop: 24 }}>
                             <button
                                 className={`${styles.btn} ${styles.primary}`}
-                                onClick={() => handleCreatePost(false)}
+                                onClick={() => handleCreatePost()}
                                 disabled={isPosting || !postForm.selectedPage || !postForm.content}
                                 style={{ flex: 1 }}
                             >
@@ -372,7 +372,7 @@ export const FacebookPage = () => {
                             </button>
                             <button
                                 className={`${styles.btn} ${styles.secondary}`}
-                                onClick={() => handleCreatePost(true)}
+                                onClick={() => handleCreatePost()}
                                 disabled={!postForm.scheduledTime}
                             >
                                 <Calendar size={16} /> Hẹn giờ
