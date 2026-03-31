@@ -6,6 +6,7 @@ import type {
   CarPagingResponse,
   CarResponse,
   CarsListResponse,
+  GetCarByIDRespone,
 } from "../services/cars.type";
 
 // ─── Async Thunks ─────────────────────────────────────────────────────────────
@@ -43,6 +44,14 @@ export const deleteCar = createAsyncThunk<void, string>(
   }
 );
 
+export const getCarById = createAsyncThunk<GetCarByIDRespone, string>(
+  "cars/getCarById",
+  async (id) => {
+    const res = await carService.getCarById(id);
+    return res;
+  }
+);
+
 // ─── State ────────────────────────────────────────────────────────────────────
 
 interface CarsState {
@@ -55,6 +64,9 @@ interface CarsState {
   currentPage: number;
   pageSize: number;
   loadingCars: boolean;
+
+  car: CarResponse | null;
+  loadingCar: boolean;
 }
 
 const initialState: CarsState = {
@@ -67,6 +79,9 @@ const initialState: CarsState = {
   currentPage: 1,
   pageSize: 10,
   loadingCars: false,
+
+  car: null,
+  loadingCar: false,
 };
 
 // ─── Slice ────────────────────────────────────────────────────────────────────
@@ -83,6 +98,9 @@ const carsSlice = createSlice({
       state.cars = [];
       state.totalItems = 0;
       state.currentPage = 1;
+    },
+    resetCar(state) {
+      state.car = null;
     },
   },
   extraReducers: (builder) => {
@@ -161,6 +179,15 @@ const carsSlice = createSlice({
         state.totalItems -= 1;
       })
       .addCase(deleteCar.rejected, (state) => { state.loadingCars = false; })
+
+      // ── getCarById ──
+      .addCase(getCarById.pending, (state) => { state.loadingCar = true; })
+      .addCase(getCarById.fulfilled, (state, action) => {
+        state.loadingCar = false;
+        state.car = action.payload.car ?? null;
+      })
+      .addCase(getCarById.rejected, (state) => { state.loadingCar = false; })
+
   },
 });
 

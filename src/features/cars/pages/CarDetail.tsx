@@ -1,4 +1,4 @@
-import { Box } from "lucide-react"
+import { Box } from "@mui/material"
 
 export const CarDetail = () => {
   return <Box>

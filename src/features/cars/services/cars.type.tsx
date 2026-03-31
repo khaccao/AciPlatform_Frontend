@@ -44,3 +44,17 @@ export type CarFormValues = Omit<CarResponse, "id" | "file"> & {
   // existingFiles: ảnh cũ giữ lại (base64 url từ server)
   existingFiles?: CarFileItem[];
 };
+
+export interface CarRequestPayload {
+  LicensePlates: string;
+  Note: string | null;
+  Content: string | null;
+  MileageAllowance: number;
+  FuelAmount: number;
+  Files: string[] | null;
+}
+
+export interface GetCarByIDRespone {
+  car?: CarResponse;
+  message?: string;
+}
