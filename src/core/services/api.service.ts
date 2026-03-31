@@ -46,7 +46,7 @@ api.interceptors.response.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.message || error.message || "Failed!";
+    const message = error.response?.data?.title || error.title || "Failed!";
     toast.error(message);
     return Promise.reject(error);
   }

@@ -1,19 +1,20 @@
-import { Button } from "@mui/material";
+import { Button, Box } from "@mui/material";
 import { ListCars } from "../components/ListCars";
 import { CarDialog } from "../components/CarDialog";
 import { useState } from "react";
 import { useAppDispatch } from "../../../app/hooks";
-import { createCar } from "../store/cars.slice";
+import { createCar, updateCar } from "../store/cars.slice";
 import type { CarFormValues } from "../components/CarDialog";
 import type { CarResponse } from "../services/cars.type";
+import { CarDropdown } from "../components/CarDropDown";
+import { toast } from "react-toastify";
 
 export const CarsPage = () => {
   const dispatch = useAppDispatch();
 
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openDialog, setOpenDialog]   = useState(false);
   const [selectedCar, setSelectedCar] = useState<CarResponse | undefined>(undefined);
 
-  // Mở dialog tạo mới
   const handleOpenCreate = () => {
     setSelectedCar(undefined);
     setOpenDialog(true);
@@ -24,21 +25,57 @@ export const CarsPage = () => {
     setSelectedCar(undefined);
   };
 
-  const handleSubmit = (data: CarFormValues) => {
-    dispatch(createCar(data as CarResponse));
-    handleClose();
+  const handleCarSubmit = async (data: CarFormValues) => {
+    if (selectedCar) {
+      await dispatch(updateCar({ id: selectedCar.id, car: { ...data, id: selectedCar.id } }))
+        .unwrap()
+        .then(() => {
+          toast.success("Cập nhật xe thành công!");
+          handleClose();
+        });
+    } else {
+      await dispatch(createCar(data))
+        .unwrap()
+        .then(() => {
+          toast.success("Thêm xe thành công!");
+          handleClose();
+        });
+    }
+  };
+
+  const handleOnChange = () => {};
+
+  const handleOpenEdit = (car: CarResponse) => {
+    setSelectedCar(car);
+    setOpenDialog(true);
   };
 
   return (
-    <>
-      <Button onClick={handleOpenCreate} variant="contained">Thêm xe mới</Button>
-      <ListCars/>
+    <Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "flex-start",
+          gap: "10px",
+          width: "100%",
+          px: 3,
+        }}
+      >
+        <Button onClick={handleOpenCreate} variant="contained">
+          Thêm xe mới
+        </Button>
+        <CarDropdown onChange={handleOnChange} />
+      </Box>
+
+      <ListCars onEditCar={handleOpenEdit} />
+
       <CarDialog
         open={openDialog}
         onClose={handleClose}
-        onSubmit={handleSubmit}
+        onSubmit={handleCarSubmit}
         defaultValues={selectedCar}
       />
-    </>
+    </Box>
   );
 };

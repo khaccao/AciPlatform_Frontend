@@ -1,7 +1,12 @@
 export interface CarsListResponse {
   id: string;
   licensePlates: string;
-  note?: string 
+  note?: string;
+}
+
+export interface CarFileItem {
+  fileName?: string;
+  fileUrl?: string;
 }
 
 export interface CarResponse {
@@ -11,10 +16,7 @@ export interface CarResponse {
   mileageAllowance?: number;
   fuelAmount?: number;
   content?: string;
-  file?: [{
-    fileName?: string;
-    fileUrl?: string
-  }]
+  file?: CarFileItem[];
 }
 
 export interface CarPagingResponse {
@@ -32,5 +34,13 @@ export interface CarPagingParams {
 
 export interface CreateResponse {
   code: number;
-  message?: string
+  message?: string;
 }
+
+export type CarFormValues = Omit<CarResponse, "id" | "file"> & {
+  id?: string;
+  // files: base64 string[] gửi lên BE (đã convert từ File)
+  files?: string[];
+  // existingFiles: ảnh cũ giữ lại (base64 url từ server)
+  existingFiles?: CarFileItem[];
+};

@@ -40,6 +40,7 @@ export const CarDropdown = ({
 
   return (
     <Autocomplete
+      sx={{width: "80%"}}
       value={value}
       open={open}
       onOpen={handleOpen}
@@ -52,8 +53,8 @@ export const CarDropdown = ({
       filterOptions={(options, { inputValue }) =>
         options.filter(
           (o) =>
-            o.licensePlates.toLowerCase().includes(inputValue.toLowerCase()) ||
-            o.id.toLowerCase().includes(inputValue.toLowerCase())
+            (o.licensePlates && String(o.licensePlates).toLowerCase().includes(inputValue.toLowerCase())) ||
+            (o.id && String(o.id).toLowerCase().includes(inputValue.toLowerCase()))
         )
       }
       onChange={(_, newValue) => onChange(newValue)}

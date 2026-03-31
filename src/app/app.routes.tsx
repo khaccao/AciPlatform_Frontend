@@ -4,6 +4,7 @@ import { RegisterPage } from '../features/auth/pages/RegisterPage/RegisterPage';
 import { MainLayout } from '../layouts/MainLayout/MainLayout';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { CarsPage } from '../features/cars/pages/CarsPage';
+import { CarDetail } from '../features/cars/pages/CarDetail';
 
 export const AppRoutes = () => {
     return (
@@ -18,6 +19,7 @@ export const AppRoutes = () => {
                 <Route path="/users" element={<div>User Management List (To be implemented)</div>} />
                 <Route path="/settings" element={<div>System Settings (To be implemented)</div>} />
                 <Route path="/cars" element={<CarsPage />} />
+                <Route path="/cars/:id" element={<CarDetail />} />
             </Route>
 
             {/* Fallback */}
