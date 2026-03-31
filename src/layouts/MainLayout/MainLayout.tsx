@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
     Users,
@@ -18,11 +18,13 @@ import {
     Facebook,
     RefreshCw,
     Truck,
-    Camera
+    Camera,
+    X,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout, updateUser } from '../../features/auth/store/auth.slice';
 import { authService } from '../../features/auth/services/auth.service';
+import { useMediaQuery } from '../../shared/hooks/useMediaQuery';
 import styles from './MainLayout.module.scss';
 import { toast } from 'sonner';
 
@@ -31,8 +33,31 @@ export const MainLayout: React.FC = () => {
     const location = useLocation();
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.auth.user);
-    const [isSidebarOpen, setSidebarOpen] = React.useState(true);
-    const [isRefreshing, setIsRefreshing] = React.useState(false);
+    
+    // Breaking points
+    const isMobile = useMediaQuery('(max-width: 767px)');
+    const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1024px)');
+    
+    const [isSidebarOpen, setSidebarOpen] = useState(!isMobile && !isTablet);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    // Sync sidebar state on screen size change
+    useEffect(() => {
+        if (isMobile) {
+            setSidebarOpen(false);
+        } else if (isTablet) {
+            setSidebarOpen(false); // Start collapsed for tablet
+        } else {
+            setSidebarOpen(true); // Start open for desktop
+        }
+    }, [isMobile, isTablet]);
+
+    // Close sidebar on navigation (mobile/tablet)
+    useEffect(() => {
+        if (isMobile) {
+            setSidebarOpen(false);
+        }
+    }, [location.pathname, isMobile]);
 
     const handleLogout = () => {
         dispatch(logout());
@@ -82,37 +107,23 @@ export const MainLayout: React.FC = () => {
     };
 
     const renderMenuItems = () => {
-        // Use isParent flag or no-slash heuristic
-        // Sort by order
         const sortedMenus = [...menus].sort((a, b) => (a.order || 0) - (b.order || 0));
-
-        // Note: The API flattens the list.
-        // We find parents first.
         const parentMenus = sortedMenus.filter(m => {
-            // Explicit parent flag? Or root level by code convention?
-            // "dashboard" and "settings" are root. "system" should be root. 
-            // Child menus usually have "/" (e.g. "hr/employees"), but "hr" is parent.
-            // If m.menuCode has NO slash, it's likely a parent.
             return !m.menuCode.includes('/') || m.menuCode === 'dashboard' || m.menuCode === 'settings';
         });
 
         return parentMenus.map(menu => {
-            // Improved children finding:
-            // 1. Path contains parent code (e.g., child '/fleet' belongs to parent 'fleet')
-            // 2. OR child starts with parent/
             const children = sortedMenus.filter(m => {
                 if (m.id === menu.id) return false;
-                
                 const mCode = m.menuCode.startsWith('/') ? m.menuCode.substring(1) : m.menuCode;
                 const pCode = menu.menuCode.startsWith('/') ? menu.menuCode.substring(1) : menu.menuCode;
-                
                 return mCode.startsWith(pCode) || m.menuCode === `/${pCode}`;
             });
             const hasChildren = children.length > 0;
             if (hasChildren) {
                 return (
-                    <div key={menu.id} className={styles.navGroup}>
-                        <div className={styles.navGroupTitle}>{menu.name.toUpperCase()}</div>
+                    <div key={menu.id} className={`${styles.navGroup} ${isSidebarOpen ? '' : styles.navGroupCollapsed}`}>
+                        <div className={styles.navGroupTitle}>{isSidebarOpen ? menu.name.toUpperCase() : '•••'}</div>
                         {children.map(child => {
                             const cleanPath = child.menuCode.startsWith('/') ? child.menuCode : `/${child.menuCode}`;
                             return (
@@ -120,6 +131,7 @@ export const MainLayout: React.FC = () => {
                                     key={child.id}
                                     to={cleanPath}
                                     className={`${styles.navItem} ${isActive(cleanPath) ? styles.active : ''}`}
+                                    title={child.name}
                                 >
                                     {IconMap[child.menuCode] || IconMap[cleanPath.substring(1)] || <MenuIcon size={20} />}
                                     <span>{child.name}</span>
@@ -136,6 +148,7 @@ export const MainLayout: React.FC = () => {
                     key={menu.id}
                     to={cleanPath}
                     className={`${styles.navItem} ${isActive(cleanPath) ? styles.active : ''}`}
+                    title={menu.name}
                 >
                     {IconMap[menu.menuCode] || IconMap[cleanPath.substring(1)] || <MenuIcon size={20} />}
                     <span>{menu.name}</span>
@@ -144,15 +157,55 @@ export const MainLayout: React.FC = () => {
         });
     };
 
+    const renderBottomNav = () => {
+        if (!isMobile) return null;
+
+        // Top-level navigation items for bottom bar
+        const mainLinks = [
+            { path: '/dashboard', label: 'T.Điều', icon: <LayoutDashboard size={20} /> },
+            { path: '/hr', label: 'Nhân sự', icon: <Users size={20} /> },
+            { path: '/fleet', label: 'Đội xe', icon: <Truck size={20} /> },
+            { path: '/settings', label: 'C.Đặt', icon: <Settings size={20} /> },
+        ];
+
+        return (
+            <nav className={styles.bottomNav}>
+                {mainLinks.map((link) => (
+                    <Link
+                        key={link.path}
+                        to={link.path}
+                        className={`${styles.bottomNavItem} ${isActive(link.path) ? styles.active : ''}`}
+                    >
+                        {link.icon}
+                        <span>{link.label}</span>
+                    </Link>
+                ))}
+            </nav>
+        );
+    };
+
     return (
-        <div className={styles.layout}>
+        <div className={`${styles.layout} ${isMobile ? styles.isMobile : ''} ${isTablet ? styles.isTablet : ''}`}>
+            {/* Backdrop for mobile drawer */}
+            {isMobile && isSidebarOpen && (
+                <div 
+                    className={styles.backdrop} 
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className={`${styles.sidebar} ${isSidebarOpen ? '' : styles.collapsed}`}>
+            <aside className={`${styles.sidebar} ${isSidebarOpen ? '' : styles.collapsed} ${isMobile && isSidebarOpen ? styles.mobileVisible : ''}`}>
                 <div className={styles.sidebarHeader}>
                     <div className={styles.logo}>
                         <div className={styles.logoSquare}>ACI</div>
                         <span>ACI Platform</span>
                     </div>
+                    {isMobile && (
+                        <button className={styles.closeSidebarBtn} onClick={() => setSidebarOpen(false)}>
+                            <X size={20} />
+                        </button>
+                    )}
                 </div>
 
                 <nav className={styles.nav}>
@@ -168,16 +221,26 @@ export const MainLayout: React.FC = () => {
             </aside>
 
             {/* Main Content Area */}
-            <main className={styles.main}>
+            <main className={`${styles.main} ${!isSidebarOpen && !isMobile ? styles.mainExpanded : ''}`}>
                 {/* Header */}
                 <header className={styles.header}>
                     <div className={styles.headerLeft}>
-                        <button
-                            className={styles.toggleBtn}
-                            onClick={() => setSidebarOpen(!isSidebarOpen)}
-                        >
-                            <MenuIcon size={20} />
-                        </button>
+                        {!isMobile && (
+                            <button
+                                className={styles.toggleBtn}
+                                onClick={() => setSidebarOpen(!isSidebarOpen)}
+                            >
+                                <MenuIcon size={20} />
+                            </button>
+                        )}
+                        {isMobile && (
+                            <button
+                                className={styles.toggleBtn}
+                                onClick={() => setSidebarOpen(true)}
+                            >
+                                <MenuIcon size={20} />
+                            </button>
+                        )}
                         <div className={styles.searchBar}>
                             <Search size={18} />
                             <input type="text" placeholder="Tìm kiếm..." />
@@ -185,22 +248,26 @@ export const MainLayout: React.FC = () => {
                     </div>
 
                     <div className={styles.headerRight}>
-                        <button 
-                            className={`${styles.iconBtn} ${isRefreshing ? styles.spinning : ''}`} 
-                            onClick={handleRefresh}
-                            disabled={isRefreshing}
-                            title="Làm mới menu"
-                        >
-                            <RefreshCw size={20} />
-                        </button>
-                        <button className={styles.iconBtn}>
-                            <Bell size={20} />
-                            <span className={styles.badge}>3</span>
-                        </button>
+                        {!isMobile && (
+                            <>
+                                <button
+                                    className={`${styles.iconBtn} ${isRefreshing ? styles.spinning : ''}`}
+                                    onClick={handleRefresh}
+                                    disabled={isRefreshing}
+                                    title="Làm mới menu"
+                                >
+                                    <RefreshCw size={20} />
+                                </button>
+                                <button className={styles.iconBtn}>
+                                    <Bell size={20} />
+                                    <span className={styles.badge}>3</span>
+                                </button>
+                            </>
+                        )}
                         <div className={styles.userProfile}>
                             <div className={styles.userInfo}>
-                                <span className={styles.userName}>{user?.fullName || 'Admin User'}</span>
-                                <span className={styles.userRole}>Super Admin</span>
+                                <span className={styles.userName}>{isMobile ? (user?.fullName?.split(' ').pop()) : (user?.fullName || 'Admin User')}</span>
+                                {!isMobile && <span className={styles.userRole}>Super Admin</span>}
                             </div>
                             <div className={styles.avatar}>
                                 <UserIcon size={20} />
@@ -213,6 +280,9 @@ export const MainLayout: React.FC = () => {
                 <div className={styles.content}>
                     <Outlet />
                 </div>
+
+                {/* Bottom Nav for Mobile */}
+                {renderBottomNav()}
             </main>
         </div>
     );

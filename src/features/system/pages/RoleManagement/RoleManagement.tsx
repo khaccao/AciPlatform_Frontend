@@ -145,7 +145,7 @@ export const RoleManagement: React.FC = () => {
         return (
             <React.Fragment key={role.id}>
                 <tr className={level > 0 ? styles.childRow : ''}>
-                    <td className={styles.code} style={{ paddingLeft: `${level * 24 + 12}px` }}>
+                    <td data-label="Mã" className={styles.code} style={{ paddingLeft: `${level * 24 + 12}px` }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             {hasChildren && (
                                 <button
@@ -159,10 +159,10 @@ export const RoleManagement: React.FC = () => {
                             {role.code}
                         </div>
                     </td>
-                    <td className={styles.title}>{role.title}</td>
-                    <td className={styles.note}>{role.note}</td>
-                    {isSuperAdmin && <td>{role.companyCode}</td>}
-                    <td className={styles.actions}>
+                    <td data-label="Tên nhóm quyền" className={styles.title}>{role.title}</td>
+                    <td data-label="Mô tả" className={styles.note}>{role.note}</td>
+                    {isSuperAdmin && <td data-label="Công ty">{role.companyCode}</td>}
+                    <td data-label="Thao tác" className={styles.actions}>
                         <button
                             className={styles.actionBtn}
                             onClick={() => handleOpenPermissions(role)}

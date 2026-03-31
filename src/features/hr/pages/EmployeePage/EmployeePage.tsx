@@ -408,7 +408,7 @@ export const EmployeePage: React.FC = () => {
                             ) : (
                                 employees.map((emp) => (
                                     <tr key={emp.id}>
-                                        <td>
+                                        <td data-label="Nhân viên">
                                             <div className={styles.empInfo}>
                                                 <div className={styles.avatar}>
                                                     {emp.fullName?.charAt(0) || 'U'}
@@ -419,30 +419,30 @@ export const EmployeePage: React.FC = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Bộ phận / Chức vụ">
                                             <div className={styles.deptInfo}>
                                                 <span className={styles.dept}>{emp.departmentName || 'Chưa cập nhật'}</span>
                                                 <span className={styles.pos}>{emp.positionName || 'Nhân viên'}</span>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Liên hệ">
                                             <div className={styles.contactInfo}>
                                                 <span className={styles.contactItem}><Mail size={14} /> {emp.email || '-'}</span>
                                                 <span className={styles.contactItem}><Phone size={14} /> {emp.phone || '-'}</span>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Ngày vào làm">
                                             <div className={styles.dateInfo}>
                                                 <Calendar size={14} />
                                                 {emp.createdDate ? new Date(emp.createdDate).toLocaleDateString('vi-VN') : '-'}
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Trạng thái">
                                             <span className={`${styles.statusBadge} ${emp.status === 1 ? styles.active : styles.inactive}`}>
                                                 {emp.status === 1 ? 'Đang làm việc' : 'Đã nghỉ việc'}
                                             </span>
                                         </td>
-                                        <td className={styles.actionsColumn}>
+                                        <td data-label="Thao tác" className={styles.actionsColumn}>
                                             <div className={styles.actionBtns}>
                                                 <button 
                                                     className={`${styles.actionBtn} ${emp.faceImage ? styles.registered : ''}`} 

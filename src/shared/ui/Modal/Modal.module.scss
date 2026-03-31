@@ -17,41 +17,62 @@
     background: var(--surface-color);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
-    width: 90%;
-    max-height: 90vh;
+    width: 95%;
+    max-height: 95vh;
     display: flex;
     flex-direction: column;
     animation: slideUp 0.3s ease-out;
+
+    @media (min-width: 768px) {
+        width: 90%;
+        max-height: 90vh;
+    }
 }
 
 .sm {
-    max-width: 400px;
+    @media (min-width: 768px) {
+        max-width: 400px;
+    }
 }
 
 .md {
-    max-width: 600px;
+    @media (min-width: 768px) {
+        max-width: 600px;
+    }
 }
 
 .lg {
-    max-width: 800px;
+    @media (min-width: 768px) {
+        max-width: 800px;
+    }
 }
 
 .xl {
-    max-width: 1000px;
+    @media (min-width: 768px) {
+        max-width: 1000px;
+    }
 }
 
 .header {
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
 
+    @media (min-width: 768px) {
+        padding: 1.25rem 1.5rem;
+    }
+
     h2 {
         margin: 0;
-        font-size: 1.25rem;
+        font-size: 1.125rem;
         font-weight: 700;
         color: var(--text-color);
+
+        @media (min-width: 768px) {
+            font-size: 1.25rem;
+        }
     }
 }
 
@@ -60,9 +81,12 @@
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
+    padding: 6px;
+    border-radius: 6px;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &:hover {
         background: var(--bg-color);
@@ -71,20 +95,38 @@
 }
 
 .content {
-    padding: 1.5rem;
+    padding: 1.25rem;
     overflow-y: auto;
     flex: 1;
+
+    @media (min-width: 768px) {
+        padding: 1.5rem;
+    }
 }
 
 .footer {
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
     border-top: 1px solid var(--border-color);
     display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
     background: var(--bg-color);
     border-bottom-left-radius: var(--radius-lg);
     border-bottom-right-radius: var(--radius-lg);
+
+    @media (min-width: 640px) {
+        padding: 1.25rem 1.5rem;
+        flex-direction: row;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    button {
+        width: 100%;
+        @media (min-width: 640px) {
+            width: auto;
+        }
+    }
 }
 
 @keyframes fadeIn {

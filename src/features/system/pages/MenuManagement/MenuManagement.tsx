@@ -150,20 +150,20 @@ export const MenuManagement: React.FC = () => {
                         ) : (
                             filteredMenus.map(menu => (
                                 <tr key={menu.id}>
-                                    <td>
+                                    <td data-label="Tên Menu">
                                         <div className={styles.menuName}>
                                             {menu.isParent ? <Folder size={16} className={styles.parentIcon} /> : <FileText size={16} className={styles.childIcon} />}
                                             <span style={{ marginLeft: menu.codeParent ? '1.5rem' : '0' }}>{menu.name}</span>
                                         </div>
                                     </td>
-                                    <td><code>{menu.code}</code></td>
-                                    <td>{menu.order}</td>
-                                    <td>
+                                    <td data-label="Mã CODE"><code>{menu.code}</code></td>
+                                    <td data-label="Thứ tự">{menu.order}</td>
+                                    <td data-label="Loại">
                                         <span className={`${styles.badge} ${menu.isParent ? styles.bgParent : styles.bgChild}`}>
                                             {menu.isParent ? 'Danh mục cha' : 'Menu con'}
                                         </span>
                                     </td>
-                                    <td>
+                                    <td data-label="Thao tác">
                                         <div className={styles.actions}>
                                             <button onClick={() => handleEditClick(menu)} title="Sửa"><Edit2 size={16} /></button>
                                             <button onClick={() => handleDeleteClick(menu.id)} title="Xóa" className={styles.delete}><Trash2 size={16} /></button>

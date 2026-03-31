@@ -213,11 +213,11 @@ export const OrganizationPage: React.FC = () => {
                                         <tr><td colSpan={5} className={styles.empty}>Chưa có phòng ban nào</td></tr>
                                     ) : departments.map(dept => (
                                         <tr key={dept.id}>
-                                            <td><span className={styles.code}>{dept.code || '---'}</span></td>
-                                            <td><span className={styles.name}>{dept.name}</span></td>
-                                            <td>{departments.find(d => d.id === dept.parentId)?.name || '-'}</td>
-                                            <td>{dept.order || 0}</td>
-                                            <td className={styles.actionsColumn}>
+                                            <td data-label="Mã PB"><span className={styles.code}>{dept.code || '---'}</span></td>
+                                            <td data-label="Tên phòng ban"><span className={styles.name}>{dept.name}</span></td>
+                                            <td data-label="Phòng ban cha">{departments.find(d => d.id === dept.parentId)?.name || '-'}</td>
+                                            <td data-label="Sắp xếp">{dept.order || 0}</td>
+                                            <td data-label="Thao tác" className={styles.actionsColumn}>
                                                 <div className={styles.actionBtns}>
                                                     <button className={styles.actionBtn} onClick={() => handleEditDept(dept)}><Edit2 size={16} /></button>
                                                     <button className={styles.actionBtn} onClick={() => handleDeleteDept(dept.id)}><Trash2 size={16} /></button>
@@ -256,11 +256,11 @@ export const OrganizationPage: React.FC = () => {
                                         <tr><td colSpan={5} className={styles.empty}>Chưa có chức vụ nào</td></tr>
                                     ) : positions.map(pos => (
                                         <tr key={pos.id}>
-                                            <td><span className={styles.code}>{pos.code || '---'}</span></td>
-                                            <td><span className={styles.name}>{pos.name}</span></td>
-                                            <td>{departments.find(d => d.id === pos.departmentId)?.name || 'Tất cả'}</td>
-                                            <td>{pos.note || '-'}</td>
-                                            <td className={styles.actionsColumn}>
+                                            <td data-label="Mã CV"><span className={styles.code}>{pos.code || '---'}</span></td>
+                                            <td data-label="Tên chức vụ"><span className={styles.name}>{pos.name}</span></td>
+                                            <td data-label="Phòng ban">{departments.find(d => d.id === pos.departmentId)?.name || 'Tất cả'}</td>
+                                            <td data-label="Ghi chú">{pos.note || '-'}</td>
+                                            <td data-label="Thao tác" className={styles.actionsColumn}>
                                                 <div className={styles.actionBtns}>
                                                     <button className={styles.actionBtn} onClick={() => handleEditPos(pos)}><Edit2 size={16} /></button>
                                                     <button className={styles.actionBtn} onClick={() => handleDeletePos(pos.id)}><Trash2 size={16} /></button>
