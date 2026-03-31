@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { User, Lock, LogIn, ChevronLeft } from 'lucide-react';
+import { User, Lock, LogIn, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { Input } from '../../../../shared/ui/Input/Input';
 import { Button } from '../../../../shared/ui/Button/Button';
 import { Select } from '../../../../shared/ui/Select/Select';
@@ -21,6 +21,7 @@ const loginSchema = z.object({
     username: z.string().min(1, 'Tên đăng nhập không được để trống'),
     password: z.string().min(1, 'Mật khẩu không được để trống'),
     companyCode: z.string().min(1, 'Vui lòng chọn mã công ty'),
+    rememberMe: z.boolean().optional(),
 });
 
 type UsernameFormValues = z.infer<typeof usernameSchema>;
@@ -34,6 +35,15 @@ export const LoginPage: React.FC = () => {
     const [step, setStep] = useState<'username' | 'password'>('username');
     const [companyCodes, setCompanyCodes] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Populate preserved username on mount
+    useEffect(() => {
+        const savedUsername = localStorage.getItem('preservedUsername');
+        if (savedUsername) {
+            usernameForm.setValue('username', savedUsername);
+        }
+    }, []);
 
     // Form for Step 1
     const usernameForm = useForm<UsernameFormValues>({
@@ -43,6 +53,9 @@ export const LoginPage: React.FC = () => {
     // Form for Step 2
     const loginForm = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema),
+        defaultValues: {
+            rememberMe: localStorage.getItem('rememberMe') === 'true'
+        }
     });
 
     const onCheckUsername = async (data: UsernameFormValues) => {
@@ -76,6 +89,15 @@ export const LoginPage: React.FC = () => {
 
                 // Save dbName to localStorage for interceptor
                 localStorage.setItem('dbName', data.companyCode);
+
+                // Handle remember me logic
+                if (data.rememberMe) {
+                    localStorage.setItem('preservedUsername', data.username);
+                    localStorage.setItem('rememberMe', 'true');
+                } else {
+                    localStorage.removeItem('preservedUsername');
+                    localStorage.setItem('rememberMe', 'false');
+                }
 
                 dispatch(loginSuccess({
                     user: {
@@ -147,9 +169,14 @@ export const LoginPage: React.FC = () => {
 
                         <Input
                             label="Mật khẩu"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             placeholder="••••••••"
                             icon={<Lock size={18} />}
+                            suffix={
+                                <div onClick={() => setShowPassword(!showPassword)} style={{ cursor: 'pointer', display: 'flex' }}>
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </div>
+                            }
                             error={loginForm.formState.errors.password?.message}
                             {...loginForm.register('password')}
                             autoFocus
@@ -157,7 +184,7 @@ export const LoginPage: React.FC = () => {
 
                         <div className={styles.options}>
                             <label className={styles.remember}>
-                                <input type="checkbox" />
+                                <input type="checkbox" {...loginForm.register('rememberMe')} />
                                 <span>Ghi nhớ đăng nhập</span>
                             </label>
                             <Link to="/forgot-password" className={styles.forgot}>

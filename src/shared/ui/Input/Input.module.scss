@@ -58,6 +58,20 @@
     }
 }
 
+.suffix {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+        color: var(--primary-color);
+    }
+}
+
 .errorText {
     font-size: 0.75rem;
     color: var(--danger-color);
