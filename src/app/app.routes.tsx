@@ -19,7 +19,7 @@ export const AppRoutes = () => {
                 <Route path="/users" element={<div>User Management List (To be implemented)</div>} />
                 <Route path="/settings" element={<div>System Settings (To be implemented)</div>} />
                 <Route path="/cars" element={<CarsPage />} />
-                <Route path="/cars/:id" element={<CarDetail />} />
+                <Route path="/cars/:id" element={<CarDetail/>} />
             </Route>
 
             {/* Fallback */}

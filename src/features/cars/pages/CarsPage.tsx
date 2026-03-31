@@ -1,4 +1,4 @@
-import { Button, Box } from "@mui/material";
+import { Button, Box, Typography } from "@mui/material";
 import { ListCars } from "../components/ListCars";
 import { CarDialog } from "../components/CarDialog";
 import { useState } from "react";
@@ -6,14 +6,15 @@ import { useAppDispatch } from "../../../app/hooks";
 import { createCar, updateCar } from "../store/cars.slice";
 import type { CarFormValues } from "../components/CarDialog";
 import type { CarResponse } from "../services/cars.type";
-import { CarDropdown } from "../components/CarDropDown";
 import { toast } from "react-toastify";
+import { CarsFilter } from "../components/CarsFilter";
 
 export const CarsPage = () => {
   const dispatch = useAppDispatch();
 
   const [openDialog, setOpenDialog]   = useState(false);
   const [selectedCar, setSelectedCar] = useState<CarResponse | undefined>(undefined);
+  const [searchText, setSearchText]   = useState("");
 
   const handleOpenCreate = () => {
     setSelectedCar(undefined);
@@ -43,32 +44,61 @@ export const CarsPage = () => {
     }
   };
 
-  const handleOnChange = () => {};
-
-  const handleOpenEdit = (car: CarResponse) => {
-    setSelectedCar(car);
-    setOpenDialog(true);
-  };
-
   return (
-    <Box>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
+      {/* ── Header (không scroll) ── */}
       <Box
         sx={{
+          flexShrink: 0,
           display: "flex",
-          flexDirection: "row",
-          justifyContent: "flex-start",
-          gap: "10px",
-          width: "100%",
+          alignItems: "center",
+          justifyContent: "space-between",
           px: 3,
+          py: 2,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
         }}
       >
-        <Button onClick={handleOpenCreate} variant="contained">
-          Thêm xe mới
-        </Button>
-        <CarDropdown onChange={handleOnChange} />
+        <Box>
+          <Typography variant="h6" fontWeight={700}>
+            Danh sách xe
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Quản lý toàn bộ phương tiện
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <CarsFilter searchText={searchText} onSearchChange={setSearchText} />
+          <Button
+            onClick={handleOpenCreate}
+            variant="contained"
+            size="medium"
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: 1.5,
+              boxShadow: "none",
+              "&:hover": { boxShadow: "none" },
+            }}
+          >
+            + Thêm xe mới
+          </Button>
+        </Box>
       </Box>
 
-      <ListCars onEditCar={handleOpenEdit} />
+      {/* ── List (scroll được) ── */}
+      <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+        <ListCars searchText={searchText} />
+      </Box>
 
       <CarDialog
         open={openDialog}

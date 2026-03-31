@@ -21,20 +21,26 @@ export const fetchCars = createAsyncThunk<CarPagingResponse, CarPagingParams>(
   async (params) => carService.getPaging(params)
 );
 
-export const createCar = createAsyncThunk<CarFormValues, CarFormValues>(
+export const createCar = createAsyncThunk<void, CarFormValues>(
   "cars/createCar",
-  async (car) => {
+  async (car, { dispatch, getState }) => {
     await carService.createCar(car);
-    return car;
+    const state = getState() as { cars: CarsState };
+    dispatch(fetchCars({
+      page: state.cars.currentPage,
+      pageSize: state.cars.pageSize,
+    }));
   }
 );
 
-// updateCar nhận CarFormValues (có files mới) thay vì CarResponse
-export const updateCar = createAsyncThunk<
-  void,
-  { id: string; car: CarFormValues }
->("cars/updateCar", async ({ id, car }) => {
+export const updateCar = createAsyncThunk<void,{ id: string; car: CarFormValues }
+>("cars/updateCar", async ({ id, car }, { dispatch, getState }) => {
   await carService.updateCar(id, car);
+  const state = getState() as { cars: CarsState };
+  dispatch(fetchCars({
+    page: state.cars.currentPage,
+    pageSize: state.cars.pageSize,
+  }));
 });
 
 export const deleteCar = createAsyncThunk<void, string>(
@@ -126,46 +132,14 @@ const carsSlice = createSlice({
       .addCase(fetchCars.rejected, (state) => { state.loadingCars = false; })
 
       // ── createCar ──
-      .addCase(createCar.pending, (state) => { state.loadingCars = true; })
-      .addCase(createCar.fulfilled, (state, action) => {
-        state.loadingCars = false;
-        const newCar: CarResponse = {
-          ...action.payload,
-          id: crypto.randomUUID(),
-          file: [], // ảnh thực sẽ có sau khi refetch
-        };
-        state.cars.push(newCar);
-        state.totalItems += 1;
-        state.list.push({
-          id: newCar.id,
-          licensePlates: newCar.licensePlates,
-          note: newCar.note,
-        });
-      })
-      .addCase(createCar.rejected, (state) => { state.loadingCars = false; })
+      .addCase(createCar.pending,   (state) => { state.loadingCars = true; })
+      .addCase(createCar.fulfilled, (state) => { state.loadingCars = false; })
+      .addCase(createCar.rejected,  (state) => { state.loadingCars = false; })
 
       // ── updateCar ──
       .addCase(updateCar.pending, (state) => { state.loadingCars = true; })
-      .addCase(updateCar.fulfilled, (state, action) => {
+      .addCase(updateCar.fulfilled, (state) => {
         state.loadingCars = false;
-        const { id, car: updatedCar } = action.meta.arg;
-        const index = state.cars.findIndex((c) => c.id === id);
-        if (index !== -1) {
-          // Giữ lại existingFiles (ảnh cũ) vào field file
-          state.cars[index] = {
-            ...state.cars[index],
-            ...updatedCar,
-            file: updatedCar.existingFiles ?? state.cars[index].file,
-          };
-        }
-        const listIndex = state.list.findIndex((c) => c.id === id);
-        if (listIndex !== -1) {
-          state.list[listIndex] = {
-            id,
-            licensePlates: updatedCar.licensePlates,
-            note: updatedCar.note,
-          };
-        }
       })
       .addCase(updateCar.rejected, (state) => { state.loadingCars = false; })
 
@@ -184,7 +158,7 @@ const carsSlice = createSlice({
       .addCase(getCarById.pending, (state) => { state.loadingCar = true; })
       .addCase(getCarById.fulfilled, (state, action) => {
         state.loadingCar = false;
-        state.car = action.payload.car ?? null;
+        state.car = action.payload.car ?? (action.payload as unknown as CarResponse) ?? null;
       })
       .addCase(getCarById.rejected, (state) => { state.loadingCar = false; })
 

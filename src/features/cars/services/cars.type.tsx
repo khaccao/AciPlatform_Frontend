@@ -16,6 +16,9 @@ export interface CarResponse {
   mileageAllowance?: number;
   fuelAmount?: number;
   content?: string;
+  // BE trả về files là string[] (URL trực tiếp)
+  files?: string[];
+  // Giữ lại file?: CarFileItem[] để tương thích nếu có endpoint cũ
   file?: CarFileItem[];
 }
 
@@ -37,11 +40,9 @@ export interface CreateResponse {
   message?: string;
 }
 
-export type CarFormValues = Omit<CarResponse, "id" | "file"> & {
+export type CarFormValues = Omit<CarResponse, "id" | "file" | "files"> & {
   id?: string;
-  // files: base64 string[] gửi lên BE (đã convert từ File)
   files?: string[];
-  // existingFiles: ảnh cũ giữ lại (base64 url từ server)
   existingFiles?: CarFileItem[];
 };
 

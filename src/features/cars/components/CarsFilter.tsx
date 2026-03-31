@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { TextField } from "@mui/material";
 
 type CarsFilterProps = {
@@ -8,10 +8,6 @@ type CarsFilterProps = {
 
 export const CarsFilter = ({ searchText, onSearchChange }: CarsFilterProps) => {
   const [localValue, setLocalValue] = useState(searchText);
-
-  useEffect(() => {
-    setLocalValue(searchText);
-  }, [searchText]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -26,7 +22,7 @@ export const CarsFilter = ({ searchText, onSearchChange }: CarsFilterProps) => {
       value={localValue}
       onChange={(e) => setLocalValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      sx={{ mb: 1.5, width: 300 }}
+      sx={{  width: 300 }}
     />
   );
 };
