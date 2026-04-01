@@ -1,6 +1,12 @@
 export interface AuthenticateModel {
     username: string;
     password?: string;
+    companyCode?: string;
+}
+
+export interface UsernameCheckResponse {
+    username: string;
+    companyCodes: string[];
 }
 
 export interface AuthenticateResponse {

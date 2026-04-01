@@ -6,6 +6,16 @@ import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { CarsPage } from '../features/cars/pages/CarsPage';
 import { CarDetail } from '../features/cars/pages/CarDetail';
 import { CarFieldSetupDetail } from '../features/cars/pages/CarFieldSetupDetail';
+import { EmployeePage } from '../features/hr/pages/EmployeePage/EmployeePage';
+import { OrganizationPage } from '../features/hr/pages/OrganizationPage/OrganizationPage';
+import { ContractPage } from '../features/hr/pages/ContractPage/ContractPage';
+import { TimekeepingPage } from '../features/hr/pages/TimekeepingPage/TimekeepingPage';
+import { SalaryPage } from '../features/hr/pages/SalaryPage/SalaryPage';
+import { SettingsPage } from '../features/settings/pages/SettingsPage/SettingsPage';
+import { RoleManagement } from '../features/system/pages/RoleManagement/RoleManagement';
+import { MenuManagement } from '../features/system/pages/MenuManagement/MenuManagement';
+import { TestPage } from '../features/test/pages/TestPage';
+import { FacebookPage } from '../features/multi-channel/pages/FacebookPage/FacebookPage';
 
 export const AppRoutes = () => {
     return (
@@ -22,6 +32,35 @@ export const AppRoutes = () => {
                 <Route path="/cars" element={<CarsPage />} />
                 <Route path="/cars/:id" element={<CarDetail/>} />
                 <Route path="/cars/:id/car-field-setup" element={<CarFieldSetupDetail/>} />
+
+                {/* HR Module Routes */}
+                <Route path="/hr">
+                    <Route path="employees" element={<EmployeePage />} />
+                    <Route path="organization" element={<OrganizationPage />} />
+                    <Route path="contracts" element={<ContractPage />} />
+                    <Route path="timekeeping" element={<TimekeepingPage />} />
+                    <Route path="salary" element={<SalaryPage />} />
+                </Route>
+
+                <Route path="/users" element={<EmployeePage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+
+                {/* System Routes */}
+                <Route path="/system">
+                    <Route path="roles" element={<RoleManagement />} />
+                </Route>
+
+                <Route path="/test">
+                    <Route path="demo" element={<TestPage />} />
+                </Route>
+
+                {/* Multi-Channel Routes */}
+                <Route path="/dakenh">
+                    <Route path="facebook" element={<FacebookPage />} />
+                </Route>
+
+                <Route path="/menus" element={<MenuManagement />} />
+                <Route path="/users" element={<EmployeePage />} />
             </Route>
 
             {/* Fallback */}

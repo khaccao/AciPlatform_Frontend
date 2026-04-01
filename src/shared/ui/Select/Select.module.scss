@@ -1,0 +1,62 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.selectWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+
+    &:focus-within {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px var(--primary-light);
+    }
+
+    &.hasError {
+        border-color: var(--danger-color);
+    }
+}
+
+.select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    padding-right: 2.5rem;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    appearance: none;
+    cursor: pointer;
+
+    &::placeholder {
+        color: var(--text-muted);
+    }
+}
+
+.icon {
+    position: absolute;
+    right: 1rem;
+    pointer-events: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+}
+
+.errorText {
+    font-size: 0.75rem;
+    color: var(--danger-color);
+}
