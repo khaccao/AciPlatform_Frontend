@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, Link, useNavigate, useLocation, NavLink } from 'react-router-dom';
 import {
     Users,
     LayoutDashboard,
@@ -9,6 +9,7 @@ import {
     Bell,
     Search,
     User as UserIcon,
+    CarFront,
     Briefcase,
     Clock,
     CreditCard,
@@ -20,6 +21,13 @@ import {
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout } from '../../features/auth/store/auth.slice';
 import styles from './MainLayout.module.scss';
+
+const navItems = [
+    { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Tổng quan' },
+    { to: '/users',     icon: <Users size={20} />,           label: 'Nhân viên' },
+    { to: '/cars',      icon: <CarFront size={20} />,        label: 'Vận tải' },
+    { to: '/settings',  icon: <Settings size={20} />,        label: 'Cài đặt' },
+];
 
 export const MainLayout: React.FC = () => {
     const navigate = useNavigate();
@@ -120,6 +128,16 @@ export const MainLayout: React.FC = () => {
                 </div>
 
                 <nav className={styles.nav}>
+                    {navItems.map(({ to, icon, label }) => (
+                        <NavLink
+                            key={to}
+                            to={to}
+                            className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}
+                        >
+                            {icon}
+                            <span>{label}</span>
+                        </NavLink>
+                    ))}
                     {renderMenuItems()}
                 </nav>
 

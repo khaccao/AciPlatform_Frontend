@@ -3,6 +3,9 @@ import { LoginPage } from '../features/auth/pages/LoginPage/LoginPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage/RegisterPage';
 import { MainLayout } from '../layouts/MainLayout/MainLayout';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
+import { CarsPage } from '../features/cars/pages/CarsPage';
+import { CarDetail } from '../features/cars/pages/CarDetail';
+import { CarFieldSetupDetail } from '../features/cars/pages/CarFieldSetupDetail';
 import { EmployeePage } from '../features/hr/pages/EmployeePage/EmployeePage';
 import { OrganizationPage } from '../features/hr/pages/OrganizationPage/OrganizationPage';
 import { ContractPage } from '../features/hr/pages/ContractPage/ContractPage';
@@ -24,6 +27,11 @@ export const AppRoutes = () => {
             <Route element={<MainLayout />}>
                 <Route path="/" element={<Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/users" element={<div>User Management List (To be implemented)</div>} />
+                <Route path="/settings" element={<div>System Settings (To be implemented)</div>} />
+                <Route path="/cars" element={<CarsPage />} />
+                <Route path="/cars/:id" element={<CarDetail/>} />
+                <Route path="/cars/:id/car-field-setup" element={<CarFieldSetupDetail/>} />
 
                 {/* HR Module Routes */}
                 <Route path="/hr">

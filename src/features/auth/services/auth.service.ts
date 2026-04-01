@@ -8,6 +8,7 @@ export const authService = {
     },
 
     login: async (data: AuthenticateModel): Promise<AuthenticateResponse> => {
+        //const response = await api.post('/auth/login', data);
         // When logging in, we might need to set the dbName header for this specific request
         // if it's not already in localStorage
         const response = await api.post('/Auth/login', data, {
