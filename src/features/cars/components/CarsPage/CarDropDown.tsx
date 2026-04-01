@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Autocomplete, TextField, CircularProgress } from "@mui/material";
-import { useAppSelector, useAppDispatch } from "../../../app/hooks";
-import { fetchCarList } from "../store/cars.slice";
-import type { CarsListResponse } from "../services/cars.type";
+import { useAppSelector, useAppDispatch } from "../../../../app/hooks";
+import { fetchCarList } from "../../store/cars.slice";
+import type { CarsListResponse } from "../../services/cars.type";
 
 interface CarDropdownProps {
   value?: CarsListResponse | null;

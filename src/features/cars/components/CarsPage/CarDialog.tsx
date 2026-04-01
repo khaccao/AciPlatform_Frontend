@@ -9,7 +9,7 @@ import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternate
 import CloseIcon from "@mui/icons-material/Close";
 import BrokenImageOutlinedIcon from "@mui/icons-material/BrokenImageOutlined";
 import { useForm, Controller } from "react-hook-form";
-import type { CarFileItem, CarResponse } from "../services/cars.type";
+import type { CarFileItem, CarResponse } from "../../services/cars.type";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

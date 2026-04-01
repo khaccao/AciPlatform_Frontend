@@ -59,3 +59,16 @@ export interface GetCarByIDRespone {
   car?: CarResponse;
   message?: string;
 }
+
+export interface CarFieldSetup {
+  carFieldId: number;
+  name: string;
+  order: string;
+  valueNumber? : number;
+  fromAt?: Date;
+  toAt?: Date;
+  warningAt?: Date;
+  userIdString?: string;
+  note?: string;
+  fileLink?: string
+}

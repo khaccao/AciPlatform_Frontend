@@ -1,13 +1,13 @@
 import { Button, Box, Typography } from "@mui/material";
-import { ListCars } from "../components/ListCars";
-import { CarDialog } from "../components/CarDialog";
+import { ListCars } from "../components/CarsPage/ListCars";
+import { CarDialog } from "../components/CarsPage/CarDialog";
 import { useState } from "react";
 import { useAppDispatch } from "../../../app/hooks";
 import { createCar, updateCar } from "../store/cars.slice";
-import type { CarFormValues } from "../components/CarDialog";
+import type { CarFormValues } from "../components/CarsPage/CarDialog";
 import type { CarResponse } from "../services/cars.type";
 import { toast } from "react-toastify";
-import { CarsFilter } from "../components/CarsFilter";
+import { CarsFilter } from "../components/CarsPage/CarsFilter";
 
 export const CarsPage = () => {
   const dispatch = useAppDispatch();

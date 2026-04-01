@@ -6,7 +6,8 @@ import type {
   CreateResponse,
   CarFormValues,
   CarRequestPayload,
-  GetCarByIDRespone
+  GetCarByIDRespone,
+  CarFieldSetup
 } from "./cars.type";
 
 // Helper: Build request payload từ CarFormValues
@@ -47,6 +48,16 @@ export const carService = {
 
   getCarById: async (id: string): Promise<GetCarByIDRespone> => {
     const res = await api.get(`cars/${id}`);
+    return res.data;
+  },
+
+  getCarFieldSetup: async(carId: string): Promise<CarFieldSetup[]> => {
+    const res = await api.get(`cars/car-field-setup?carId=${carId}`);
+    return res.data;
+  },
+
+  updateCarFieldSetup: async(carId: string, carFieldSetups: CarFieldSetup[]): Promise<{code: number}> => {
+    const res = await api.put(`cars/car-field-setup?${carId}`, carFieldSetups);
     return res.data;
   }
 };

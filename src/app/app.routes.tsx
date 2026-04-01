@@ -5,6 +5,7 @@ import { MainLayout } from '../layouts/MainLayout/MainLayout';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { CarsPage } from '../features/cars/pages/CarsPage';
 import { CarDetail } from '../features/cars/pages/CarDetail';
+import { CarFieldSetupDetail } from '../features/cars/pages/CarFieldSetupDetail';
 
 export const AppRoutes = () => {
     return (
@@ -20,6 +21,7 @@ export const AppRoutes = () => {
                 <Route path="/settings" element={<div>System Settings (To be implemented)</div>} />
                 <Route path="/cars" element={<CarsPage />} />
                 <Route path="/cars/:id" element={<CarDetail/>} />
+                <Route path="/cars/:id/car-field-setup" element={<CarFieldSetupDetail/>} />
             </Route>
 
             {/* Fallback */}

@@ -9,10 +9,10 @@ import {
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { useNavigate } from "react-router-dom";
-import { useAppSelector, useAppDispatch } from "../../../app/hooks";
-import { deleteCar, fetchCars } from "../store/cars.slice";
-import type { CarResponse } from "../services/cars.type";
-import type { RootState } from "../../../store/store";
+import { useAppSelector, useAppDispatch } from "../../../../app/hooks";
+import { deleteCar, fetchCars } from "../../store/cars.slice";
+import type { CarResponse } from "../../services/cars.type";
+import type { RootState } from "../../../../store/store";
 
 const ROWS_OPTIONS = [10, 25, 50];
 const COLUMNS = ["Biển số", "Định mức Km", "Lượng xăng", "Ghi chú", "Thao tác"];
@@ -47,10 +47,6 @@ export const ListCars = ({  searchText }: ListCarsProps) => {
   useEffect(() => {
     load(0, rowsPerPage, searchText);
   }, [searchText, rowsPerPage, dispatch]);
-
-  useEffect(() => {
-  console.log("Cars updated:", cars);
-}, [cars]);
 
   const handlePageChange = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -98,39 +94,41 @@ export const ListCars = ({  searchText }: ListCarsProps) => {
     <Box sx={{ p: 3 }}>
 
       <TableContainer component={Paper} variant="outlined">
-        <Table size="medium">
-          <TableHead><HeaderRow /></TableHead>
-          <TableBody>
-            {!cars?.length ? (
-              <TableRow>
-                <TableCell colSpan={COLUMNS.length} align="center">
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                    Không có dữ liệu xe.
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              cars.map((car) => (
-                <TableRow key={car.id} hover>
-                  <TableCell align="center">{car.licensePlates}</TableCell>
-                  <TableCell align="center">{car.mileageAllowance ?? "—"}</TableCell>
-                  <TableCell align="center">{car.fuelAmount ?? "—"}</TableCell>
-                  <TableCell align="center">{car.note || "—"}</TableCell>
-                  <TableCell align="center" sx={{ whiteSpace: "nowrap", display: "flex", flexDirection: "row", justifyContent: "center",alignContent:"center", gap: "5px"}}>
-                      <Button size="small" variant="contained" onClick={() => navigate(`/cars/${car.id}`)} sx = {{display: "flex", flexDirection: "row", justifyContent: "flex-start", gap: "10px", alignContent: "center"}}>
-                        <InfoOutlinedIcon fontSize="small" />
-                        Chi tiết
-                      </Button>
-                      <Button size="small" color="error" variant="contained" onClick={() => setDeleteTarget(car)} sx={{display: "flex", flexDirection: "row", justifyContent: "flex-start", gap: "5px", alignContent: "center"}}>
-                        <DeleteOutlineOutlinedIcon fontSize="small" />
-                        Xóa
-                      </Button>
+        <Box sx={{ maxHeight: 600, overflow: 'auto' }}>
+          <Table size="medium" stickyHeader>
+            <TableHead><HeaderRow /></TableHead>
+            <TableBody>
+              {!cars?.length ? (
+                <TableRow>
+                  <TableCell colSpan={COLUMNS.length} align="center">
+                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                      Không có dữ liệu xe.
+                    </Typography>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                cars.map((car) => (
+                  <TableRow key={car.id} hover>
+                    <TableCell align="center">{car.licensePlates}</TableCell>
+                    <TableCell align="center">{car.mileageAllowance ?? "—"}</TableCell>
+                    <TableCell align="center">{car.fuelAmount ?? "—"}</TableCell>
+                    <TableCell align="center">{car.note || "—"}</TableCell>
+                    <TableCell align="center" sx={{ whiteSpace: "nowrap", display: "flex", flexDirection: "row", justifyContent: "center",alignContent:"center", gap: "5px"}}>
+                        <Button size="small" variant="contained" onClick={() => navigate(`/cars/${car.id}`)} sx = {{display: "flex", flexDirection: "row", justifyContent: "flex-start", gap: "10px", alignContent: "center"}}>
+                          <InfoOutlinedIcon fontSize="small" />
+                          Chi tiết
+                        </Button>
+                        <Button size="small" color="error" variant="contained" onClick={() => setDeleteTarget(car)} sx={{display: "flex", flexDirection: "row", justifyContent: "flex-start", gap: "5px", alignContent: "center"}}>
+                          <DeleteOutlineOutlinedIcon fontSize="small" />
+                          Xóa
+                        </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Box>
 
         <TablePagination
           component="div"

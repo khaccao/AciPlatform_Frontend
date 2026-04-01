@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { carService } from "../services/cars.service";
 import type {
+  CarFieldSetup,
   CarFormValues,
   CarPagingParams,
   CarPagingResponse,
@@ -58,6 +59,21 @@ export const getCarById = createAsyncThunk<GetCarByIDRespone, string>(
   }
 );
 
+export const getCarFieldSetup = createAsyncThunk(
+  "cars/getCarFieldSetup",
+  async (carId: string) => {
+    const res = await carService.getCarFieldSetup(carId);
+    return res;
+  });
+
+export const updateCarFieldSetup = createAsyncThunk(
+  "cars/updateCarFieldSetup",
+  async ({ carId, carFieldSetups }: { carId: string; carFieldSetups: CarFieldSetup[] }, { dispatch }) => {
+    await carService.updateCarFieldSetup(carId, carFieldSetups);
+    dispatch(getCarFieldSetup(carId));
+  }
+);
+
 // ─── State ────────────────────────────────────────────────────────────────────
 
 interface CarsState {
@@ -73,6 +89,9 @@ interface CarsState {
 
   car: CarResponse | null;
   loadingCar: boolean;
+
+  carFieldSetup: CarFieldSetup[];
+  loadingCarFieldSetup: boolean;
 }
 
 const initialState: CarsState = {
@@ -88,6 +107,9 @@ const initialState: CarsState = {
 
   car: null,
   loadingCar: false,
+
+  carFieldSetup: [],
+  loadingCarFieldSetup: false,
 };
 
 // ─── Slice ────────────────────────────────────────────────────────────────────
@@ -162,6 +184,20 @@ const carsSlice = createSlice({
       })
       .addCase(getCarById.rejected, (state) => { state.loadingCar = false; })
 
+      // ── getCarFieldSetup ──
+      .addCase(getCarFieldSetup.pending, (state) => { state.loadingCarFieldSetup = true; })
+      .addCase(getCarFieldSetup.fulfilled, (state, action) => {
+        state.loadingCarFieldSetup = false;
+        state.carFieldSetup = action.payload;
+      })
+      .addCase(getCarFieldSetup.rejected, (state) => { state.loadingCarFieldSetup = false; })
+
+      // ── updateCarFieldSetup ──
+      .addCase(updateCarFieldSetup.pending, (state) => { state.loadingCarFieldSetup = true; })
+      .addCase(updateCarFieldSetup.fulfilled, (state) => { 
+        state.loadingCarFieldSetup = false;
+      })
+      .addCase(updateCarFieldSetup.rejected, (state) => { state.loadingCarFieldSetup = false; })
   },
 });
 

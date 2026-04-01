@@ -2,9 +2,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   Box, Typography, Divider, CircularProgress, Paper,
   Button,
-  IconButton,
 } from "@mui/material";
-import { ArrowLeft } from "lucide-react";
+import { Settings } from "lucide-react";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DirectionsCarOutlinedIcon from "@mui/icons-material/DirectionsCarOutlined";
 import SpeedOutlinedIcon from "@mui/icons-material/SpeedOutlined";
@@ -15,10 +14,12 @@ import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import type { RootState } from "../../../store/store";
 import { getCarById, updateCar } from "../store/cars.slice";
-import { CarDialog } from "../components/CarDialog";
-import type { CarFormValues } from "../components/CarDialog";
-import { ImageGallery } from "../components/ImageGallery/ImageGallery";
+import { CarDialog } from "../components/CarsPage/CarDialog";
+import type { CarFormValues } from "../components/CarsPage/CarDialog";
+import { ImageGallery } from "../components/CarDetail/ImageGallery/ImageGallery";
 import { toast } from "react-toastify";
+import { InfoRow } from "../components/CarDetail/InfoRow";
+import { PageHeader } from "../components/PageHeader/PageHeader";
 
 const getCarImages = (car: { files?: string[]; file?: { fileUrl?: string }[] }): string[] => {
   if (car.files && car.files.length > 0) return car.files.filter(Boolean);
@@ -26,56 +27,6 @@ const getCarImages = (car: { files?: string[]; file?: { fileUrl?: string }[] }):
     return car.file.map((f) => f.fileUrl ?? "").filter(Boolean);
   return [];
 };
-
-const InfoRow = ({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-}) => (
-  <Box
-    sx={{
-      display: "flex",
-      alignItems: "flex-start",
-      gap: 2,
-      p: 2,
-      borderRadius: 1.5,
-      bgcolor: "grey.50",
-      border: "1px solid",
-      borderColor: "grey.100",
-    }}
-  >
-    <Box
-      sx={{
-        mt: 0.1,
-        color: "primary.main",
-        opacity: 0.75,
-        flexShrink: 0,
-        display: "flex",
-      }}
-    >
-      {icon}
-    </Box>
-    <Box sx={{ minWidth: 0 }}>
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        display="block"
-        fontWeight={500}
-        letterSpacing={0.4}
-        sx={{ textTransform: "uppercase", fontSize: "0.68rem", mb: 0.4 }}
-      >
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ lineHeight: 1.5 }}>
-        {value}
-      </Typography>
-    </Box>
-  </Box>
-);
 
 export const CarDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -114,15 +65,7 @@ export const CarDetail = () => {
   const images = getCarImages(car);
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "grey.50",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* ── Page Body ─────────────────────────────────── */}
+    <Box sx={{ minHeight: "100vh", bgcolor: "grey.50", display: "flex", flexDirection: "column" }}>
       <Box
         sx={{
           flex: 1,
@@ -134,70 +77,52 @@ export const CarDetail = () => {
           boxSizing: "border-box",
         }}
       >
-        {/* ── Slim top bar: back + title + action ── */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            mb: 2.5,
-          }}
-        >
-          {/* Left */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <IconButton
-              onClick={() => navigate("/cars")}
-              size="small"
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 1.5,
-                p: "5px",
-                bgcolor: "background.paper",
-                "&:hover": { bgcolor: "grey.100" },
-              }}
-            >
-              <ArrowLeft size={16} />
-            </IconButton>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ cursor: "pointer", "&:hover": { color: "primary.main" } }}
-                  onClick={() => navigate("/cars")}
-                >
-                  Quản lý xe
-                </Typography>
-                <Typography variant="body2" color="text.disabled">/</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>{car.licensePlates}</strong>
-                </Typography>
-              </Box>
-              <Typography variant="h6" fontWeight={700} lineHeight={1.2}>
-                Chi tiết xe
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Right */}
-          <Button
-            variant="contained"
-            startIcon={<EditOutlinedIcon />}
-            onClick={() => setOpenDialog(true)}
-            size="medium"
-            sx={{
-              borderRadius: 1.5,
-              textTransform: "none",
-              fontWeight: 600,
-              px: 2,
-              boxShadow: "none",
-              "&:hover": { boxShadow: "none" },
-            }}
-          >
-            Chỉnh sửa
-          </Button>
-        </Box>
+        {/* ── Top bar ── */}
+        <PageHeader
+          backPath="/cars"
+          breadcrumbs={[
+            { label: "Quản lý xe", path: "/cars" },
+            { label: car.licensePlates },
+          ]}
+          title="Chi tiết xe"
+          actions={
+            <>
+              <Button
+                variant="contained"
+                startIcon={<EditOutlinedIcon />}
+                onClick={() => setOpenDialog(true)}
+                size="medium"
+                sx={{
+                  borderRadius: 1.5,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 2,
+                  boxShadow: "none",
+                  "&:hover": { boxShadow: "none" },
+                }}
+              >
+                Chỉnh sửa
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<Settings />}
+                onClick={() => navigate(`/cars/${id}/car-field-setup`)}
+                size="medium"
+                color="warning"
+                sx={{
+                  borderRadius: 1.5,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 2,
+                  boxShadow: "none",
+                  "&:hover": { boxShadow: "none" },
+                }}
+              >
+                Set up
+              </Button>
+            </>
+          }
+        />
 
         {/* Main card */}
         <Paper
@@ -217,7 +142,7 @@ export const CarDetail = () => {
               minHeight: 520,
             }}
           >
-            {/* ── Gallery column ── */}
+            {/* Gallery column */}
             <Box
               sx={{
                 flex: "0 0 55%",
@@ -266,7 +191,7 @@ export const CarDetail = () => {
               )}
             </Box>
 
-            {/* ── Info column ── */}
+            {/* Info column */}
             <Box
               sx={{
                 flex: 1,
@@ -276,7 +201,6 @@ export const CarDetail = () => {
                 gap: 2,
               }}
             >
-              {/* Section title */}
               <Box>
                 <Typography
                   variant="caption"
@@ -289,7 +213,6 @@ export const CarDetail = () => {
                 <Divider sx={{ mt: 1 }} />
               </Box>
 
-              {/* Stats row */}
               <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5 }}>
                 <InfoRow
                   icon={<SpeedOutlinedIcon fontSize="small" />}
@@ -303,7 +226,6 @@ export const CarDetail = () => {
                 />
               </Box>
 
-              {/* Note */}
               <InfoRow
                 icon={<NotesOutlinedIcon fontSize="small" />}
                 label="Ghi chú"
@@ -319,7 +241,6 @@ export const CarDetail = () => {
                 }
               />
 
-              {/* Content */}
               <InfoRow
                 icon={<ArticleOutlinedIcon fontSize="small" />}
                 label="Nội dung"
@@ -339,7 +260,6 @@ export const CarDetail = () => {
         </Paper>
       </Box>
 
-      {/* Dialog edit */}
       <CarDialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
