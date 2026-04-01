@@ -1,11 +1,10 @@
 import { useParams } from "react-router-dom";
-import { Box, Button } from "@mui/material";
+import { Box } from "@mui/material";
 import { PageHeader } from "../components/PageHeader/PageHeader";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import type { RootState } from "../../../store/store";
 import { useEffect } from "react";
 import { getCarFieldSetup } from "../store/cars.slice";
-import { Plus } from "lucide-react";
 import { CarFieldSetupList } from "../components/CarFieldSetupDetail/CarFieldSetupList";
 
 export const CarFieldSetupDetail = () => {
@@ -13,11 +12,12 @@ export const CarFieldSetupDetail = () => {
   const car = useAppSelector((s: RootState) => s.cars.car);
   const dispatch = useAppDispatch();
 
+
   useEffect(() => {
     if (id) {
       dispatch(getCarFieldSetup(id));
     }
-  }, [id, dispatch])
+  }, [id, dispatch]);
 
   return (
     <Box
@@ -47,18 +47,16 @@ export const CarFieldSetupDetail = () => {
             { label: "Set up" },
           ]}
           title="Cài đặt trường dữ liệu"
-          actions={
-            <>
-              <Button startIcon={<Plus />} variant="contained" onClick={() => {}}>Thêm</Button>
-            </>
-          }
+          
         />
 
-        {/* Nội dung trang */}
         <Box>
-          <CarFieldSetupList />
+          <CarFieldSetupList
+          />
         </Box>
       </Box>
+
+      
     </Box>
   );
 };

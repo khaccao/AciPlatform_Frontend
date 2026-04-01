@@ -63,7 +63,7 @@ export interface GetCarByIDRespone {
 export interface CarFieldSetup {
   carFieldId: number;
   name: string;
-  order: string;
+  order: number;
   valueNumber? : number;
   fromAt?: Date;
   toAt?: Date;

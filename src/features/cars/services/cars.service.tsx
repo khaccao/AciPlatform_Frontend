@@ -57,7 +57,19 @@ export const carService = {
   },
 
   updateCarFieldSetup: async(carId: string, carFieldSetups: CarFieldSetup[]): Promise<{code: number}> => {
-    const res = await api.put(`cars/car-field-setup?${carId}`, carFieldSetups);
+    const payload = carFieldSetups.map((s) => ({
+      Id: 0,
+      CarId: Number(carId),
+      CarFieldId: s.carFieldId,
+      ValueNumber: s.valueNumber ?? null,
+      FromAt: s.fromAt ?? null,
+      ToAt: s.toAt ?? null,
+      WarningAt: s.warningAt ?? null,
+      UserIdString: s.userIdString ?? null,
+      Note: s.note ?? null,
+      FileLink: s.fileLink ?? null,
+    }));
+    const res = await api.put(`cars/car-field-setup?carId=${carId}`, payload);
     return res.data;
   }
 };
