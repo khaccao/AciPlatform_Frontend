@@ -13,6 +13,7 @@ import {
     Clock,
     CreditCard,
     Shield,
+    ShieldCheck,
     GitBranch,
     Share2,
     Facebook,
@@ -20,6 +21,7 @@ import {
     Truck,
     Camera,
     X,
+    Package,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout, updateUser } from '../../features/auth/store/auth.slice';
@@ -99,27 +101,38 @@ export const MainLayout: React.FC = () => {
         'settings': <Settings size={20} />,
         'system': <Settings size={20} />,
         'system/roles': <Shield size={20} />,
+        'system/security': <ShieldCheck size={20} />,
+        'system/menus': <MenuIcon size={20} />,
         'users': <Users size={20} />,
         'menus': <MenuIcon size={20} />,
         'dakenh': <Share2 size={20} />,
         'dakenh/facebook': <Facebook size={20} />,
         'fleet': <Truck size={20} />,
+        '/fleet': <Truck size={20} />,
+        'thuongmai': <Briefcase size={20} />,
+        '/thuongmai': <Briefcase size={20} />,
+        'customer': <Users size={20} />,
+        '/customer': <Users size={20} />,
+        'goods': <Package size={20} />,
+        '/goods': <Package size={20} />,
     };
 
     const renderMenuItems = () => {
+        // 1. Sort all menus by Order
         const sortedMenus = [...menus].sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        // 2. Identify parents (where isParent is true or has no slash/parent code)
+        // Note: The logic should rely on IsParent if available, or hierarchy codes
         const parentMenus = sortedMenus.filter(m => {
-            return !m.menuCode.includes('/') || m.menuCode === 'dashboard' || m.menuCode === 'settings';
+            // Check if it's a parent based on being in DB as parent OR not having a slash and not having a parent assigned
+            return m.isParent || (!m.codeParent && !m.menuCode.includes('/'));
         });
 
-        return parentMenus.map(menu => {
-            const children = sortedMenus.filter(m => {
-                if (m.id === menu.id) return false;
-                const mCode = m.menuCode.startsWith('/') ? m.menuCode.substring(1) : m.menuCode;
-                const pCode = menu.menuCode.startsWith('/') ? menu.menuCode.substring(1) : menu.menuCode;
-                return mCode.startsWith(pCode) || m.menuCode === `/${pCode}`;
-            });
+        const dynamicItems = parentMenus.map(menu => {
+            // Find children that have this menu as a parent code
+            const children = sortedMenus.filter(m => m.codeParent === menu.menuCode && m.id !== menu.id);
             const hasChildren = children.length > 0;
+
             if (hasChildren) {
                 return (
                     <div key={menu.id} className={`${styles.navGroup} ${isSidebarOpen ? '' : styles.navGroupCollapsed}`}>
@@ -142,6 +155,7 @@ export const MainLayout: React.FC = () => {
                 );
             }
 
+            // Single item (no children)
             const cleanPath = menu.menuCode.startsWith('/') ? menu.menuCode : `/${menu.menuCode}`;
             return (
                 <Link
@@ -155,6 +169,12 @@ export const MainLayout: React.FC = () => {
                 </Link>
             );
         });
+
+        return (
+            <>
+                {dynamicItems}
+            </>
+        );
     };
 
     const renderBottomNav = () => {

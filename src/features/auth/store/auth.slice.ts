@@ -12,6 +12,8 @@ interface Menu {
     edit: boolean;
     delete: boolean;
     approve: boolean;
+    isParent: boolean;
+    codeParent?: string;
 }
 
 interface User {

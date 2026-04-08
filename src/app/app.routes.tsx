@@ -12,10 +12,13 @@ import { SalaryPage } from '../features/hr/pages/SalaryPage/SalaryPage';
 import { SettingsPage } from '../features/settings/pages/SettingsPage/SettingsPage';
 import { RoleManagement } from '../features/system/pages/RoleManagement/RoleManagement';
 import { MenuManagement } from '../features/system/pages/MenuManagement/MenuManagement';
+import { AdvancedSecurityPage } from '../features/security/pages/AdvancedSecurityPage';
 import { TestPage } from '../features/test/pages/TestPage';
 import { FacebookPage } from '../features/multi-channel/pages/FacebookPage/FacebookPage';
 import { FleetManagementPage } from '../features/fleet/pages/FleetManagementPage/FleetManagementPage';
 import FaceAttendancePage from '../features/hr/pages/FaceAttendancePage/FaceAttendancePage';
+import { CustomerPage } from '../features/customers/pages/CustomerPage';
+import { GoodsPage } from '../features/goods/pages/GoodsPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
@@ -58,20 +61,22 @@ export const AppRoutes = () => {
                 {/* System Routes */}
                 <Route path="/system">
                     <Route path="roles" element={<RoleManagement />} />
+                    <Route path="security" element={<AdvancedSecurityPage />} />
                 </Route>
 
-                <Route path="/test">
-                    <Route path="demo" element={<TestPage />} />
-                </Route>
+                <Route path="/menus" element={<MenuManagement />} />
+                
+                <Route path="/test/demo" element={<TestPage />} />
 
                 {/* Multi-Channel Routes */}
-                <Route path="/dakenh">
-                    <Route path="facebook" element={<FacebookPage />} />
-                </Route>
+                <Route path="/dakenh/facebook" element={<FacebookPage />} />
 
                 <Route path="/fleet" element={<FleetManagementPage />} />
 
-                <Route path="/menus" element={<MenuManagement />} />
+                {/* Ecommerce Routes (Matching DB codes /customer and /goods) */}
+                <Route path="/customer" element={<CustomerPage />} />
+                <Route path="/goods" element={<GoodsPage />} />
+
                 <Route path="/users" element={<EmployeePage />} />
             </Route>
 

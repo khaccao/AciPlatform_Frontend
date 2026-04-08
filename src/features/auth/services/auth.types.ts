@@ -20,6 +20,13 @@ export interface AuthenticateResponse {
         token: string;
         roleName: string[];
         menus: any[];
+        userId?: number; // For partial 2FA login
+        requires2FA?: boolean;
         [key: string]: any;
     };
+}
+
+export interface TwoFactorRequest {
+    userId: number;
+    code: string;
 }

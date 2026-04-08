@@ -37,5 +37,10 @@ export const authService = {
     refreshMenu: async () => {
         const response = await api.post('/Auth/refresh');
         return response.data;
+    },
+
+    verify2FA: async (data: { userId: number, code: string }): Promise<AuthenticateResponse> => {
+        const response = await api.post('/Auth/verify-2fa', data);
+        return response.data;
     }
 };
