@@ -41,15 +41,26 @@ jobs:
             
             # 2. Update/Clone Frontend Code
             if [ ! -d "$FRONTEND_DIR/.git" ]; then
-                echo "Frontend directory not found, cloning..."
+                echo "Frontend directory not found or not a git repo, cloning branch 'testing'..."
+                rm -rf $FRONTEND_DIR
                 mkdir -p $FRONTEND_DIR
                 cd $FRONTEND_DIR
                 git clone -b testing https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/khaccao/AciPlatform_Frontend.git .
             else
                 cd $FRONTEND_DIR
-                echo "Updating Frontend..."
-                git fetch origin testing
-                git reset --hard origin/testing
+                echo "Current Frontend Remote Info:"
+                git remote -v
+                echo "Updating Frontend from branch 'testing'..."
+                if ! git fetch origin testing; then
+                    echo "Fetch failed, re-cloning frontend..."
+                    cd ..
+                    rm -rf $FRONTEND_DIR
+                    mkdir -p $FRONTEND_DIR
+                    cd $FRONTEND_DIR
+                    git clone -b testing https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/khaccao/AciPlatform_Frontend.git .
+                else
+                    git reset --hard origin/testing
+                fi
             fi
             
             # 3. Docker Sync & Restart
