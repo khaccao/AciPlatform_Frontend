@@ -19,6 +19,10 @@ import { FleetManagementPage } from '../features/fleet/pages/FleetManagementPage
 import FaceAttendancePage from '../features/hr/pages/FaceAttendancePage/FaceAttendancePage';
 import { CustomerPage } from '../features/customers/pages/CustomerPage';
 import { GoodsPage } from '../features/goods/pages/GoodsPage';
+import { SellPage } from '../features/sell/pages/SellPage';
+import ProjectList from '../features/projects/pages/ProjectList/ProjectList';
+import ProjectDetail from '../features/projects/pages/ProjectDetail/ProjectDetail';
+import MyTasks from '../features/projects/pages/MyTasks/MyTasks';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
@@ -76,6 +80,12 @@ export const AppRoutes = () => {
                 {/* Ecommerce Routes (Matching DB codes /customer and /goods) */}
                 <Route path="/customer" element={<CustomerPage />} />
                 <Route path="/goods" element={<GoodsPage />} />
+                <Route path="/sell" element={<SellPage />} />
+
+                {/* R&D Project Management Routes */}
+                <Route path="/projects" element={<ProjectList />} />
+                <Route path="/projects/:id" element={<ProjectDetail />} />
+                <Route path="/my-tasks" element={<MyTasks />} />
 
                 <Route path="/users" element={<EmployeePage />} />
             </Route>

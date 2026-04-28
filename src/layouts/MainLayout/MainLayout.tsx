@@ -22,6 +22,7 @@ import {
     Camera,
     X,
     Package,
+    CheckSquare,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout, updateUser } from '../../features/auth/store/auth.slice';
@@ -173,6 +174,25 @@ export const MainLayout: React.FC = () => {
         return (
             <>
                 {dynamicItems}
+                <div className={`${styles.navGroup} ${isSidebarOpen ? '' : styles.navGroupCollapsed}`}>
+                    <div className={styles.navGroupTitle}>{isSidebarOpen ? 'NGHIÊN CỨU & PHÁT TRIỂN' : 'R&D'}</div>
+                    <Link
+                        to="/projects"
+                        className={`${styles.navItem} ${isActive('/projects') ? styles.active : ''}`}
+                        title="Dự án R&D"
+                    >
+                        <Briefcase size={20} />
+                        <span>Dự án R&D</span>
+                    </Link>
+                    <Link
+                        to="/projects/my-tasks"
+                        className={`${styles.navItem} ${isActive('/projects/my-tasks') ? styles.active : ''}`}
+                        title="Nhiệm vụ của tôi"
+                    >
+                        <CheckSquare size={20} />
+                        <span>Nhiệm vụ của tôi</span>
+                    </Link>
+                </div>
             </>
         );
     };
