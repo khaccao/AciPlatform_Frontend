@@ -50,7 +50,7 @@ export const ApproveVoucherPage: React.FC = () => {
     }
   };
 
-  const filteredVouchers = vouchers.filter(v => {
+  const filteredVouchers = vouchers.filter((v: any) => {
     if (activeTab === 'pending') return v.status === 0;
     if (activeTab === 'approved') return v.status === 1;
     if (activeTab === 'rejected') return v.status === -1;
@@ -72,7 +72,7 @@ export const ApproveVoucherPage: React.FC = () => {
   };
 
   // Group by date
-  const groupedVouchers = filteredVouchers.reduce((acc, v) => {
+  const groupedVouchers = filteredVouchers.reduce((acc: any, v: any) => {
     const d = formatDate(v.bookDate);
     if (!acc[d]) acc[d] = [];
     acc[d].push(v);
@@ -124,7 +124,7 @@ export const ApproveVoucherPage: React.FC = () => {
             ) : (
               Object.keys(groupedVouchers).sort((a, b) => b.localeCompare(a)).map(date => {
                 const group = groupedVouchers[date];
-                const totalAmount = group.reduce((sum, v) => sum + (v.amount || 0), 0);
+                const totalAmount = group.reduce((sum: number, v: any) => sum + (v.amount || 0), 0);
                 
                 return (
                   <React.Fragment key={date}>
@@ -136,7 +136,7 @@ export const ApproveVoucherPage: React.FC = () => {
                       {group.length} chứng từ • {totalAmount.toLocaleString()} đ
                     </div>
 
-                    {group.map(v => {
+                    {group.map((v: any) => {
                       const statusInfo = getStatusInfo(v.status || 0);
                       return (
                         <div 
