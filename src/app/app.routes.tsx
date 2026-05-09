@@ -33,6 +33,14 @@ import { ReceiptVoucherPage } from '../features/accounting/pages/ReceiptVoucherP
 import { CustomerDebtPage } from '../features/accounting/pages/CustomerDebtPage';
 import { WarehouseManagementPage } from '../features/warehouse/pages/WarehouseManagementPage';
 import { InventoryPage } from '../features/warehouse/pages/InventoryPage';
+// Hotel Module
+import { HotelDashboardPage } from '../features/hotel/pages/HotelDashboardPage';
+import { RoomMapPage } from '../features/hotel/pages/RoomMapPage';
+import { BookingsPage } from '../features/hotel/pages/BookingsPage';
+import { VehiclesPage } from '../features/hotel/pages/VehiclesPage';
+import { ToursPage } from '../features/hotel/pages/ToursPage';
+import { GuestsPage } from '../features/hotel/pages/GuestsPage';
+import { ReportsPage } from '../features/hotel/pages/ReportsPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
@@ -114,6 +122,18 @@ export const AppRoutes = () => {
                     <Route index element={<Navigate to="inventory" replace />} />
                     <Route path="locations" element={<WarehouseManagementPage />} />
                     <Route path="inventory" element={<InventoryPage />} />
+                </Route>
+
+                {/* Hotel Management Routes */}
+                <Route path="/hotel">
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<HotelDashboardPage />} />
+                    <Route path="room-map" element={<RoomMapPage />} />
+                    <Route path="bookings" element={<BookingsPage />} />
+                    <Route path="vehicles" element={<VehiclesPage />} />
+                    <Route path="tours" element={<ToursPage />} />
+                    <Route path="guests" element={<GuestsPage />} />
+                    <Route path="reports" element={<ReportsPage />} />
                 </Route>
 
                 <Route path="/users" element={<EmployeePage />} />
