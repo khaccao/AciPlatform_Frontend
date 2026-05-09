@@ -207,19 +207,19 @@ export const MainLayout: React.FC = () => {
                 return (
                     <div key={menu.id} className={`${styles.navGroup} ${isSidebarOpen ? '' : styles.navGroupCollapsed}`}>
                         <div 
-                            className={`${styles.navItem} ${styles.navGroupToggle}`} 
+                            className={`${styles.navItem} ${styles.navGroupToggle} ${isExpanded ? styles.navGroupToggleActive : ''}`} 
                             onClick={() => toggleGroup(menu.menuCode)}
                         >
-                            {getIcon(menu, cleanPath)}
-                            <span>{menu.name}</span>
+                            <span className={styles.parentName}>{menu.name}</span>
                             {isSidebarOpen && (
                                 <div className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ''}`}>
-                                    <ChevronDown size={14} style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
+                                    <ChevronDown size={14} />
                                 </div>
                             )}
                         </div>
                         
                         <div className={`${styles.navChildren} ${isExpanded ? styles.navChildrenOpen : ''}`}>
+                            <div className={styles.verticalLine} />
                             {children.map(child => {
                                 const childPath = child.menuCode.startsWith('/') ? child.menuCode : `/${child.menuCode}`;
                                 return (
@@ -229,7 +229,9 @@ export const MainLayout: React.FC = () => {
                                         className={`${styles.navItem} ${styles.navSubItem} ${isActive(childPath) ? styles.active : ''}`}
                                         title={child.name}
                                     >
-                                        <div className={styles.dotIndicator} />
+                                        <div className={styles.subItemIcon}>
+                                            {getIcon(child, childPath)}
+                                        </div>
                                         <span>{child.name}</span>
                                     </Link>
                                 );
