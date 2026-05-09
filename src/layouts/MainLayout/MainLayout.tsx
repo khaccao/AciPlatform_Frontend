@@ -33,7 +33,8 @@ import {
     Wallet,
     Home,
     Layers,
-    Warehouse
+    Warehouse,
+    ChevronDown
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout, updateUser } from '../../features/auth/store/auth.slice';
@@ -54,6 +55,19 @@ export const MainLayout: React.FC = () => {
     
     const [isSidebarOpen, setSidebarOpen] = useState(!isMobile && !isTablet);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [expandedMenus, setExpandedMenus] = useState<string[]>(() => {
+        try {
+            const saved = localStorage.getItem('expandedMenus');
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            return [];
+        }
+    });
+
+    // Persist expanded menus to cache
+    useEffect(() => {
+        localStorage.setItem('expandedMenus', JSON.stringify(expandedMenus));
+    }, [expandedMenus]);
 
     // Sync sidebar state on screen size change
     useEffect(() => {
@@ -96,121 +110,135 @@ export const MainLayout: React.FC = () => {
     };
 
     const isActive = (path: string) => {
-        return location.pathname.startsWith(path);
+        return location.pathname === path || location.pathname.startsWith(path + '/');
+    };
+
+    const toggleGroup = (menuCode: string) => {
+        setExpandedMenus(prev => 
+            prev.includes(menuCode) 
+                ? prev.filter(code => code !== menuCode)
+                : [...prev, menuCode]
+        );
     };
 
     const menus = user?.menus || [];
 
     const IconMap: Record<string, React.ReactNode> = {
-        'dashboard': <LayoutDashboard size={20} />,
-        'hr': <Users size={20} />,
-        'hr/employees': <Users size={20} />,
-        'hr/organization': <GitBranch size={20} />,
-        'hr/contracts': <Briefcase size={20} />,
-        'hr/timekeeping': <Clock size={20} />,
-        'hr/face-attendance': <Camera size={20} />,
-        'hr/salary': <CreditCard size={20} />,
-        'settings': <Settings size={20} />,
-        'system': <Settings size={20} />,
-        'system/roles': <Shield size={20} />,
-        'system/security': <ShieldCheck size={20} />,
-        'system/menus': <MenuIcon size={20} />,
-        'users': <Users size={20} />,
-        'menus': <MenuIcon size={20} />,
-        'dakenh': <Share2 size={20} />,
-        'dakenh/facebook': <Facebook size={20} />,
-        'fleet': <Truck size={20} />,
-        '/fleet': <Truck size={20} />,
-        'thuongmai': <Briefcase size={20} />,
-        '/thuongmai': <Briefcase size={20} />,
-        'customer': <Users size={20} />,
-        '/customer': <Users size={20} />,
-        'goods': <Package size={20} />,
-        '/goods': <Package size={20} />,
-        'accounting/payment-voucher': <FileText size={20} />,
-        '/accounting/payment-voucher': <FileText size={20} />,
-        'accounting/approve-voucher': <ClipboardCheck size={20} />,
-        '/accounting/approve-voucher': <ClipboardCheck size={20} />,
-        'accounting/warehouse-receipt': <PackagePlus size={20} />,
-        '/accounting/warehouse-receipt': <PackagePlus size={20} />,
+        'dashboard': <LayoutDashboard size={18} />,
+        'hr': <Users size={18} />,
+        'hr/employees': <Users size={18} />,
+        'hr/organization': <GitBranch size={18} />,
+        'hr/contracts': <Briefcase size={18} />,
+        'hr/timekeeping': <Clock size={18} />,
+        'hr/face-attendance': <Camera size={18} />,
+        'hr/salary': <CreditCard size={18} />,
+        'settings': <Settings size={18} />,
+        'system': <Settings size={18} />,
+        'system/roles': <Shield size={18} />,
+        'system/security': <ShieldCheck size={18} />,
+        'system/menus': <MenuIcon size={18} />,
+        'users': <Users size={18} />,
+        'menus': <MenuIcon size={18} />,
+        'dakenh': <Share2 size={18} />,
+        'dakenh/facebook': <Facebook size={18} />,
+        'fleet': <Truck size={18} />,
+        '/fleet': <Truck size={18} />,
+        'thuongmai': <Briefcase size={18} />,
+        '/thuongmai': <Briefcase size={18} />,
+        'customer': <Users size={18} />,
+        '/customer': <Users size={18} />,
+        'goods': <Package size={18} />,
+        '/goods': <Package size={18} />,
+        'accounting/payment-voucher': <FileText size={18} />,
+        '/accounting/payment-voucher': <FileText size={18} />,
+        'accounting/approve-voucher': <ClipboardCheck size={18} />,
+        '/accounting/approve-voucher': <ClipboardCheck size={18} />,
+        'accounting/warehouse-receipt': <PackagePlus size={18} />,
+        '/accounting/warehouse-receipt': <PackagePlus size={18} />,
     };
 
     const AllIcons: Record<string, React.ReactNode> = {
-        'LayoutDashboard': <LayoutDashboard size={20} />,
-        'Users': <Users size={20} />,
-        'CreditCard': <CreditCard size={20} />,
-        'FileText': <FileText size={20} />,
-        'ClipboardCheck': <ClipboardCheck size={20} />,
-        'PackagePlus': <PackagePlus size={20} />,
-        'Package': <Package size={20} />,
-        'Briefcase': <Briefcase size={20} />,
-        'Settings': <Settings size={20} />,
-        'Shield': <Shield size={20} />,
-        'ShieldCheck': <ShieldCheck size={20} />,
-        'Menu': <MenuIcon size={20} />,
-        'Truck': <Truck size={20} />,
-        'Camera': <Camera size={20} />,
-        'GitBranch': <GitBranch size={20} />,
-        'Share2': <Share2 size={20} />,
-        'Facebook': <Facebook size={20} />,
-        'Clock': <Clock size={20} />,
-        'List': <List size={20} />,
-        'UserPlus': <UserPlus size={20} />,
-        'FileSearch': <FileSearch size={20} />,
-        'BookOpen': <BookOpen size={20} />,
-        'Wallet': <Wallet size={20} />,
-        'Home': <Home size={20} />,
-        'Layers': <Layers size={20} />,
-        'Warehouse': <Warehouse size={20} />
+        'LayoutDashboard': <LayoutDashboard size={18} />,
+        'Users': <Users size={18} />,
+        'CreditCard': <CreditCard size={18} />,
+        'FileText': <FileText size={18} />,
+        'ClipboardCheck': <ClipboardCheck size={18} />,
+        'PackagePlus': <PackagePlus size={18} />,
+        'Package': <Package size={18} />,
+        'Briefcase': <Briefcase size={18} />,
+        'Settings': <Settings size={18} />,
+        'Shield': <Shield size={18} />,
+        'ShieldCheck': <ShieldCheck size={18} />,
+        'Menu': <MenuIcon size={18} />,
+        'Truck': <Truck size={18} />,
+        'Camera': <Camera size={18} />,
+        'GitBranch': <GitBranch size={18} />,
+        'Share2': <Share2 size={18} />,
+        'Facebook': <Facebook size={18} />,
+        'Clock': <Clock size={18} />,
+        'List': <List size={18} />,
+        'UserPlus': <UserPlus size={18} />,
+        'FileSearch': <FileSearch size={18} />,
+        'BookOpen': <BookOpen size={18} />,
+        'Wallet': <Wallet size={18} />,
+        'Home': <Home size={18} />,
+        'Layers': <Layers size={18} />,
+        'Warehouse': <Warehouse size={18} />
     };
 
     const getIcon = (menu: any, cleanPath: string) => {
         if (menu.icon && AllIcons[menu.icon]) {
             return AllIcons[menu.icon];
         }
-        return IconMap[menu.menuCode] || IconMap[cleanPath.substring(1)] || <MenuIcon size={20} />;
+        return IconMap[menu.menuCode] || IconMap[cleanPath.substring(1)] || <MenuIcon size={18} />;
     };
 
     const renderMenuItems = () => {
-        // 1. Sort all menus by Order
         const sortedMenus = [...menus].sort((a, b) => (a.order || 0) - (b.order || 0));
-        
-        // 2. Identify parents (where isParent is true or has no slash/parent code)
-        // Note: The logic should rely on IsParent if available, or hierarchy codes
-        const parentMenus = sortedMenus.filter(m => {
-            // Check if it's a parent based on being in DB as parent OR not having a slash and not having a parent assigned
-            return m.isParent || (!m.codeParent && !m.menuCode.includes('/'));
-        });
+        const parentMenus = sortedMenus.filter(m => m.isParent || (!m.codeParent && !m.menuCode.includes('/')));
 
-        const dynamicItems = parentMenus.map(menu => {
-            // Find children that have this menu as a parent code
+        return parentMenus.map(menu => {
             const children = sortedMenus.filter(m => m.codeParent === menu.menuCode && m.id !== menu.id);
             const hasChildren = children.length > 0;
+            const isExpanded = expandedMenus.includes(menu.menuCode);
+            const cleanPath = menu.menuCode.startsWith('/') ? menu.menuCode : `/${menu.menuCode}`;
 
             if (hasChildren) {
                 return (
                     <div key={menu.id} className={`${styles.navGroup} ${isSidebarOpen ? '' : styles.navGroupCollapsed}`}>
-                        <div className={styles.navGroupTitle}>{isSidebarOpen ? menu.name.toUpperCase() : '•••'}</div>
-                        {children.map(child => {
-                            const cleanPath = child.menuCode.startsWith('/') ? child.menuCode : `/${child.menuCode}`;
-                            return (
-                                <Link
-                                    key={child.id}
-                                    to={cleanPath}
-                                    className={`${styles.navItem} ${isActive(cleanPath) ? styles.active : ''}`}
-                                    title={child.name}
-                                >
-                                    {getIcon(child, cleanPath)}
-                                    <span>{child.name}</span>
-                                </Link>
-                            );
-                        })}
+                        <div 
+                            className={`${styles.navItem} ${styles.navGroupToggle}`} 
+                            onClick={() => toggleGroup(menu.menuCode)}
+                        >
+                            {getIcon(menu, cleanPath)}
+                            <span>{menu.name}</span>
+                            {isSidebarOpen && (
+                                <div className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ''}`}>
+                                    <ChevronDown size={14} style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className={`${styles.navChildren} ${isExpanded ? styles.navChildrenOpen : ''}`}>
+                            {children.map(child => {
+                                const childPath = child.menuCode.startsWith('/') ? child.menuCode : `/${child.menuCode}`;
+                                return (
+                                    <Link
+                                        key={child.id}
+                                        to={childPath}
+                                        className={`${styles.navItem} ${styles.navSubItem} ${isActive(childPath) ? styles.active : ''}`}
+                                        title={child.name}
+                                    >
+                                        <div className={styles.dotIndicator} />
+                                        <span>{child.name}</span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
                     </div>
                 );
             }
 
-            // Single item (no children)
-            const cleanPath = menu.menuCode.startsWith('/') ? menu.menuCode : `/${menu.menuCode}`;
             return (
                 <Link
                     key={menu.id}
@@ -223,31 +251,6 @@ export const MainLayout: React.FC = () => {
                 </Link>
             );
         });
-
-        return (
-            <>
-                {dynamicItems}
-                <div className={`${styles.navGroup} ${isSidebarOpen ? '' : styles.navGroupCollapsed}`}>
-                    <div className={styles.navGroupTitle}>{isSidebarOpen ? 'NGHIÊN CỨU & PHÁT TRIỂN' : 'R&D'}</div>
-                    <Link
-                        to="/projects"
-                        className={`${styles.navItem} ${isActive('/projects') ? styles.active : ''}`}
-                        title="Dự án R&D"
-                    >
-                        <Briefcase size={20} />
-                        <span>Dự án R&D</span>
-                    </Link>
-                    <Link
-                        to="/projects/my-tasks"
-                        className={`${styles.navItem} ${isActive('/projects/my-tasks') ? styles.active : ''}`}
-                        title="Nhiệm vụ của tôi"
-                    >
-                        <CheckSquare size={20} />
-                        <span>Nhiệm vụ của tôi</span>
-                    </Link>
-                </div>
-            </>
-        );
     };
 
     const renderBottomNav = () => {
