@@ -32,6 +32,7 @@ export interface Menu {
     codeParent?: string;
     isParent?: boolean;
     order: number;
+    icon?: string;
 }
 
 export const systemService = {

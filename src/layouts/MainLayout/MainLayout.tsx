@@ -23,6 +23,17 @@ import {
     X,
     Package,
     CheckSquare,
+    FileText,
+    ClipboardCheck,
+    PackagePlus,
+    List,
+    UserPlus,
+    FileSearch,
+    BookOpen,
+    Wallet,
+    Home,
+    Layers,
+    Warehouse
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout, updateUser } from '../../features/auth/store/auth.slice';
@@ -116,6 +127,48 @@ export const MainLayout: React.FC = () => {
         '/customer': <Users size={20} />,
         'goods': <Package size={20} />,
         '/goods': <Package size={20} />,
+        'accounting/payment-voucher': <FileText size={20} />,
+        '/accounting/payment-voucher': <FileText size={20} />,
+        'accounting/approve-voucher': <ClipboardCheck size={20} />,
+        '/accounting/approve-voucher': <ClipboardCheck size={20} />,
+        'accounting/warehouse-receipt': <PackagePlus size={20} />,
+        '/accounting/warehouse-receipt': <PackagePlus size={20} />,
+    };
+
+    const AllIcons: Record<string, React.ReactNode> = {
+        'LayoutDashboard': <LayoutDashboard size={20} />,
+        'Users': <Users size={20} />,
+        'CreditCard': <CreditCard size={20} />,
+        'FileText': <FileText size={20} />,
+        'ClipboardCheck': <ClipboardCheck size={20} />,
+        'PackagePlus': <PackagePlus size={20} />,
+        'Package': <Package size={20} />,
+        'Briefcase': <Briefcase size={20} />,
+        'Settings': <Settings size={20} />,
+        'Shield': <Shield size={20} />,
+        'ShieldCheck': <ShieldCheck size={20} />,
+        'Menu': <MenuIcon size={20} />,
+        'Truck': <Truck size={20} />,
+        'Camera': <Camera size={20} />,
+        'GitBranch': <GitBranch size={20} />,
+        'Share2': <Share2 size={20} />,
+        'Facebook': <Facebook size={20} />,
+        'Clock': <Clock size={20} />,
+        'List': <List size={20} />,
+        'UserPlus': <UserPlus size={20} />,
+        'FileSearch': <FileSearch size={20} />,
+        'BookOpen': <BookOpen size={20} />,
+        'Wallet': <Wallet size={20} />,
+        'Home': <Home size={20} />,
+        'Layers': <Layers size={20} />,
+        'Warehouse': <Warehouse size={20} />
+    };
+
+    const getIcon = (menu: any, cleanPath: string) => {
+        if (menu.icon && AllIcons[menu.icon]) {
+            return AllIcons[menu.icon];
+        }
+        return IconMap[menu.menuCode] || IconMap[cleanPath.substring(1)] || <MenuIcon size={20} />;
     };
 
     const renderMenuItems = () => {
@@ -147,7 +200,7 @@ export const MainLayout: React.FC = () => {
                                     className={`${styles.navItem} ${isActive(cleanPath) ? styles.active : ''}`}
                                     title={child.name}
                                 >
-                                    {IconMap[child.menuCode] || IconMap[cleanPath.substring(1)] || <MenuIcon size={20} />}
+                                    {getIcon(child, cleanPath)}
                                     <span>{child.name}</span>
                                 </Link>
                             );
@@ -165,7 +218,7 @@ export const MainLayout: React.FC = () => {
                     className={`${styles.navItem} ${isActive(cleanPath) ? styles.active : ''}`}
                     title={menu.name}
                 >
-                    {IconMap[menu.menuCode] || IconMap[cleanPath.substring(1)] || <MenuIcon size={20} />}
+                    {getIcon(menu, cleanPath)}
                     <span>{menu.name}</span>
                 </Link>
             );

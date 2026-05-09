@@ -23,6 +23,16 @@ import { SellPage } from '../features/sell/pages/SellPage';
 import ProjectList from '../features/projects/pages/ProjectList/ProjectList';
 import ProjectDetail from '../features/projects/pages/ProjectDetail/ProjectDetail';
 import MyTasks from '../features/projects/pages/MyTasks/MyTasks';
+import PaymentVoucherPage from '../features/accounting/pages/PaymentVoucherPage';
+import ApproveVoucherPage from '../features/accounting/pages/ApproveVoucherPage';
+import WarehouseReceiptPage from '../features/accounting/pages/WarehouseReceiptPage';
+import ChartOfAccountsPage from '../features/accounting/pages/ChartOfAccountsPage';
+import GeneralLedgerPage from '../features/accounting/pages/GeneralLedgerPage';
+import SupplierManagementPage from '../features/accounting/pages/SupplierManagementPage';
+import ReceiptVoucherPage from '../features/accounting/pages/ReceiptVoucherPage';
+import CustomerDebtPage from '../features/accounting/pages/CustomerDebtPage';
+import WarehouseManagementPage from '../features/warehouse/pages/WarehouseManagementPage';
+import InventoryPage from '../features/warehouse/pages/InventoryPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
@@ -86,6 +96,25 @@ export const AppRoutes = () => {
                 <Route path="/projects" element={<ProjectList />} />
                 <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/my-tasks" element={<MyTasks />} />
+
+                {/* Accounting Routes */}
+                <Route path="/accounting">
+                    <Route index element={<Navigate to="general-ledger" replace />} />
+                    <Route path="payment-voucher" element={<PaymentVoucherPage />} />
+                    <Route path="approve-voucher" element={<ApproveVoucherPage />} />
+                    <Route path="warehouse-receipt" element={<WarehouseReceiptPage />} />
+                    <Route path="chart-of-accounts" element={<ChartOfAccountsPage />} />
+                    <Route path="general-ledger" element={<GeneralLedgerPage />} />
+                    <Route path="suppliers" element={<SupplierManagementPage />} />
+                    <Route path="receipt-voucher" element={<ReceiptVoucherPage />} />
+                    <Route path="customer-debt" element={<CustomerDebtPage />} />
+                </Route>
+
+                <Route path="/warehouse">
+                    <Route index element={<Navigate to="inventory" replace />} />
+                    <Route path="locations" element={<WarehouseManagementPage />} />
+                    <Route path="inventory" element={<InventoryPage />} />
+                </Route>
 
                 <Route path="/users" element={<EmployeePage />} />
             </Route>
