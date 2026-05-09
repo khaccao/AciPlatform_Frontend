@@ -23,16 +23,16 @@ import { SellPage } from '../features/sell/pages/SellPage';
 import ProjectList from '../features/projects/pages/ProjectList/ProjectList';
 import ProjectDetail from '../features/projects/pages/ProjectDetail/ProjectDetail';
 import MyTasks from '../features/projects/pages/MyTasks/MyTasks';
-import PaymentVoucherPage from '../features/accounting/pages/PaymentVoucherPage';
-import ApproveVoucherPage from '../features/accounting/pages/ApproveVoucherPage';
-import WarehouseReceiptPage from '../features/accounting/pages/WarehouseReceiptPage';
-import ChartOfAccountsPage from '../features/accounting/pages/ChartOfAccountsPage';
-import GeneralLedgerPage from '../features/accounting/pages/GeneralLedgerPage';
-import SupplierManagementPage from '../features/accounting/pages/SupplierManagementPage';
-import ReceiptVoucherPage from '../features/accounting/pages/ReceiptVoucherPage';
-import CustomerDebtPage from '../features/accounting/pages/CustomerDebtPage';
-import WarehouseManagementPage from '../features/warehouse/pages/WarehouseManagementPage';
-import InventoryPage from '../features/warehouse/pages/InventoryPage';
+import { PaymentVoucherPage } from '../features/accounting/pages/PaymentVoucherPage';
+import { ApproveVoucherPage } from '../features/accounting/pages/ApproveVoucherPage';
+import { WarehouseReceiptPage } from '../features/accounting/pages/WarehouseReceiptPage';
+import { ChartOfAccountsPage } from '../features/accounting/pages/ChartOfAccountsPage';
+import { GeneralLedgerPage } from '../features/accounting/pages/GeneralLedgerPage';
+import { SupplierManagementPage } from '../features/accounting/pages/SupplierManagementPage';
+import { ReceiptVoucherPage } from '../features/accounting/pages/ReceiptVoucherPage';
+import { CustomerDebtPage } from '../features/accounting/pages/CustomerDebtPage';
+import { WarehouseManagementPage } from '../features/warehouse/pages/WarehouseManagementPage';
+import { InventoryPage } from '../features/warehouse/pages/InventoryPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
