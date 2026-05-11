@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Plus, RefreshCw, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
@@ -7,38 +6,24 @@ import hotelService from '../services/hotel.service';
 import type { VehicleDto, VehicleRentalDto } from '../services/hotel.service';
 
 const VEHICLE_STATUS: Record<string, { label: string; cls: string }> = {
-  AVAILABLE: { label: 'Sáºµn sĂ ng', cls: 'available' },
-  RENTED: { label: 'Äang thuĂª', cls: 'rented' },
-  MAINTENANCE: { label: 'Báº£o trĂ¬', cls: 'maintenance' },
+  AVAILABLE:  { label: 'Sẵn sàng',  cls: 'available' },
+  RENTED:     { label: 'Đang thuê', cls: 'rented' },
+  MAINTENANCE:{ label: 'Bảo trì',   cls: 'oos' },
+  DAMAGED:    { label: 'Hư hỏng',   cls: 'dirty' },
 };
 
 export const VehiclesPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [tab, setTab] = useState<'fleet' | 'rentals'>('fleet');
   const [vehicles, setVehicles] = useState<VehicleDto[]>([]);
   const [rentals, setRentals] = useState<VehicleRentalDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [activeTab, setActiveTab] = useState<'fleet' | 'rentals'>('fleet');
+  const [showModal, setShowModal] = useState(false);
+  const [returnModal, setReturnModal] = useState<VehicleRentalDto | null>(null);
   const [search, setSearch] = useState('');
-  const [showRentModal, setShowRentModal] = useState(false);
-  const [showReturnModal, setShowReturnModal] = useState(false);
-  const [selectedRental, setSelectedRental] = useState<VehicleRentalDto | null>(null);
-  const [showAddVehicle, setShowAddVehicle] = useState(false);
-
-  // Rent form
-  const [rentForm, setRentForm] = useState({
-    vehicleCode: '', guestName: '', guestPhone: '', guestIdCard: '',
-    rentFrom: new Date().toISOString().slice(0, 16),
-    rentTo: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
-    depositAmount: 500000, bookingId: '',
+  const [form, setForm] = useState({
+    vehicleCode: '', guestName: '', guestPhone: '', rentFrom: '', rentTo: '', depositAmount: 0, notes: '',
   });
-  // Return form
-  const [returnForm, setReturnForm] = useState({ fuelLevel: 80, damageFee: 0, damageNote: '' });
-  // Vehicle form
-  const [vehicleForm, setVehicleForm] = useState({
-    vehicleCode: '', licensePlate: '', vehicleName: '', vehicleType: 'MANUAL',
-    pricePerDay: 120000, depositAmount: 500000, fuelLevel: 100, condition: 'GOOD',
-  });
+  const [returnForm, setReturnForm] = useState({ fuelLevel: 100, damageFee: 0, depositReturned: 0, notes: '' });
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -48,191 +33,150 @@ export const VehiclesPage: React.FC = () => {
       const [v, r] = await Promise.all([hotelService.getVehicles(), hotelService.getActiveRentals()]);
       setVehicles(v);
       setRentals(r);
-    } catch { toast.error('Lá»—i táº£i dá»¯ liá»‡u xe'); }
+    } catch { toast.error('Lỗi tải dữ liệu xe'); }
     finally { setLoading(false); }
   };
 
   const handleRent = async () => {
-    if (!rentForm.vehicleCode || !rentForm.guestName || !rentForm.guestPhone) {
-      toast.error('Vui lĂ²ng Ä‘iá»n Ä‘áº§y Ä‘á»§ thĂ´ng tin'); return;
-    }
+    if (!form.vehicleCode || !form.guestName || !form.rentFrom || !form.rentTo)
+      return toast.error('Vui lòng điền đầy đủ thông tin');
     try {
-      const days = Math.max(1, Math.ceil((new Date(rentForm.rentTo).getTime() - new Date(rentForm.rentFrom).getTime()) / 86400000));
-      const v = vehicles.find(x => x.vehicleCode === rentForm.vehicleCode);
-      await hotelService.createRental({
-        ...rentForm, totalDays: days,
-        pricePerDay: v?.pricePerDay || 0,
-        totalAmount: days * (v?.pricePerDay || 0),
-        bookingId: rentForm.bookingId ? Number(rentForm.bookingId) : undefined,
-      });
-      toast.success('Giao xe thĂ nh cĂ´ng!');
-      setShowRentModal(false);
+      await hotelService.createRental(form);
+      toast.success('Cho thuê xe thành công!');
+      setShowModal(false);
+      setForm({ vehicleCode: '', guestName: '', guestPhone: '', rentFrom: '', rentTo: '', depositAmount: 0, notes: '' });
       fetchAll();
-    } catch { toast.error('Lá»—i táº¡o giao dá»‹ch thuĂª xe'); }
+    } catch { toast.error('Lỗi tạo phiếu thuê xe'); }
   };
 
   const handleReturn = async () => {
-    if (!selectedRental) return;
+    if (!returnModal) return;
     try {
-      await hotelService.returnVehicle(selectedRental.id, {
-        fuelLevel: returnForm.fuelLevel,
-        damageFee: returnForm.damageFee,
-        damageNote: returnForm.damageNote,
-        returnedAt: new Date().toISOString(),
-      });
-      toast.success('Nháº­n xe thĂ nh cĂ´ng!');
-      setShowReturnModal(false);
-      setSelectedRental(null);
+      await hotelService.returnVehicle(returnModal.id, returnForm);
+      toast.success(`Trả xe ${returnModal.vehicleCode} thành công!`);
+      setReturnModal(null);
       fetchAll();
-    } catch { toast.error('Lá»—i nháº­n xe'); }
+    } catch { toast.error('Lỗi xử lý trả xe'); }
   };
 
-  const handleAddVehicle = async () => {
-    try {
-      await hotelService.upsertVehicle(vehicleForm);
-      toast.success('ThĂªm xe thĂ nh cĂ´ng!');
-      setShowAddVehicle(false);
-      fetchAll();
-    } catch { toast.error('Lá»—i thĂªm xe'); }
-  };
-
-  const fmtMoney = (n: number) => n?.toLocaleString('vi-VN') + 'Ä‘';
-  const calcDays = (from: string, to: string) => Math.max(1, Math.ceil((new Date(to).getTime() - new Date(from).getTime()) / 86400000));
-  const isOverdue = (rentTo: string) => new Date(rentTo) < new Date();
-
-  const filteredVehicles = vehicles.filter(v => {
-    if (statusFilter && v.status !== statusFilter) return false;
-    if (search && !v.vehicleName?.toLowerCase().includes(search.toLowerCase()) && !v.licensePlate?.includes(search)) return false;
-    return true;
-  });
+  const now = new Date();
+  const filteredVehicles = vehicles.filter(v =>
+    !search || v.vehicleCode?.toLowerCase().includes(search.toLowerCase()) || v.licensePlate?.toLowerCase().includes(search.toLowerCase())
+  );
+  const filteredRentals = rentals.filter(r =>
+    !search || r.guestName?.toLowerCase().includes(search.toLowerCase()) || r.vehicleCode?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
-        <h1>đŸï¸ Quáº£n LĂ½ Xe MĂ¡y</h1>
+        <div>
+          <h1>🏍️ Cho Thuê Xe Máy</h1>
+          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
+            {vehicles.filter(v => v.status === 'AVAILABLE').length}/{vehicles.length} xe sẵn sàng ·{' '}
+            {rentals.filter(r => new Date(r.rentTo) < now).length} quá hạn
+          </p>
+        </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnSecondary} onClick={fetchAll}><RefreshCw size={15} /> LĂ m má»›i</button>
-          <button className={styles.btnSecondary} onClick={() => setShowAddVehicle(true)}><Plus size={15} /> ThĂªm xe</button>
-          <button className={styles.btnPrimary} onClick={() => setShowRentModal(true)}><Plus size={15} /> Cho thuĂª xe</button>
+          <button className={styles.btnSecondary} onClick={fetchAll}><RefreshCw size={15} /> Làm mới</button>
+          <button className={styles.btnPrimary} onClick={() => setShowModal(true)}><Plus size={15} /> Cho thuê xe</button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className={styles.tabs}>
-        <button className={`${styles.tab} ${tab === 'fleet' ? styles.active : ''}`} onClick={() => setTab('fleet')}>
-          đŸ— Kho xe ({vehicles.length})
+      <div className={styles.tabs} style={{ marginBottom: 20 }}>
+        <button className={`${styles.tab} ${activeTab === 'fleet' ? styles.active : ''}`} onClick={() => setActiveTab('fleet')}>
+          🚗 Kho xe ({vehicles.length})
         </button>
-        <button className={`${styles.tab} ${tab === 'rentals' ? styles.active : ''}`} onClick={() => setTab('rentals')}>
-          đŸ“‹ Äang thuĂª ({rentals.length})
-          {rentals.some(r => isOverdue(r.rentTo)) && <span style={{ marginLeft: 6, background: '#ef4444', color: '#fff', borderRadius: 999, padding: '1px 6px', fontSize: 11 }}>!</span>}
+        <button className={`${styles.tab} ${activeTab === 'rentals' ? styles.active : ''}`} onClick={() => setActiveTab('rentals')}>
+          📋 Đang thuê ({rentals.length})
         </button>
       </div>
 
-      {tab === 'fleet' && (
-        <>
-          <div className={styles.searchBar}>
-            <div className={styles.searchInput}>
-              <Search size={16} color="#94a3b8" />
-              <input placeholder="TĂ¬m biá»ƒn sá»‘, tĂªn xe..." value={search} onChange={e => setSearch(e.target.value)} />
-            </div>
-            <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-              <option value="">Táº¥t cáº£ tĂ¬nh tráº¡ng</option>
-              {Object.entries(VEHICLE_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-            </select>
-          </div>
+      {/* Search */}
+      <div className={styles.searchBar} style={{ marginBottom: 16 }}>
+        <div className={styles.searchInput}>
+          <Search size={16} color="#94a3b8" />
+          <input placeholder="Tìm theo mã xe, biển số, tên khách..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+      </div>
 
-          {loading ? <div style={{ textAlign: 'center', padding: 48, color: '#94a3b8' }}>Äang táº£i...</div> : (
-            <div className={styles.vehicleGrid}>
-              {filteredVehicles.map(v => {
-                const st = VEHICLE_STATUS[v.status || 'AVAILABLE'];
-                return (
-                  <div key={v.id} className={`${styles.vehicleCard} ${styles[st.cls]}`}>
-                    <div className={styles.vehicleImg}>đŸï¸</div>
-                    <div className={styles.vehicleName}>{v.vehicleName || 'Xe mĂ¡y'}</div>
-                    <div className={styles.vehiclePlate}>{v.licensePlate}</div>
-                    <div style={{ margin: '8px 0' }}>
-                      <span className={`${styles.badge} ${styles[st.cls]}`}>{st.label}</span>
-                      <span style={{ marginLeft: 8, fontSize: 12, color: '#64748b' }}>{v.vehicleType}</span>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 48, color: '#94a3b8' }}>Đang tải...</div>
+      ) : activeTab === 'fleet' ? (
+        /* Kho xe Grid */
+        <div className={styles.vehicleGrid}>
+          {filteredVehicles.length === 0 ? (
+            <div className={styles.emptyState}><div className={styles.emptyIcon}>🏍️</div><p>Chưa có xe nào</p></div>
+          ) : filteredVehicles.map(v => {
+            const st = VEHICLE_STATUS[v.status || 'AVAILABLE'] || { label: v.status, cls: 'available' };
+            return (
+              <div key={v.id} className={`${styles.vehicleCard}`}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{v.vehicleCode}</div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>{v.licensePlate}</div>
+                  </div>
+                  <span className={`${styles.badge} ${styles[st.cls]}`}>{st.label}</span>
+                </div>
+                <div style={{ fontSize: 14, color: '#334155', marginBottom: 8 }}>{v.vehicleName || 'Xe máy'}</div>
+                {v.fuelLevel !== undefined && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+                      <span>⛽ Nhiên liệu</span><span>{v.fuelLevel}%</span>
                     </div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 6 }}>
-                      XÄƒng: {v.fuelLevel || 0}%
-                      <div className={`${styles.progressBar} ${styles.fuelBar}`} style={{ marginTop: 4 }}>
-                        <div className={styles.fill} style={{ width: `${v.fuelLevel || 0}%`, background: (v.fuelLevel || 0) < 30 ? '#ef4444' : '#22c55e' }} />
-                      </div>
-                    </div>
-                    <div className={styles.vehiclePrice}>{fmtMoney(v.pricePerDay)}<span className={styles.tourPriceSub}>/ngĂ y</span></div>
-                    <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>Cá»c: {fmtMoney(v.depositAmount)}</div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {v.status === 'AVAILABLE' && (
-                        <button className={styles.btnPrimary} style={{ flex: 1, justifyContent: 'center' }}
-                          onClick={() => { setRentForm(f => ({ ...f, vehicleCode: v.vehicleCode })); setShowRentModal(true); }}>
-                          Cho thuĂª
-                        </button>
-                      )}
-                      {v.status !== 'AVAILABLE' && <span style={{ flex: 1, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>KhĂ´ng sáºµn sĂ ng</span>}
+                    <div className={styles.progressBar}>
+                      <div className={styles.fill} style={{ width: `${v.fuelLevel}%`, background: v.fuelLevel < 30 ? '#ef4444' : '#22c55e' }} />
                     </div>
                   </div>
-                );
-              })}
-              {filteredVehicles.length === 0 && <div className={styles.emptyState} style={{ gridColumn: '1/-1' }}><div className={styles.emptyIcon}>đŸï¸</div><p>KhĂ´ng cĂ³ xe phĂ¹ há»£p</p></div>}
-            </div>
-          )}
-        </>
-      )}
-
-      {tab === 'rentals' && (
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#475569' }}>
+                  <span>💰 {(v.pricePerDay || 0).toLocaleString('vi-VN')}đ/ngày</span>
+                  <span>🔒 Đặt cọc: {(v.depositAmount || 0).toLocaleString('vi-VN')}đ</span>
+                </div>
+                {v.status === 'AVAILABLE' && (
+                  <button className={styles.btnPrimary} style={{ width: '100%', marginTop: 12 }}
+                    onClick={() => { setForm(f => ({ ...f, vehicleCode: v.vehicleCode })); setShowModal(true); }}>
+                    Cho thuê
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Danh sách đang thuê */
         <div className={styles.tableWrapper}>
           <table className={styles.dataTable}>
             <thead>
               <tr>
-                <th>MĂ£ thuĂª</th>
-                <th>Xe</th>
-                <th>KhĂ¡ch thuĂª</th>
-                <th>ThuĂª tá»«</th>
-                <th>Háº¡n tráº£</th>
-                <th>Thá»i gian</th>
-                <th>Cá»c</th>
-                <th>Tá»•ng tiá»n</th>
-                <th>Tráº¡ng thĂ¡i</th>
-                <th style={{ textAlign: 'center' }}>Thao tĂ¡c</th>
+                <th>Mã phiếu</th><th>Xe</th><th>Khách thuê</th><th>Từ ngày</th>
+                <th>Đến ngày</th><th>Số ngày</th><th>Tiền cọc</th><th>Tổng tiền</th><th>Trạng thái</th><th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 32 }}>Äang táº£i...</td></tr>
-              ) : rentals.length === 0 ? (
-                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>KhĂ´ng cĂ³ giao dá»‹ch thuĂª xe nĂ o Ä‘ang active</td></tr>
-              ) : rentals.map(r => {
-                const overdue = isOverdue(r.rentTo);
-                const daysLeft = Math.ceil((new Date(r.rentTo).getTime() - Date.now()) / 86400000);
+              {filteredRentals.length === 0 ? (
+                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>Không có xe đang thuê</td></tr>
+              ) : filteredRentals.map(r => {
+                const overdue = new Date(r.rentTo) < now && r.status === 'ACTIVE';
                 return (
-                  <tr key={r.id}>
-                    <td><span style={{ fontFamily: 'monospace', fontSize: 12, color: '#2563eb' }}>{r.rentalCode}</span></td>
+                  <tr key={r.id} style={{ background: overdue ? '#fef2f2' : undefined }}>
+                    <td style={{ fontFamily: 'monospace', fontSize: 12, color: '#2563eb' }}>{r.rentalCode}</td>
+                    <td><strong>{r.vehicleCode}</strong><br /><span style={{ fontSize: 12, color: '#94a3b8' }}>{r.licensePlate}</span></td>
+                    <td><strong>{r.guestName}</strong><br /><span style={{ fontSize: 12, color: '#94a3b8' }}>{r.guestPhone}</span></td>
+                    <td>{new Date(r.rentFrom).toLocaleDateString('vi-VN')}</td>
+                    <td style={{ color: overdue ? '#dc2626' : undefined, fontWeight: overdue ? 700 : 400 }}>
+                      {new Date(r.rentTo).toLocaleDateString('vi-VN')}
+                      {overdue && <span style={{ marginLeft: 6, fontSize: 11, background: '#fecaca', color: '#dc2626', padding: '2px 6px', borderRadius: 4 }}>Quá hạn</span>}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>{r.totalDays} ngày</td>
+                    <td>{(r.depositAmount || 0).toLocaleString('vi-VN')}đ</td>
+                    <td style={{ fontWeight: 700 }}>{(r.totalAmount || 0).toLocaleString('vi-VN')}đ</td>
+                    <td><span className={`${styles.badge} ${overdue ? styles.dirty : styles.checkedIn}`}>{overdue ? 'Quá hạn' : 'Đang thuê'}</span></td>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{r.vehicleName || r.vehicleCode}</div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>{r.licensePlate}</div>
-                    </td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{r.guestName}</div>
-                      <div style={{ fontSize: 12, color: '#94a3b8' }}>{r.guestPhone}</div>
-                    </td>
-                    <td style={{ fontSize: 13 }}>{new Date(r.rentFrom).toLocaleString('vi-VN')}</td>
-                    <td style={{ color: overdue ? '#dc2626' : '#334155', fontWeight: overdue ? 700 : 500 }}>
-                      {new Date(r.rentTo).toLocaleString('vi-VN')}
-                      {overdue && <div style={{ fontSize: 11, color: '#dc2626' }}>â ï¸ QUĂ Háº N</div>}
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <span style={{ fontWeight: 600, color: overdue ? '#dc2626' : '#1e293b' }}>
-                        {overdue ? `+${Math.abs(daysLeft)} ngĂ y` : `${daysLeft} ngĂ y`}
-                      </span>
-                    </td>
-                    <td>{fmtMoney(r.depositAmount)}</td>
-                    <td style={{ fontWeight: 700 }}>{fmtMoney(r.totalAmount)}</td>
-                    <td><span className={`${styles.badge} ${overdue ? styles.overdue : styles.active}`}>{overdue ? 'QuĂ¡ háº¡n' : 'Äang thuĂª'}</span></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button className={styles.btnSuccess} style={{ padding: '5px 12px', fontSize: 12 }}
-                        onClick={() => { setSelectedRental(r); setShowReturnModal(true); }}>
-                        Nháº­n xe
+                      <button className={styles.btnDanger} style={{ padding: '5px 10px', fontSize: 12 }}
+                        onClick={() => { setReturnModal(r); setReturnForm({ fuelLevel: 100, damageFee: 0, depositReturned: r.depositAmount || 0, notes: '' }); }}>
+                        Trả xe
                       </button>
                     </td>
                   </tr>
@@ -243,154 +187,93 @@ export const VehiclesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Rent Modal */}
-      {showRentModal && (
-        <div className={styles.overlay} onClick={() => setShowRentModal(false)}>
+      {/* Modal cho thuê xe */}
+      {showModal && (
+        <div className={styles.modalBackdrop} onClick={() => setShowModal(false)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>đŸï¸ Giao xe cho khĂ¡ch</h2>
-              <button className={styles.btnIcon} onClick={() => setShowRentModal(false)}><X size={20} /></button>
+              <h3>🏍️ Tạo Phiếu Cho Thuê Xe</h3>
+              <button className={styles.btnIcon} onClick={() => setShowModal(false)}><X size={20} /></button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formGrid}>
                 <div className={styles.formGroup}>
-                  <label>Xe <span className={styles.required}>*</span></label>
-                  <select value={rentForm.vehicleCode} onChange={e => setRentForm(f => ({ ...f, vehicleCode: e.target.value }))}>
-                    <option value="">-- Chá»n xe --</option>
+                  <label>Mã xe *</label>
+                  <select value={form.vehicleCode} onChange={e => setForm(f => ({ ...f, vehicleCode: e.target.value }))}>
+                    <option value="">-- Chọn xe --</option>
                     {vehicles.filter(v => v.status === 'AVAILABLE').map(v => (
-                      <option key={v.vehicleCode} value={v.vehicleCode}>{v.vehicleName} â€” {v.licensePlate} ({fmtMoney(v.pricePerDay)}/ngĂ y)</option>
+                      <option key={v.vehicleCode} value={v.vehicleCode}>{v.vehicleCode} — {v.licensePlate}</option>
                     ))}
                   </select>
                 </div>
                 <div className={styles.formGroup}>
-                  <label>MĂ£ booking (náº¿u cĂ³)</label>
-                  <input type="number" placeholder="BK ID" value={rentForm.bookingId} onChange={e => setRentForm(f => ({ ...f, bookingId: e.target.value }))} />
+                  <label>Tên khách *</label>
+                  <input value={form.guestName} onChange={e => setForm(f => ({ ...f, guestName: e.target.value }))} placeholder="Nguyễn Văn A" />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>TĂªn khĂ¡ch <span className={styles.required}>*</span></label>
-                  <input value={rentForm.guestName} onChange={e => setRentForm(f => ({ ...f, guestName: e.target.value }))} placeholder="Há» vĂ  tĂªn" />
+                  <label>Số điện thoại</label>
+                  <input value={form.guestPhone} onChange={e => setForm(f => ({ ...f, guestPhone: e.target.value }))} placeholder="0912345678" />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>SÄT <span className={styles.required}>*</span></label>
-                  <input value={rentForm.guestPhone} onChange={e => setRentForm(f => ({ ...f, guestPhone: e.target.value }))} placeholder="0912..." />
+                  <label>Tiền đặt cọc (đ)</label>
+                  <input type="number" value={form.depositAmount} onChange={e => setForm(f => ({ ...f, depositAmount: Number(e.target.value) }))} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>CMND/Passport</label>
-                  <input value={rentForm.guestIdCard} onChange={e => setRentForm(f => ({ ...f, guestIdCard: e.target.value }))} />
+                  <label>Từ ngày *</label>
+                  <input type="datetime-local" value={form.rentFrom} onChange={e => setForm(f => ({ ...f, rentFrom: e.target.value }))} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Tiá»n cá»c</label>
-                  <input type="number" value={rentForm.depositAmount} onChange={e => setRentForm(f => ({ ...f, depositAmount: Number(e.target.value) }))} />
+                  <label>Đến ngày *</label>
+                  <input type="datetime-local" value={form.rentTo} onChange={e => setForm(f => ({ ...f, rentTo: e.target.value }))} />
                 </div>
-                <div className={styles.formGroup}>
-                  <label>ThuĂª tá»«</label>
-                  <input type="datetime-local" value={rentForm.rentFrom} onChange={e => setRentForm(f => ({ ...f, rentFrom: e.target.value }))} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Tráº£ xe lĂºc</label>
-                  <input type="datetime-local" value={rentForm.rentTo} onChange={e => setRentForm(f => ({ ...f, rentTo: e.target.value }))} />
+                <div className={styles.formGroup} style={{ gridColumn: '1/-1' }}>
+                  <label>Ghi chú</label>
+                  <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
                 </div>
               </div>
-              {rentForm.vehicleCode && rentForm.rentFrom && rentForm.rentTo && (
-                <div style={{ marginTop: 16, padding: '12px 16px', background: '#eff6ff', borderRadius: 10, fontSize: 14 }}>
-                  đŸ’¡ {calcDays(rentForm.rentFrom, rentForm.rentTo)} ngĂ y Ă— {fmtMoney(vehicles.find(v => v.vehicleCode === rentForm.vehicleCode)?.pricePerDay || 0)} =
-                  <strong style={{ color: '#1e6fff', marginLeft: 6 }}>{fmtMoney(calcDays(rentForm.rentFrom, rentForm.rentTo) * (vehicles.find(v => v.vehicleCode === rentForm.vehicleCode)?.pricePerDay || 0))}</strong>
-                </div>
-              )}
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} onClick={() => setShowRentModal(false)}>Há»§y</button>
-              <button className={styles.btnPrimary} onClick={handleRent}>âœ… XĂ¡c nháº­n giao xe</button>
+              <button className={styles.btnSecondary} onClick={() => setShowModal(false)}>Hủy</button>
+              <button className={styles.btnPrimary} onClick={handleRent}>✅ Xác nhận cho thuê</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Return Modal */}
-      {showReturnModal && selectedRental && (
-        <div className={styles.overlay} onClick={() => setShowReturnModal(false)}>
+      {/* Modal trả xe */}
+      {returnModal && (
+        <div className={styles.modalBackdrop} onClick={() => setReturnModal(null)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>đŸ”„ Nháº­n xe láº¡i â€” {selectedRental.vehicleCode}</h2>
-              <button className={styles.btnIcon} onClick={() => setShowReturnModal(false)}><X size={20} /></button>
+              <h3>🔄 Trả Xe — {returnModal.vehicleCode}</h3>
+              <button className={styles.btnIcon} onClick={() => setReturnModal(null)}><X size={20} /></button>
             </div>
             <div className={styles.modalBody}>
-              <div style={{ marginBottom: 16, padding: 14, background: '#f8fafc', borderRadius: 10 }}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedRental.guestName} â€” {selectedRental.vehicleName}</div>
-                <div style={{ fontSize: 13, color: '#64748b' }}>ThuĂª {selectedRental.totalDays} ngĂ y â€” {(selectedRental.totalAmount).toLocaleString()}Ä‘</div>
-              </div>
               <div className={styles.formGrid}>
                 <div className={styles.formGroup}>
-                  <label>Má»©c xÄƒng khi tráº£ (%)</label>
-                  <input type="range" min={0} max={100} value={returnForm.fuelLevel}
+                  <label>Mức nhiên liệu khi trả (%)</label>
+                  <input type="number" min={0} max={100} value={returnForm.fuelLevel}
                     onChange={e => setReturnForm(f => ({ ...f, fuelLevel: Number(e.target.value) }))} />
-                  <div style={{ textAlign: 'center', fontWeight: 700, color: '#1e6fff' }}>{returnForm.fuelLevel}%</div>
                 </div>
                 <div className={styles.formGroup}>
-                  <label>PhĂ­ hÆ° há»ng (Ä‘)</label>
-                  <input type="number" value={returnForm.damageFee} onChange={e => setReturnForm(f => ({ ...f, damageFee: Number(e.target.value) }))} />
-                </div>
-                <div className={`${styles.formGroup} ${styles.fullSpan}`}>
-                  <label>Ghi chĂº hÆ° há»ng</label>
-                  <textarea value={returnForm.damageNote} onChange={e => setReturnForm(f => ({ ...f, damageNote: e.target.value }))} placeholder="MĂ´ táº£ hÆ° há»ng náº¿u cĂ³..." />
-                </div>
-              </div>
-              <div style={{ marginTop: 16, padding: '12px 16px', background: '#f0fdf4', borderRadius: 10, fontSize: 14 }}>
-                đŸ’° HoĂ n cá»c: <strong style={{ color: '#16a34a' }}>{fmtMoney(selectedRental.depositAmount - returnForm.damageFee)}</strong>
-                {returnForm.damageFee > 0 && <span style={{ color: '#dc2626', marginLeft: 8 }}>(trá»« {fmtMoney(returnForm.damageFee)} phĂ­ hÆ° há»ng)</span>}
-              </div>
-            </div>
-            <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} onClick={() => setShowReturnModal(false)}>Há»§y</button>
-              <button className={styles.btnSuccess} onClick={handleReturn}>âœ… XĂ¡c nháº­n nháº­n xe</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Vehicle Modal */}
-      {showAddVehicle && (
-        <div className={styles.overlay} onClick={() => setShowAddVehicle(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2>â• ThĂªm xe má»›i</h2>
-              <button className={styles.btnIcon} onClick={() => setShowAddVehicle(false)}><X size={20} /></button>
-            </div>
-            <div className={styles.modalBody}>
-              <div className={styles.formGrid}>
-                {[
-                  { label: 'MĂ£ xe', key: 'vehicleCode', placeholder: 'XS-01' },
-                  { label: 'Biá»ƒn sá»‘', key: 'licensePlate', placeholder: '23A-12345' },
-                  { label: 'TĂªn xe', key: 'vehicleName', placeholder: 'Xe sá»‘ Honda' },
-                ].map(f => (
-                  <div className={styles.formGroup} key={f.key}>
-                    <label>{f.label}</label>
-                    <input value={(vehicleForm as any)[f.key]} placeholder={f.placeholder}
-                      onChange={e => setVehicleForm(v => ({ ...v, [f.key]: e.target.value }))} />
-                  </div>
-                ))}
-                <div className={styles.formGroup}>
-                  <label>Loáº¡i xe</label>
-                  <select value={vehicleForm.vehicleType} onChange={e => setVehicleForm(v => ({ ...v, vehicleType: e.target.value }))}>
-                    <option value="MANUAL">Xe sá»‘</option>
-                    <option value="AUTOMATIC">Xe tay ga</option>
-                    <option value="SEMI_MANUAL">Xe cĂ´n</option>
-                    <option value="OTHER">KhĂ¡c</option>
-                  </select>
+                  <label>Phí hư hỏng (đ)</label>
+                  <input type="number" value={returnForm.damageFee}
+                    onChange={e => setReturnForm(f => ({ ...f, damageFee: Number(e.target.value) }))} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>GiĂ¡/ngĂ y (Ä‘)</label>
-                  <input type="number" value={vehicleForm.pricePerDay} onChange={e => setVehicleForm(v => ({ ...v, pricePerDay: Number(e.target.value) }))} />
+                  <label>Hoàn cọc (đ)</label>
+                  <input type="number" value={returnForm.depositReturned}
+                    onChange={e => setReturnForm(f => ({ ...f, depositReturned: Number(e.target.value) }))} />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Tiá»n cá»c (Ä‘)</label>
-                  <input type="number" value={vehicleForm.depositAmount} onChange={e => setVehicleForm(v => ({ ...v, depositAmount: Number(e.target.value) }))} />
+                  <label>Ghi chú</label>
+                  <input value={returnForm.notes} onChange={e => setReturnForm(f => ({ ...f, notes: e.target.value }))} />
                 </div>
               </div>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} onClick={() => setShowAddVehicle(false)}>Há»§y</button>
-              <button className={styles.btnPrimary} onClick={handleAddVehicle}>đŸ’¾ ThĂªm xe</button>
+              <button className={styles.btnSecondary} onClick={() => setReturnModal(null)}>Hủy</button>
+              <button className={styles.btnPrimary} onClick={handleReturn}>✅ Xác nhận trả xe</button>
             </div>
           </div>
         </div>
@@ -400,4 +283,3 @@ export const VehiclesPage: React.FC = () => {
 };
 
 export default VehiclesPage;
-

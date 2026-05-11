@@ -5,267 +5,259 @@ import styles from '../hotel.module.scss';
 import hotelService from '../services/hotel.service';
 import type { HotelTourDto } from '../services/hotel.service';
 
-const DIFFICULTY_LABELS: Record<string, string> = { EASY: 'Dá»…', MODERATE: 'Trung bĂ¬nh', HARD: 'KhĂ³' };
-const TOUR_TYPES: Record<string, string> = { DAY_TRIP: 'Day Trip', LOOP: 'Loop Tour', TREKKING: 'Trekking', CAR_TOUR: 'Xe Ă´ tĂ´' };
+const DIFFICULTY_LABELS: Record<string, string> = { EASY: 'Dễ', MODERATE: 'Trung bình', HARD: 'Khó' };
+const TOUR_TYPES: Record<string, string> = { DAY_TRIP: 'Day Trip', LOOP: 'Loop Tour', TREKKING: 'Trekking', CAR_TOUR: 'Xe ô tô' };
+
+const EMPTY_TOUR: Partial<HotelTourDto> = {
+  tourCode: '', tourName: '', tourNameEN: '', tourType: 'DAY_TRIP',
+  durationDays: 1, durationNights: 0, maxPerson: 20, minPerson: 2,
+  pricePerPerson: 0, groupPrice: 0, difficulty: 'EASY',
+  highlights: '', meetingPoint: '', isAvailable: true,
+};
 
 export const ToursPage: React.FC = () => {
-  const [tab, setTab] = useState<'catalog' | 'guides' | 'schedules'>('catalog');
   const [tours, setTours] = useState<HotelTourDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState<Partial<HotelTourDto> | null>(null);
+  const [activeTab, setActiveTab] = useState<'tours' | 'guides' | 'schedules'>('tours');
   const [guides, setGuides] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [typeFilter, setTypeFilter] = useState('');
-  const [search, setSearch] = useState('');
-  const [showTourModal, setShowTourModal] = useState(false);
-  const [showGuideModal, setShowGuideModal] = useState(false);
-  const [editTour, setEditTour] = useState<HotelTourDto | null>(null);
 
-  const [tourForm, setTourForm] = useState({
-    tourCode: '', tourName: '', tourNameEN: '', tourType: 'DAY_TRIP',
-    durationDays: 1, durationNights: 0, maxPerson: 10, minPerson: 1,
-    pricePerPerson: 0, groupPrice: 0, groupDiscountFrom: 5,
-    highlights: '', itinerary: '', inclusions: '', exclusions: '',
-    meetingPoint: '', difficulty: 'EASY', isAvailable: true, sortOrder: 0,
-  });
+  useEffect(() => { fetchTours(); }, [typeFilter]);
 
-  const [guideForm, setGuideForm] = useState({
-    name: '', phone: '', email: '', languages: 'Tiáº¿ng Viá»‡t', speciality: '',
-    isFreelance: false, dailyRate: 0, bio: '', isActive: true,
-  });
-
-  useEffect(() => { fetchAll(); }, []);
-
-  const fetchAll = async () => {
+  const fetchTours = async () => {
     setLoading(true);
-    try {
-      const [t, g, s] = await Promise.all([hotelService.getTours(), hotelService.getGuides(), hotelService.getTourSchedules()]);
-      setTours(t); setGuides(g); setSchedules(s);
-    } catch { toast.error('Lá»—i táº£i dá»¯ liá»‡u tour'); }
+    try { setTours(await hotelService.getTours(typeFilter || undefined)); }
+    catch { toast.error('Lỗi tải danh sách tour'); }
     finally { setLoading(false); }
   };
 
-  const handleSaveTour = async () => {
-    if (!tourForm.tourCode || !tourForm.tourName) { toast.error('Nháº­p mĂ£ vĂ  tĂªn tour'); return; }
+  const fetchGuides = async () => {
+    try { setGuides(await hotelService.getGuides()); }
+    catch { toast.error('Lỗi tải hướng dẫn viên'); }
+  };
+
+  const fetchSchedules = async () => {
+    try { setSchedules(await hotelService.getTourSchedules()); }
+    catch { toast.error('Lỗi tải lịch tour'); }
+  };
+
+  const handleTabChange = (tab: 'tours' | 'guides' | 'schedules') => {
+    setActiveTab(tab);
+    if (tab === 'guides') fetchGuides();
+    if (tab === 'schedules') fetchSchedules();
+  };
+
+  const handleSave = async () => {
+    if (!editing?.tourName || !editing?.tourCode) return toast.error('Vui lòng nhập đầy đủ thông tin');
     try {
-      await hotelService.upsertTour(tourForm);
-      toast.success(editTour ? 'Cáº­p nháº­t tour thĂ nh cĂ´ng' : 'ThĂªm tour thĂ nh cĂ´ng');
-      setShowTourModal(false); fetchAll();
-    } catch { toast.error('Lá»—i lÆ°u tour'); }
+      await hotelService.upsertTour(editing);
+      toast.success(editing.id ? 'Cập nhật tour thành công!' : 'Tạo tour mới thành công!');
+      setShowModal(false); setEditing(null); fetchTours();
+    } catch { toast.error('Lỗi lưu tour'); }
   };
 
-  const handleSaveGuide = async () => {
-    if (!guideForm.name) { toast.error('Nháº­p tĂªn hÆ°á»›ng dáº«n viĂªn'); return; }
-    try {
-      await hotelService.upsertGuide(guideForm);
-      toast.success('LÆ°u thĂ nh cĂ´ng');
-      setShowGuideModal(false); fetchAll();
-    } catch { toast.error('Lá»—i lÆ°u HDV'); }
+  const handleDelete = async (id: number) => {
+    if (!confirm('Xác nhận xóa tour này?')) return;
+    try { await hotelService.deleteTour(id); toast.success('Đã xóa tour'); fetchTours(); }
+    catch { toast.error('Lỗi xóa tour'); }
   };
 
-  const handleDeleteTour = async (id: number) => {
-    if (!window.confirm('XĂ³a tour nĂ y?')) return;
-    try { await hotelService.deleteTour(id); toast.success('XĂ³a thĂ nh cĂ´ng'); fetchAll(); }
-    catch { toast.error('Lá»—i xĂ³a tour'); }
-  };
-
-  const filteredTours = tours.filter(t => {
-    if (typeFilter && t.tourType !== typeFilter) return false;
-    if (search && !t.tourName.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-
-  const fmtMoney = (n: number) => n?.toLocaleString('vi-VN') + 'Ä‘';
-
-  const openEdit = (t: HotelTourDto) => {
-    setEditTour(t);
-    setTourForm({ ...t, highlights: t.highlights || '', itinerary: t.itinerary || '', inclusions: '', exclusions: '', meetingPoint: t.meetingPoint || '' } as any);
-    setShowTourModal(true);
-  };
+  const filtered = tours.filter(t => !search || t.tourName?.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
-        <h1>đŸ¯ Quáº£n LĂ½ Tour</h1>
+        <div>
+          <h1>🗺️ Quản Lý Tour</h1>
+          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
+            {tours.length} tour · {tours.filter(t => t.isAvailable).length} đang hoạt động
+          </p>
+        </div>
         <div className={styles.headerActions}>
-          {tab === 'catalog' && <button className={styles.btnPrimary} onClick={() => { setEditTour(null); setTourForm({ tourCode: '', tourName: '', tourNameEN: '', tourType: 'DAY_TRIP', durationDays: 1, durationNights: 0, maxPerson: 10, minPerson: 1, pricePerPerson: 0, groupPrice: 0, groupDiscountFrom: 5, highlights: '', itinerary: '', inclusions: '', exclusions: '', meetingPoint: '', difficulty: 'EASY', isAvailable: true, sortOrder: 0 }); setShowTourModal(true); }}><Plus size={15} /> ThĂªm tour</button>}
-          {tab === 'guides' && <button className={styles.btnPrimary} onClick={() => setShowGuideModal(true)}><Plus size={15} /> ThĂªm HDV</button>}
+          <button className={styles.btnPrimary} onClick={() => { setEditing({ ...EMPTY_TOUR }); setShowModal(true); }}>
+            <Plus size={15} /> Thêm tour
+          </button>
         </div>
       </div>
 
-      <div className={styles.tabs}>
-        {[['catalog', 'đŸ—ºï¸ Catalog Tour'], ['guides', 'đŸ‘¤ HÆ°á»›ng dáº«n viĂªn'], ['schedules', 'đŸ“… Lá»‹ch tour']].map(([k, l]) => (
-          <button key={k} className={`${styles.tab} ${tab === k ? styles.active : ''}`} onClick={() => setTab(k as any)}>{l}</button>
+      {/* Tabs */}
+      <div className={styles.tabs} style={{ marginBottom: 20 }}>
+        {[
+          { key: 'tours', label: `🗺️ Danh mục tour (${tours.length})` },
+          { key: 'guides', label: `👤 Hướng dẫn viên (${guides.length})` },
+          { key: 'schedules', label: `📅 Lịch khởi hành (${schedules.length})` },
+        ].map(t => (
+          <button key={t.key} className={`${styles.tab} ${activeTab === t.key ? styles.active : ''}`}
+            onClick={() => handleTabChange(t.key as any)}>{t.label}</button>
         ))}
       </div>
 
-      {/* Tour Catalog */}
-      {tab === 'catalog' && (
+      {activeTab === 'tours' && (
         <>
-          <div className={styles.searchBar}>
-            <div className={styles.searchInput}><Search size={16} color="#94a3b8" /><input placeholder="TĂ¬m tour..." value={search} onChange={e => setSearch(e.target.value)} /></div>
+          <div className={styles.searchBar} style={{ marginBottom: 16 }}>
+            <div className={styles.searchInput}>
+              <Search size={16} color="#94a3b8" />
+              <input placeholder="Tìm tên tour..." value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
             <select className={styles.filterSelect} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-              <option value="">Táº¥t cáº£ loáº¡i</option>
+              <option value="">Tất cả loại</option>
               {Object.entries(TOUR_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
 
-          {loading ? <div style={{ textAlign: 'center', padding: 48, color: '#94a3b8' }}>Äang táº£i...</div> : (
+          {loading ? <div style={{ textAlign: 'center', padding: 48, color: '#94a3b8' }}>Đang tải...</div> : (
             <div className={styles.tourGrid}>
-              {filteredTours.map(t => (
+              {filtered.length === 0 ? (
+                <div className={styles.emptyState} style={{ gridColumn: '1/-1' }}>
+                  <div className={styles.emptyIcon}>🗺️</div><p>Chưa có tour nào. Hãy thêm tour đầu tiên!</p>
+                </div>
+              ) : filtered.map(t => (
                 <div key={t.id} className={styles.tourCard}>
-                  <div className={styles.tourImg}>đŸ”ï¸</div>
-                  <div className={styles.tourBody}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                      <div className={styles.tourName}>{t.tourName}</div>
-                      <span className={`${styles.badge} ${styles[t.difficulty.toLowerCase()] || styles.easy}`} style={{ flexShrink: 0 }}>{DIFFICULTY_LABELS[t.difficulty]}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{t.tourName}</div>
+                      <div style={{ fontSize: 12, color: '#64748b' }}>{t.tourCode} · {TOUR_TYPES[t.tourType] || t.tourType}</div>
                     </div>
-                    <div className={styles.tourMeta}>
-                      <span>â± {t.durationDays} ngĂ y {t.durationNights} Ä‘Ăªm</span>
-                      <span>đŸ‘¥ {t.minPerson}â€“{t.maxPerson} ngÆ°á»i</span>
-                      <span className={`${styles.badge} ${t.isAvailable ? styles.vacant : styles.oos}`}>{t.isAvailable ? 'Má»Ÿ' : 'ÄĂ³ng'}</span>
+                    <span className={`${styles.badge} ${t.isAvailable ? styles.confirmed : styles.cancelled}`}>
+                      {t.isAvailable ? 'Hoạt động' : 'Dừng'}
+                    </span>
+                  </div>
+                  {t.highlights && <p style={{ fontSize: 13, color: '#475569', marginBottom: 12, lineHeight: 1.5 }}>{t.highlights.slice(0, 120)}...</p>}
+                  <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#64748b', marginBottom: 12, flexWrap: 'wrap' }}>
+                    <span>⏱️ {t.durationDays}N{t.durationNights > 0 ? `${t.durationNights}Đ` : ''}</span>
+                    <span>👥 {t.minPerson}–{t.maxPerson} người</span>
+                    <span>💪 {DIFFICULTY_LABELS[t.difficulty] || t.difficulty}</span>
+                    {t.availableSlots > 0 && <span>✅ {t.availableSlots} chỗ</span>}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: '#1e6fff' }}>{(t.pricePerPerson || 0).toLocaleString('vi-VN')}đ</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8' }}>/ người · Đoàn: {(t.groupPrice || 0).toLocaleString('vi-VN')}đ</div>
                     </div>
-                    {t.highlights && <p style={{ fontSize: 13, color: '#64748b', margin: '6px 0 10px', lineHeight: 1.5 }}>{t.highlights.substring(0, 120)}{t.highlights.length > 120 ? '...' : ''}</p>}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                      <div>
-                        <div className={styles.tourPrice}>{fmtMoney(t.pricePerPerson)}<span className={styles.tourPriceSub}>/ngÆ°á»i</span></div>
-                        {t.groupPrice > 0 && <div style={{ fontSize: 12, color: '#94a3b8' }}>ÄoĂ n: {fmtMoney(t.groupPrice)}</div>}
-                      </div>
-                    </div>
-                    <div className={styles.tourActions}>
-                      <button className={styles.btnPrimary} style={{ flex: 1, justifyContent: 'center', fontSize: 13 }} onClick={() => openEdit(t)}><Edit size={14} /> Sá»­a</button>
-                      <button className={styles.btnDanger} style={{ padding: '7px 12px' }} onClick={() => handleDeleteTour(t.id)}><Trash2 size={14} /></button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className={styles.btnSecondary} style={{ padding: '6px 10px' }}
+                        onClick={() => { setEditing({ ...t }); setShowModal(true); }}>
+                        <Edit size={14} />
+                      </button>
+                      <button className={styles.btnDanger} style={{ padding: '6px 10px' }} onClick={() => handleDelete(t.id)}>
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
                 </div>
               ))}
-              {filteredTours.length === 0 && (
-                <div className={styles.emptyState} style={{ gridColumn: '1/-1' }}>
-                  <div className={styles.emptyIcon}>đŸ—ºï¸</div>
-                  <p>ChÆ°a cĂ³ tour nĂ o. Nháº¥n "+ ThĂªm tour" Ä‘á»ƒ báº¯t Ä‘áº§u.</p>
-                </div>
-              )}
             </div>
           )}
         </>
       )}
 
-      {/* Guides */}
-      {tab === 'guides' && (
-        <div className={styles.tableWrapper}>
-          <table className={styles.dataTable}>
-            <thead>
-              <tr><th>TĂªn</th><th>SÄT</th><th>NgĂ´n ngá»¯</th><th>ChuyĂªn mĂ´n</th><th>Loáº¡i</th><th>GiĂ¡/ngĂ y</th><th>Tráº¡ng thĂ¡i</th></tr>
-            </thead>
-            <tbody>
-              {loading ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32 }}>Äang táº£i...</td></tr>
-                : guides.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>ChÆ°a cĂ³ hÆ°á»›ng dáº«n viĂªn</td></tr>
-                  : guides.map((g: any) => (
+      {activeTab === 'guides' && (
+        <div className={styles.card}>
+          <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700 }}>👤 Danh Sách Hướng Dẫn Viên</h3>
+          {guides.length === 0 ? (
+            <div className={styles.emptyState}><div className={styles.emptyIcon}>👤</div><p>Chưa có hướng dẫn viên</p></div>
+          ) : (
+            <div className={styles.tableWrapper}>
+              <table className={styles.dataTable}>
+                <thead><tr><th>Mã HDV</th><th>Họ tên</th><th>Chuyên môn</th><th>Ngôn ngữ</th><th>SĐT</th><th>Trạng thái</th></tr></thead>
+                <tbody>
+                  {guides.map(g => (
                     <tr key={g.id}>
-                      <td><div style={{ fontWeight: 600 }}>{g.name}</div><div style={{ fontSize: 12, color: '#94a3b8' }}>{g.email}</div></td>
-                      <td>{g.phone}</td>
+                      <td style={{ fontFamily: 'monospace' }}>{g.guideCode}</td>
+                      <td><strong>{g.guideName}</strong></td>
+                      <td>{g.specialty}</td>
                       <td>{g.languages}</td>
-                      <td>{g.speciality}</td>
-                      <td><span className={`${styles.badge} ${g.isFreelance ? styles.pending : styles.confirmed}`}>{g.isFreelance ? 'Tá»± do' : 'CÆ¡ há»¯u'}</span></td>
-                      <td>{fmtMoney(g.dailyRate)}</td>
-                      <td><span className={`${styles.badge} ${g.isActive ? styles.confirmed : styles.oos}`}>{g.isActive ? 'Hoáº¡t Ä‘á»™ng' : 'Nghá»‰'}</span></td>
+                      <td>{g.phone}</td>
+                      <td><span className={`${styles.badge} ${g.isActive ? styles.confirmed : styles.cancelled}`}>{g.isActive ? 'Hoạt động' : 'Nghỉ'}</span></td>
                     </tr>
                   ))}
-            </tbody>
-          </table>
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Schedules */}
-      {tab === 'schedules' && (
-        <div className={styles.tableWrapper}>
-          <table className={styles.dataTable}>
-            <thead>
-              <tr><th>Tour</th><th>NgĂ y</th><th>HDV</th><th>Slots</th><th>CĂ²n trá»‘ng</th><th>GiĂ¡</th><th>Tráº¡ng thĂ¡i</th></tr>
-            </thead>
-            <tbody>
-              {loading ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32 }}>Äang táº£i...</td></tr>
-                : schedules.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>ChÆ°a cĂ³ lá»‹ch tour</td></tr>
-                  : schedules.map((s: any) => (
+      {activeTab === 'schedules' && (
+        <div className={styles.card}>
+          <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700 }}>📅 Lịch Khởi Hành</h3>
+          {schedules.length === 0 ? (
+            <div className={styles.emptyState}><div className={styles.emptyIcon}>📅</div><p>Chưa có lịch khởi hành nào</p></div>
+          ) : (
+            <div className={styles.tableWrapper}>
+              <table className={styles.dataTable}>
+                <thead><tr><th>Tour</th><th>Ngày khởi hành</th><th>HDV</th><th>Đã đặt/Tối đa</th><th>Trạng thái</th></tr></thead>
+                <tbody>
+                  {schedules.map(s => (
                     <tr key={s.id}>
-                      <td style={{ fontWeight: 600 }}>{s.tourCode}</td>
-                      <td>{new Date(s.tourDate).toLocaleDateString('vi-VN')}</td>
-                      <td>{s.guideName || 'â€”'}</td>
-                      <td style={{ textAlign: 'center' }}>{s.maxSlots}</td>
-                      <td style={{ textAlign: 'center', color: s.availableSlots === 0 ? '#dc2626' : '#16a34a', fontWeight: 700 }}>{s.availableSlots}</td>
-                      <td>{s.priceOverride ? fmtMoney(s.priceOverride) : 'â€”'}</td>
-                      <td><span className={`${styles.badge} ${s.status === 'OPEN' ? styles.confirmed : styles.oos}`}>{s.status}</span></td>
+                      <td><strong>{s.tourName || s.tourCode}</strong></td>
+                      <td>{new Date(s.departureDate).toLocaleDateString('vi-VN')}</td>
+                      <td>{s.guideName || '—'}</td>
+                      <td style={{ textAlign: 'center' }}>{s.bookedCount}/{s.maxPerson}</td>
+                      <td><span className={`${styles.badge} ${styles.confirmed}`}>{s.status}</span></td>
                     </tr>
                   ))}
-            </tbody>
-          </table>
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Tour Modal */}
-      {showTourModal && (
-        <div className={styles.overlay} onClick={() => setShowTourModal(false)}>
-          <div className={`${styles.modal} ${styles.modalLg}`} onClick={e => e.stopPropagation()}>
+      {/* Modal tạo/sửa tour */}
+      {showModal && editing && (
+        <div className={styles.modalBackdrop} onClick={() => { setShowModal(false); setEditing(null); }}>
+          <div className={styles.modal} style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>{editTour ? 'âœï¸ Sá»­a tour' : 'â• ThĂªm tour má»›i'}</h2>
-              <button className={styles.btnIcon} onClick={() => setShowTourModal(false)}><X size={20} /></button>
+              <h3>{editing.id ? 'Chỉnh sửa tour' : 'Tạo tour mới'}</h3>
+              <button className={styles.btnIcon} onClick={() => { setShowModal(false); setEditing(null); }}><X size={20} /></button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formGrid}>
-                <div className={styles.formGroup}><label>MĂ£ tour *</label><input value={tourForm.tourCode} onChange={e => setTourForm(f => ({ ...f, tourCode: e.target.value }))} placeholder="HG-LOOP-3D" /></div>
-                <div className={styles.formGroup}><label>Loáº¡i</label>
-                  <select value={tourForm.tourType} onChange={e => setTourForm(f => ({ ...f, tourType: e.target.value }))}>
+                {[
+                  { label: 'Mã tour *', key: 'tourCode', type: 'text' },
+                  { label: 'Tên tour *', key: 'tourName', type: 'text' },
+                  { label: 'Tên tour (EN)', key: 'tourNameEN', type: 'text' },
+                  { label: 'Điểm xuất phát', key: 'meetingPoint', type: 'text' },
+                  { label: 'Số ngày', key: 'durationDays', type: 'number' },
+                  { label: 'Số đêm', key: 'durationNights', type: 'number' },
+                  { label: 'Tối thiểu người', key: 'minPerson', type: 'number' },
+                  { label: 'Tối đa người', key: 'maxPerson', type: 'number' },
+                  { label: 'Giá/người (đ)', key: 'pricePerPerson', type: 'number' },
+                  { label: 'Giá đoàn (đ)', key: 'groupPrice', type: 'number' },
+                ].map(f => (
+                  <div className={styles.formGroup} key={f.key}>
+                    <label>{f.label}</label>
+                    <input type={f.type} value={(editing as any)[f.key] || ''}
+                      onChange={e => setEditing(ed => ({ ...ed, [f.key]: f.type === 'number' ? Number(e.target.value) : e.target.value }))} />
+                  </div>
+                ))}
+                <div className={styles.formGroup}>
+                  <label>Loại tour</label>
+                  <select value={editing.tourType} onChange={e => setEditing(ed => ({ ...ed, tourType: e.target.value }))}>
                     {Object.entries(TOUR_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
-                <div className={`${styles.formGroup} ${styles.fullSpan}`}><label>TĂªn tour *</label><input value={tourForm.tourName} onChange={e => setTourForm(f => ({ ...f, tourName: e.target.value }))} placeholder="Ha Giang Loop 3 ngĂ y 2 Ä‘Ăªm" /></div>
-                <div className={`${styles.formGroup} ${styles.fullSpan}`}><label>TĂªn tiáº¿ng Anh</label><input value={tourForm.tourNameEN} onChange={e => setTourForm(f => ({ ...f, tourNameEN: e.target.value }))} /></div>
-                <div className={styles.formGroup}><label>Thá»i gian (ngĂ y)</label><input type="number" value={tourForm.durationDays} onChange={e => setTourForm(f => ({ ...f, durationDays: Number(e.target.value) }))} /></div>
-                <div className={styles.formGroup}><label>Sá»‘ Ä‘Ăªm</label><input type="number" value={tourForm.durationNights} onChange={e => setTourForm(f => ({ ...f, durationNights: Number(e.target.value) }))} /></div>
-                <div className={styles.formGroup}><label>Tá»‘i thiá»ƒu ngÆ°á»i</label><input type="number" value={tourForm.minPerson} onChange={e => setTourForm(f => ({ ...f, minPerson: Number(e.target.value) }))} /></div>
-                <div className={styles.formGroup}><label>Tá»‘i Ä‘a ngÆ°á»i</label><input type="number" value={tourForm.maxPerson} onChange={e => setTourForm(f => ({ ...f, maxPerson: Number(e.target.value) }))} /></div>
-                <div className={styles.formGroup}><label>GiĂ¡/ngÆ°á»i (Ä‘)</label><input type="number" value={tourForm.pricePerPerson} onChange={e => setTourForm(f => ({ ...f, pricePerPerson: Number(e.target.value) }))} /></div>
-                <div className={styles.formGroup}><label>GiĂ¡ Ä‘oĂ n (Ä‘)</label><input type="number" value={tourForm.groupPrice} onChange={e => setTourForm(f => ({ ...f, groupPrice: Number(e.target.value) }))} /></div>
-                <div className={styles.formGroup}><label>Äá»™ khĂ³</label>
-                  <select value={tourForm.difficulty} onChange={e => setTourForm(f => ({ ...f, difficulty: e.target.value }))}>
+                <div className={styles.formGroup}>
+                  <label>Độ khó</label>
+                  <select value={editing.difficulty} onChange={e => setEditing(ed => ({ ...ed, difficulty: e.target.value }))}>
                     {Object.entries(DIFFICULTY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
-                <div className={styles.formGroup}><label>Äiá»ƒm gáº·p</label><input value={tourForm.meetingPoint} onChange={e => setTourForm(f => ({ ...f, meetingPoint: e.target.value }))} placeholder="Lobby khĂ¡ch sáº¡n" /></div>
-                <div className={`${styles.formGroup} ${styles.fullSpan}`}><label>Äiá»ƒm ná»•i báº­t</label><textarea value={tourForm.highlights} onChange={e => setTourForm(f => ({ ...f, highlights: e.target.value }))} rows={3} /></div>
-                <div className={`${styles.formGroup} ${styles.fullSpan}`}><label>Lá»‹ch trĂ¬nh</label><textarea value={tourForm.itinerary} onChange={e => setTourForm(f => ({ ...f, itinerary: e.target.value }))} rows={4} placeholder="NgĂ y 1: ..." /></div>
-              </div>
-            </div>
-            <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} onClick={() => setShowTourModal(false)}>Há»§y</button>
-              <button className={styles.btnPrimary} onClick={handleSaveTour}>đŸ’¾ LÆ°u tour</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Guide Modal */}
-      {showGuideModal && (
-        <div className={styles.overlay} onClick={() => setShowGuideModal(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}><h2>â• ThĂªm hÆ°á»›ng dáº«n viĂªn</h2><button className={styles.btnIcon} onClick={() => setShowGuideModal(false)}><X size={20} /></button></div>
-            <div className={styles.modalBody}>
-              <div className={styles.formGrid}>
-                <div className={styles.formGroup}><label>Há» tĂªn *</label><input value={guideForm.name} onChange={e => setGuideForm(f => ({ ...f, name: e.target.value }))} /></div>
-                <div className={styles.formGroup}><label>SÄT</label><input value={guideForm.phone} onChange={e => setGuideForm(f => ({ ...f, phone: e.target.value }))} /></div>
-                <div className={styles.formGroup}><label>NgĂ´n ngá»¯</label><input value={guideForm.languages} onChange={e => setGuideForm(f => ({ ...f, languages: e.target.value }))} /></div>
-                <div className={styles.formGroup}><label>ChuyĂªn mĂ´n</label><input value={guideForm.speciality} onChange={e => setGuideForm(f => ({ ...f, speciality: e.target.value }))} /></div>
-                <div className={styles.formGroup}><label>GiĂ¡/ngĂ y (Ä‘)</label><input type="number" value={guideForm.dailyRate} onChange={e => setGuideForm(f => ({ ...f, dailyRate: Number(e.target.value) }))} /></div>
-                <div className={styles.formGroup} style={{ justifyContent: 'flex-end', paddingTop: 20 }}>
-                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={guideForm.isFreelance} onChange={e => setGuideForm(f => ({ ...f, isFreelance: e.target.checked }))} />
-                    HÆ°á»›ng dáº«n viĂªn tá»± do
-                  </label>
+                <div className={styles.formGroup} style={{ gridColumn: '1/-1' }}>
+                  <label>Điểm nổi bật</label>
+                  <textarea value={editing.highlights || ''} rows={3}
+                    onChange={e => setEditing(ed => ({ ...ed, highlights: e.target.value }))} />
                 </div>
               </div>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} onClick={() => setShowGuideModal(false)}>Há»§y</button>
-              <button className={styles.btnPrimary} onClick={handleSaveGuide}>đŸ’¾ LÆ°u</button>
+              <button className={styles.btnSecondary} onClick={() => { setShowModal(false); setEditing(null); }}>Hủy</button>
+              <button className={styles.btnPrimary} onClick={handleSave}>💾 Lưu tour</button>
             </div>
           </div>
         </div>
@@ -275,4 +267,3 @@ export const ToursPage: React.FC = () => {
 };
 
 export default ToursPage;
-
