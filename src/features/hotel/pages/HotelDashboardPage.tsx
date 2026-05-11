@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Hotel, LogIn, LogOut, Bike, TrendingUp, AlertCircle, Plus, RefreshCw, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
-import hotelService, { BookingDto, VehicleRentalDto } from '../services/hotel.service';
+import hotelService from '../services/hotel.service';
+import type { BookingDto, VehicleRentalDto } from '../services/hotel.service';
 
 export const HotelDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ export const HotelDashboardPage: React.FC = () => {
       }
       setLastRefresh(new Date());
     } catch (e) {
-      toast.error('Lỗi tải dữ liệu dashboard');
+      toast.error('Lá»—i táº£i dá»¯ liá»‡u dashboard');
     } finally { setLoading(false); }
   }, []);
 
@@ -63,27 +64,27 @@ export const HotelDashboardPage: React.FC = () => {
   const handleCheckIn = async (id: number) => {
     try {
       await hotelService.updateBookingStatus(id, 'CHECKED_IN');
-      toast.success('Check-in thành công!');
+      toast.success('Check-in thĂ nh cĂ´ng!');
       fetchAll();
-    } catch { toast.error('Lỗi check-in'); }
+    } catch { toast.error('Lá»—i check-in'); }
   };
 
   const handleCheckOut = async (id: number) => {
     try {
       await hotelService.updateBookingStatus(id, 'CHECKED_OUT');
-      toast.success('Check-out thành công!');
+      toast.success('Check-out thĂ nh cĂ´ng!');
       fetchAll();
-    } catch { toast.error('Lỗi check-out'); }
+    } catch { toast.error('Lá»—i check-out'); }
   };
 
-  const fmtMoney = (n: number) => n?.toLocaleString('vi-VN') + 'đ';
+  const fmtMoney = (n: number) => n?.toLocaleString('vi-VN') + 'Ä‘';
   const fmtTime = (dt: string) => new Date(dt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
   const kpis = [
-    { label: 'Phòng đang ở', value: dashboard?.inHouse ?? '—', icon: Hotel, color: 'blue', sub: 'In-house guests' },
-    { label: 'Check-in hôm nay', value: dashboard?.checkInsToday ?? '—', icon: LogIn, color: 'green', sub: 'arrivals today' },
-    { label: 'Check-out hôm nay', value: dashboard?.checkOutsToday ?? '—', icon: LogOut, color: 'orange', sub: 'departures today' },
-    { label: 'Doanh thu hôm nay', value: todayRevenue ? fmtMoney(todayRevenue.totalRevenue || 0) : '—', icon: TrendingUp, color: 'purple', sub: 'revenue today' },
+    { label: 'PhĂ²ng Ä‘ang á»Ÿ', value: dashboard?.inHouse ?? 'â€”', icon: Hotel, color: 'blue', sub: 'In-house guests' },
+    { label: 'Check-in hĂ´m nay', value: dashboard?.checkInsToday ?? 'â€”', icon: LogIn, color: 'green', sub: 'arrivals today' },
+    { label: 'Check-out hĂ´m nay', value: dashboard?.checkOutsToday ?? 'â€”', icon: LogOut, color: 'orange', sub: 'departures today' },
+    { label: 'Doanh thu hĂ´m nay', value: todayRevenue ? fmtMoney(todayRevenue.totalRevenue || 0) : 'â€”', icon: TrendingUp, color: 'purple', sub: 'revenue today' },
   ];
 
   const getRoomStatusClass = (r: any) => {
@@ -98,18 +99,18 @@ export const HotelDashboardPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>🏨 Dashboard Khách Sạn</h1>
+          <h1>đŸ¨ Dashboard KhĂ¡ch Sáº¡n</h1>
           <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
             <Clock size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-            Cập nhật lúc {lastRefresh.toLocaleTimeString('vi-VN')}
+            Cáº­p nháº­t lĂºc {lastRefresh.toLocaleTimeString('vi-VN')}
           </p>
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnSecondary} onClick={fetchAll}>
-            <RefreshCw size={15} /> Làm mới
+            <RefreshCw size={15} /> LĂ m má»›i
           </button>
           <button className={styles.btnPrimary} onClick={() => navigate('/hotel/bookings/new')}>
-            <Plus size={15} /> Đặt phòng mới
+            <Plus size={15} /> Äáº·t phĂ²ng má»›i
           </button>
         </div>
       </div>
@@ -129,27 +130,27 @@ export const HotelDashboardPage: React.FC = () => {
       {/* 3-column layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 320px', gap: 20 }}>
 
-        {/* COL LEFT — Hành động hôm nay */}
+        {/* COL LEFT â€” HĂ nh Ä‘á»™ng hĂ´m nay */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Check-out hôm nay */}
+          {/* Check-out hĂ´m nay */}
           <div className={styles.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>
                 <LogOut size={16} style={{ verticalAlign: 'middle', marginRight: 6, color: '#ef4444' }} />
-                Check-out hôm nay ({checkouts.length})
+                Check-out hĂ´m nay ({checkouts.length})
               </h3>
             </div>
             {checkouts.length === 0 ? (
-              <div className={styles.emptyState}><div className={styles.emptyIcon}>✅</div><p>Không có ai check-out hôm nay</p></div>
+              <div className={styles.emptyState}><div className={styles.emptyIcon}>âœ…</div><p>KhĂ´ng cĂ³ ai check-out hĂ´m nay</p></div>
             ) : checkouts.map(b => (
               <div key={b.id} className={styles.checkoutItem}>
                 <div className={styles.checkoutRoom}>{b.rooms[0]?.roomNo || '?'}</div>
                 <div className={styles.checkoutInfo}>
                   <div className={styles.checkoutName}>{b.guestName}</div>
                   <div className={styles.checkoutTime}>
-                    {fmtTime(b.checkOut)} · {b.paidAmount < b.totalAmount
-                      ? <span style={{ color: '#ef4444' }}>⚠️ Còn nợ {fmtMoney(b.totalAmount - b.paidAmount)}</span>
-                      : <span style={{ color: '#16a34a' }}>✅ Đã thanh toán</span>}
+                    {fmtTime(b.checkOut)} Â· {b.paidAmount < b.totalAmount
+                      ? <span style={{ color: '#ef4444' }}>â ï¸ CĂ²n ná»£ {fmtMoney(b.totalAmount - b.paidAmount)}</span>
+                      : <span style={{ color: '#16a34a' }}>âœ… ÄĂ£ thanh toĂ¡n</span>}
                   </div>
                 </div>
                 <div className={styles.checkoutActions}>
@@ -160,22 +161,22 @@ export const HotelDashboardPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Check-in hôm nay */}
+          {/* Check-in hĂ´m nay */}
           <div className={styles.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>
                 <LogIn size={16} style={{ verticalAlign: 'middle', marginRight: 6, color: '#22c55e' }} />
-                Check-in hôm nay ({checkins.length})
+                Check-in hĂ´m nay ({checkins.length})
               </h3>
             </div>
             {checkins.length === 0 ? (
-              <div className={styles.emptyState}><div className={styles.emptyIcon}>🛎️</div><p>Chưa có booking check-in hôm nay</p></div>
+              <div className={styles.emptyState}><div className={styles.emptyIcon}>đŸ›ï¸</div><p>ChÆ°a cĂ³ booking check-in hĂ´m nay</p></div>
             ) : checkins.map(b => (
               <div key={b.id} className={styles.checkoutItem}>
                 <div className={styles.checkoutRoom} style={{ background: '#f0fdf4', color: '#16a34a' }}>{b.rooms[0]?.roomNo || '?'}</div>
                 <div className={styles.checkoutInfo}>
                   <div className={styles.checkoutName}>{b.guestName}</div>
-                  <div className={styles.checkoutTime}>{fmtTime(b.checkIn)} · {b.source || 'Direct'}</div>
+                  <div className={styles.checkoutTime}>{fmtTime(b.checkIn)} Â· {b.source || 'Direct'}</div>
                 </div>
                 <div className={styles.checkoutActions}>
                   <button className={styles.btnSuccess} style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => handleCheckIn(b.id)}>Check-in</button>
@@ -186,19 +187,19 @@ export const HotelDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* COL MID — Mini room map */}
+        {/* COL MID â€” Mini room map */}
         <div className={styles.card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Sơ Đồ Phòng</h3>
-            <button className={styles.btnSecondary} style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => navigate('/hotel/room-map')}>Xem đầy đủ</button>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>SÆ¡ Äá»“ PhĂ²ng</h3>
+            <button className={styles.btnSecondary} style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => navigate('/hotel/room-map')}>Xem Ä‘áº§y Ä‘á»§</button>
           </div>
           <div className={styles.legend}>
-            {[['green','Trống'],['red','Có khách'],['yellow','Bẩn'],['gray','OOS'],['blue','Checkout']].map(([c,l])=>(
+            {[['green','Trá»‘ng'],['red','CĂ³ khĂ¡ch'],['yellow','Báº©n'],['gray','OOS'],['blue','Checkout']].map(([c,l])=>(
               <div className={styles.legendItem} key={c}><div className={`${styles.legendDot}`} style={{ background: c === 'green' ? '#22c55e' : c === 'red' ? '#ef4444' : c === 'yellow' ? '#f59e0b' : c === 'blue' ? '#3b82f6' : '#6b7280' }} />{l}</div>
             ))}
           </div>
           {roomMap.length === 0 ? (
-            <div className={styles.emptyState}><p>Đang tải sơ đồ phòng...</p></div>
+            <div className={styles.emptyState}><p>Äang táº£i sÆ¡ Ä‘á»“ phĂ²ng...</p></div>
           ) : roomMap.map((floor: any) => (
             <div key={floor.floorCode} style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{floor.floorName}</div>
@@ -215,11 +216,11 @@ export const HotelDashboardPage: React.FC = () => {
           {/* Fallback mini grid if no map data */}
           {roomMap.length === 0 && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>Tầng 1</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>Táº§ng 1</div>
               <div className={styles.miniRoomGrid}>
                 {['101','102','103','104','105'].map(n => <div key={n} className={`${styles.miniRoomCell} ${styles.vacant}`}>{n}</div>)}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '12px 0 8px' }}>Tầng 2-3</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '12px 0 8px' }}>Táº§ng 2-3</div>
               <div className={styles.miniRoomGrid}>
                 {['201','301','302','303','304','305'].map(n => <div key={n} className={`${styles.miniRoomCell} ${styles.vacant}`}>{n}</div>)}
               </div>
@@ -227,18 +228,18 @@ export const HotelDashboardPage: React.FC = () => {
           )}
         </div>
 
-        {/* COL RIGHT — Alerts & Quick actions */}
+        {/* COL RIGHT â€” Alerts & Quick actions */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Overdue rentals */}
           {overdueRentals.length > 0 && (
             <div className={styles.card} style={{ borderLeft: '4px solid #ef4444' }}>
               <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <AlertCircle size={16} /> Xe quá hạn trả ({overdueRentals.length})
+                <AlertCircle size={16} /> Xe quĂ¡ háº¡n tráº£ ({overdueRentals.length})
               </h3>
               {overdueRentals.map(r => (
                 <div key={r.id} style={{ padding: '8px', background: '#fef2f2', borderRadius: 8, marginBottom: 6 }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: '#1e293b' }}>{r.vehicleCode} — {r.guestName}</div>
-                  <div style={{ fontSize: 12, color: '#dc2626' }}>Quá hạn: {new Date(r.rentTo).toLocaleDateString('vi-VN')}</div>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#1e293b' }}>{r.vehicleCode} â€” {r.guestName}</div>
+                  <div style={{ fontSize: 12, color: '#dc2626' }}>QuĂ¡ háº¡n: {new Date(r.rentTo).toLocaleDateString('vi-VN')}</div>
                 </div>
               ))}
             </div>
@@ -246,14 +247,14 @@ export const HotelDashboardPage: React.FC = () => {
 
           {/* Quick actions */}
           <div className={styles.card}>
-            <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700 }}>⚡ Thao Tác Nhanh</h3>
+            <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700 }}>â¡ Thao TĂ¡c Nhanh</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
-                { label: '+ Đặt phòng mới', icon: '🛏️', path: '/hotel/bookings/new', color: '#eff6ff' },
-                { label: '+ Cho thuê xe', icon: '🏍️', path: '/hotel/vehicles', color: '#f0fdf4' },
-                { label: '+ Walk-in', icon: '🚶', path: '/hotel/bookings/new?type=WALKIN', color: '#faf5ff' },
-                { label: 'Sơ đồ phòng', icon: '🗺️', path: '/hotel/room-map', color: '#fff7ed' },
-                { label: 'Báo cáo hôm nay', icon: '📊', path: '/hotel/reports', color: '#f0fdf4' },
+                { label: '+ Äáº·t phĂ²ng má»›i', icon: 'đŸ›ï¸', path: '/hotel/bookings/new', color: '#eff6ff' },
+                { label: '+ Cho thuĂª xe', icon: 'đŸï¸', path: '/hotel/vehicles', color: '#f0fdf4' },
+                { label: '+ Walk-in', icon: 'đŸ¶', path: '/hotel/bookings/new?type=WALKIN', color: '#faf5ff' },
+                { label: 'SÆ¡ Ä‘á»“ phĂ²ng', icon: 'đŸ—ºï¸', path: '/hotel/room-map', color: '#fff7ed' },
+                { label: 'BĂ¡o cĂ¡o hĂ´m nay', icon: 'đŸ“', path: '/hotel/reports', color: '#f0fdf4' },
               ].map(a => (
                 <button key={a.path} onClick={() => navigate(a.path)}
                   style={{ padding: '10px 14px', background: a.color, border: '1px solid #e2e8f0', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600, color: '#1e293b', textAlign: 'left', transition: 'all 0.15s' }}
@@ -269,11 +270,11 @@ export const HotelDashboardPage: React.FC = () => {
           {/* Revenue summary */}
           {todayRevenue && (
             <div className={styles.card}>
-              <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700 }}>💰 Doanh Thu Hôm Nay</h3>
+              <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700 }}>đŸ’° Doanh Thu HĂ´m Nay</h3>
               {[
-                ['Phòng', todayRevenue.roomRevenue],
-                ['Xe máy', todayRevenue.vehicleRevenue],
-                ['Dịch vụ', todayRevenue.serviceRevenue],
+                ['PhĂ²ng', todayRevenue.roomRevenue],
+                ['Xe mĂ¡y', todayRevenue.vehicleRevenue],
+                ['Dá»‹ch vá»¥', todayRevenue.serviceRevenue],
               ].map(([l, v]) => (
                 <div key={l as string} className={styles.infoRow}>
                   <span className={styles.infoLabel}>{l as string}</span>
@@ -281,7 +282,7 @@ export const HotelDashboardPage: React.FC = () => {
                 </div>
               ))}
               <div className={styles.infoRow} style={{ borderTop: '2px solid #e2e8f0', paddingTop: 10, marginTop: 4 }}>
-                <span style={{ fontWeight: 700, fontSize: 14 }}>Tổng cộng</span>
+                <span style={{ fontWeight: 700, fontSize: 14 }}>Tá»•ng cá»™ng</span>
                 <span style={{ fontWeight: 800, fontSize: 16, color: '#1e6fff' }}>{fmtMoney(todayRevenue.totalRevenue || 0)}</span>
               </div>
             </div>
@@ -293,3 +294,4 @@ export const HotelDashboardPage: React.FC = () => {
 };
 
 export default HotelDashboardPage;
+

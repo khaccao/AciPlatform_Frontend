@@ -1,8 +1,8 @@
-import api from '../../../core/services/api.service';
+﻿import api from '../../../core/services/api.service';
 
 const HOTEL_CODE = 'HOMEHG';
 
-// ── Types ─────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export interface RoomDetail {
   id: number; so?: string; ma?: string; ten?: string; floor?: string;
   khuVucCode?: string; status?: string; cleanDirty?: number;
@@ -68,8 +68,10 @@ export interface HotelTourDto {
   id: number; tourCode: string; tourName: string; tourNameEN?: string;
   tourType: string; durationDays: number; durationNights: number;
   maxPerson: number; minPerson: number; pricePerPerson: number;
-  groupPrice: number; highlights?: string; difficulty: string;
-  imageUrl?: string; isAvailable: boolean; availableSlots: number;
+  groupPrice: number; groupDiscountFrom?: number;
+  highlights?: string; itinerary?: string; inclusions?: string; exclusions?: string;
+  meetingPoint?: string; difficulty: string;
+  imageUrl?: string; isAvailable: boolean; availableSlots: number; sortOrder?: number;
 }
 
 export interface HotelGuest {
@@ -90,7 +92,7 @@ export interface DashboardData {
   inHouse: number; todayRevenue: number;
 }
 
-// ── Service ───────────────────────────────────────────────────
+// â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class HotelService {
   private code = HOTEL_CODE;
 
@@ -307,3 +309,5 @@ class HotelService {
 
 export const hotelService = new HotelService();
 export default hotelService;
+
+

@@ -3,16 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Filter, Download, Eye, LogIn, LogOut, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
-import hotelService, { BookingDto } from '../services/hotel.service';
+import hotelService from '../services/hotel.service';
+import type { BookingDto } from '../services/hotel.service';
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
-  CONFIRMED: { label: 'Xác nhận', cls: 'confirmed' },
-  CHECKED_IN: { label: 'Đang ở', cls: 'checkedIn' },
-  CHECKED_OUT: { label: 'Đã check-out', cls: 'checkedOut' },
-  CANCELLED: { label: 'Đã hủy', cls: 'cancelled' },
-  PENDING: { label: 'Chờ', cls: 'pending' },
+  CONFIRMED: { label: 'XĂ¡c nháº­n', cls: 'confirmed' },
+  CHECKED_IN: { label: 'Äang á»Ÿ', cls: 'checkedIn' },
+  CHECKED_OUT: { label: 'ÄĂ£ check-out', cls: 'checkedOut' },
+  CANCELLED: { label: 'ÄĂ£ há»§y', cls: 'cancelled' },
+  PENDING: { label: 'Chá»', cls: 'pending' },
 };
-const TYPE_MAP: Record<string, string> = { FIT: 'Cá nhân', GIT: 'Đoàn', WALKIN: 'Walk-in', DORM: 'Dorm' };
+const TYPE_MAP: Record<string, string> = { FIT: 'CĂ¡ nhĂ¢n', GIT: 'ÄoĂ n', WALKIN: 'Walk-in', DORM: 'Dorm' };
 
 export const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -37,16 +38,16 @@ export const BookingsPage: React.FC = () => {
       const { items, total: t } = await hotelService.getBookings(params);
       setBookings(items);
       setTotal(t || items.length);
-    } catch { toast.error('Lỗi tải danh sách đặt phòng'); }
+    } catch { toast.error('Lá»—i táº£i danh sĂ¡ch Ä‘áº·t phĂ²ng'); }
     finally { setLoading(false); }
   };
 
   const handleStatusChange = async (b: BookingDto, newStatus: string) => {
     try {
       await hotelService.updateBookingStatus(b.id, newStatus);
-      toast.success(`Cập nhật → ${STATUS_MAP[newStatus]?.label}`);
+      toast.success(`Cáº­p nháº­t â†’ ${STATUS_MAP[newStatus]?.label}`);
       fetchBookings();
-    } catch { toast.error('Lỗi cập nhật trạng thái'); }
+    } catch { toast.error('Lá»—i cáº­p nháº­t tráº¡ng thĂ¡i'); }
   };
 
   const handleSort = (col: string) => {
@@ -64,7 +65,7 @@ export const BookingsPage: React.FC = () => {
     return sortDir === 'asc' ? cmp : -cmp;
   });
 
-  const fmtMoney = (n: number) => n?.toLocaleString('vi-VN') + 'đ';
+  const fmtMoney = (n: number) => n?.toLocaleString('vi-VN') + 'Ä‘';
   const fmtDt = (dt: string) => new Date(dt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   const isToday = (dt: string) => new Date(dt).toDateString() === new Date().toDateString();
   const isOverdue = (dt: string) => new Date(dt) < new Date();
@@ -75,12 +76,12 @@ export const BookingsPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>📅 Quản Lý Đặt Phòng</h1>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{total} booking tổng cộng</p>
+          <h1>đŸ“… Quáº£n LĂ½ Äáº·t PhĂ²ng</h1>
+          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{total} booking tá»•ng cá»™ng</p>
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnSecondary}><Download size={15} /> Export</button>
-          <button className={styles.btnPrimary} onClick={() => navigate('/hotel/bookings/new')}><Plus size={15} /> Tạo booking</button>
+          <button className={styles.btnPrimary} onClick={() => navigate('/hotel/bookings/new')}><Plus size={15} /> Táº¡o booking</button>
         </div>
       </div>
 
@@ -88,17 +89,17 @@ export const BookingsPage: React.FC = () => {
       <div className={styles.searchBar}>
         <div className={styles.searchInput}>
           <Search size={16} color="#94a3b8" />
-          <input placeholder="Tìm tên khách, SĐT, mã booking..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input placeholder="TĂ¬m tĂªn khĂ¡ch, SÄT, mĂ£ booking..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-          <option value="">Tất cả trạng thái</option>
+          <option value="">Táº¥t cáº£ tráº¡ng thĂ¡i</option>
           {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
         <select className={styles.filterSelect} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-          <option value="">Tất cả loại</option>
+          <option value="">Táº¥t cáº£ loáº¡i</option>
           {Object.entries(TYPE_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <button className={styles.btnSecondary} onClick={fetchBookings}><Filter size={15} /> Lọc</button>
+        <button className={styles.btnSecondary} onClick={fetchBookings}><Filter size={15} /> Lá»c</button>
       </div>
 
       {/* Table */}
@@ -106,25 +107,25 @@ export const BookingsPage: React.FC = () => {
         <table className={styles.dataTable}>
           <thead>
             <tr>
-              <th onClick={() => handleSort('bookingCode')}>Mã BK <SortIcon col="bookingCode" /></th>
-              <th onClick={() => handleSort('guestName')}>Khách <SortIcon col="guestName" /></th>
-              <th>Phòng/Giường</th>
+              <th onClick={() => handleSort('bookingCode')}>MĂ£ BK <SortIcon col="bookingCode" /></th>
+              <th onClick={() => handleSort('guestName')}>KhĂ¡ch <SortIcon col="guestName" /></th>
+              <th>PhĂ²ng/GiÆ°á»ng</th>
               <th onClick={() => handleSort('checkIn')}>Check-in <SortIcon col="checkIn" /></th>
               <th onClick={() => handleSort('checkOut')}>Check-out <SortIcon col="checkOut" /></th>
-              <th>Đêm</th>
-              <th onClick={() => handleSort('totalAmount')}>Tổng tiền <SortIcon col="totalAmount" /></th>
-              <th>Thanh toán</th>
-              <th>Loại</th>
-              <th>Trạng thái</th>
-              <th>Nguồn</th>
-              <th style={{ textAlign: 'center' }}>Thao tác</th>
+              <th>ÄĂªm</th>
+              <th onClick={() => handleSort('totalAmount')}>Tá»•ng tiá»n <SortIcon col="totalAmount" /></th>
+              <th>Thanh toĂ¡n</th>
+              <th>Loáº¡i</th>
+              <th>Tráº¡ng thĂ¡i</th>
+              <th>Nguá»“n</th>
+              <th style={{ textAlign: 'center' }}>Thao tĂ¡c</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={12} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>Đang tải...</td></tr>
+              <tr><td colSpan={12} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>Äang táº£i...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={12} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>Không có dữ liệu</td></tr>
+              <tr><td colSpan={12} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>KhĂ´ng cĂ³ dá»¯ liá»‡u</td></tr>
             ) : filtered.map(b => {
               const st = STATUS_MAP[b.status] || { label: b.status, cls: 'pending' };
               const paidPct = b.totalAmount > 0 ? Math.min(100, Math.round(b.paidAmount / b.totalAmount * 100)) : 0;
@@ -151,10 +152,10 @@ export const BookingsPage: React.FC = () => {
                     <td style={{ fontSize: 12, color: '#94a3b8' }}>{b.source || 'Direct'}</td>
                     <td onClick={e => e.stopPropagation()}>
                       <div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
-                        <button className={styles.btnIcon} title="Xem chi tiết" onClick={() => navigate(`/hotel/bookings/${b.id}`)}><Eye size={15} /></button>
+                        <button className={styles.btnIcon} title="Xem chi tiáº¿t" onClick={() => navigate(`/hotel/bookings/${b.id}`)}><Eye size={15} /></button>
                         {b.status === 'CONFIRMED' && <button className={styles.btnIcon} title="Check-in" style={{ color: '#16a34a' }} onClick={() => handleStatusChange(b, 'CHECKED_IN')}><LogIn size={15} /></button>}
                         {b.status === 'CHECKED_IN' && <button className={styles.btnIcon} title="Check-out" style={{ color: '#dc2626' }} onClick={() => handleStatusChange(b, 'CHECKED_OUT')}><LogOut size={15} /></button>}
-                        {(b.status === 'CONFIRMED' || b.status === 'PENDING') && <button className={styles.btnIcon} title="Hủy" style={{ color: '#dc2626' }} onClick={() => handleStatusChange(b, 'CANCELLED')}><X size={15} /></button>}
+                        {(b.status === 'CONFIRMED' || b.status === 'PENDING') && <button className={styles.btnIcon} title="Há»§y" style={{ color: '#dc2626' }} onClick={() => handleStatusChange(b, 'CANCELLED')}><X size={15} /></button>}
                       </div>
                     </td>
                   </tr>
@@ -165,27 +166,27 @@ export const BookingsPage: React.FC = () => {
                       <td colSpan={12}>
                         <div style={{ padding: '12px 16px', display: 'flex', gap: 32 }}>
                           <div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>PHÒNG & GIƯỜNG</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>PHĂ’NG & GIÆ¯á»œNG</div>
                             {b.rooms?.map(r => (
                               <div key={r.roomNo} style={{ fontSize: 13, color: '#334155', marginBottom: 4 }}>
-                                🚪 {r.roomNo}{r.bedCode ? ` / Giường ${r.bedCode}` : ''} — {r.pricePerNight?.toLocaleString()}đ/đêm
+                                đŸª {r.roomNo}{r.bedCode ? ` / GiÆ°á»ng ${r.bedCode}` : ''} â€” {r.pricePerNight?.toLocaleString()}Ä‘/Ä‘Ăªm
                               </div>
                             ))}
                           </div>
                           <div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>DỊCH VỤ KÈM</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>Dá»CH Vá»¤ KĂˆM</div>
                             {b.services?.length > 0 ? b.services.map(s => (
                               <div key={s.serviceCode} style={{ fontSize: 13, color: '#334155', marginBottom: 4 }}>
-                                🔧 {s.serviceName || s.serviceCode} × {s.quantity} — {s.totalPrice?.toLocaleString()}đ
+                                đŸ”§ {s.serviceName || s.serviceCode} Ă— {s.quantity} â€” {s.totalPrice?.toLocaleString()}Ä‘
                               </div>
-                            )) : <div style={{ fontSize: 13, color: '#94a3b8' }}>Không có dịch vụ kèm</div>}
+                            )) : <div style={{ fontSize: 13, color: '#94a3b8' }}>KhĂ´ng cĂ³ dá»‹ch vá»¥ kĂ¨m</div>}
                           </div>
                           <div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>GHI CHÚ</div>
-                            <div style={{ fontSize: 13, color: '#334155' }}>{b.notes || '—'}</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>GHI CHĂ</div>
+                            <div style={{ fontSize: 13, color: '#334155' }}>{b.notes || 'â€”'}</div>
                           </div>
                           <div style={{ marginLeft: 'auto' }}>
-                            <button className={styles.btnPrimary} onClick={() => navigate(`/hotel/bookings/${b.id}`)}>Xem đầy đủ</button>
+                            <button className={styles.btnPrimary} onClick={() => navigate(`/hotel/bookings/${b.id}`)}>Xem Ä‘áº§y Ä‘á»§</button>
                           </div>
                         </div>
                       </td>
@@ -202,3 +203,4 @@ export const BookingsPage: React.FC = () => {
 };
 
 export default BookingsPage;
+

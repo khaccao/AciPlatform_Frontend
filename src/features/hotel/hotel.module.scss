@@ -1,4 +1,4 @@
-/* Hotel Management Module - AciPlatform */
+﻿/* Hotel Management Module - AciPlatform */
 :root {
   --hotel-primary: #1e6fff;
   --hotel-primary-dark: #1558e8;
@@ -19,7 +19,7 @@
   color: #1e293b;
 }
 
-/* ── Header ── */
+/* â”€â”€ Header â”€â”€ */
 .pageHeader {
   display: flex;
   justify-content: space-between;
@@ -30,7 +30,7 @@
 
 .headerActions { display: flex; gap: 10px; align-items: center; }
 
-/* ── Tabs ── */
+/* â”€â”€ Tabs â”€â”€ */
 .tabs {
   display: flex;
   gap: 4px;
@@ -55,7 +55,7 @@
   &:hover:not(.active) { color: #334155; }
 }
 
-/* ── Buttons ── */
+/* â”€â”€ Buttons â”€â”€ */
 .btnPrimary {
   padding: 8px 16px;
   background: var(--hotel-primary);
@@ -129,7 +129,7 @@
   &:hover { background: #f1f5f9; color: #0f172a; }
 }
 
-/* ── Cards / KPI ── */
+/* â”€â”€ Cards / KPI â”€â”€ */
 .card {
   background: #fff;
   border-radius: 12px;
@@ -170,7 +170,7 @@
   &.purple { background: #faf5ff; color: #7c3aed; }
 }
 
-/* ── Table ── */
+/* â”€â”€ Table â”€â”€ */
 .tableWrapper {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -204,7 +204,7 @@
 }
 .expandedRow td { background: #fafbfc !important; }
 
-/* ── Status Badges ── */
+/* â”€â”€ Status Badges â”€â”€ */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -234,7 +234,7 @@
   &.blue { background: var(--hotel-checkout); }
 }
 
-/* ── Room Map ── */
+/* â”€â”€ Room Map â”€â”€ */
 .floorSection { margin-bottom: 32px; }
 .floorTitle {
   font-size: 15px; font-weight: 700; color: #0f172a;
@@ -265,7 +265,7 @@
 .roomCardGuest { font-size: 12px; font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .roomCardStatus { font-size: 11px; font-weight: 600; margin-top: 2px; }
 
-/* ── Bed Grid ── */
+/* â”€â”€ Bed Grid â”€â”€ */
 .bedGrid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .bedCell {
   min-width: 80px;
@@ -283,7 +283,7 @@
 .bedCode { font-size: 12px; font-weight: 700; color: #334155; }
 .bedGuest { font-size: 11px; color: #64748b; margin-top: 2px; }
 
-/* ── Side Panel ── */
+/* â”€â”€ Side Panel â”€â”€ */
 .sidePanel {
   position: fixed; top: 0; right: 0; bottom: 0;
   width: 360px;
@@ -307,7 +307,7 @@
   display: flex; gap: 10px; flex-wrap: wrap;
 }
 
-/* ── Modals ── */
+/* â”€â”€ Modals â”€â”€ */
 .overlay {
   position: fixed; inset: 0;
   background: rgba(15,23,42,0.5);
@@ -343,7 +343,7 @@
   position: sticky; bottom: 0; background: #fff;
 }
 
-/* ── Forms ── */
+/* â”€â”€ Forms â”€â”€ */
 .formGrid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
   &.col1 { grid-template-columns: 1fr; }
@@ -369,7 +369,7 @@
 .fullSpan { grid-column: 1 / -1; }
 .required { color: #ef4444; margin-left: 3px; }
 
-/* ── Search ── */
+/* â”€â”€ Search â”€â”€ */
 .searchBar {
   display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;
 }
@@ -386,7 +386,7 @@
   &:focus { border-color: var(--hotel-primary); }
 }
 
-/* ── Info Rows ── */
+/* â”€â”€ Info Rows â”€â”€ */
 .infoRow {
   display: flex; justify-content: space-between; align-items: center;
   padding: 10px 0; border-bottom: 1px solid #f1f5f9;
@@ -395,14 +395,14 @@
 .infoLabel { font-size: 13px; color: #64748b; font-weight: 500; }
 .infoValue { font-size: 13px; font-weight: 600; color: #1e293b; text-align: right; }
 
-/* ── Progress ── */
+/* â”€â”€ Progress â”€â”€ */
 .progressBar {
   height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden;
   .fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; background: var(--hotel-primary); }
 }
 .fuelBar .fill { background: var(--hotel-vacant); }
 
-/* ── Vehicle Cards ── */
+/* â”€â”€ Vehicle Cards â”€â”€ */
 .vehicleGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
 .vehicleCard {
   background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
@@ -417,7 +417,7 @@
 .vehiclePlate { font-size: 12px; color: #64748b; font-family: monospace; }
 .vehiclePrice { font-size: 16px; font-weight: 700; color: var(--hotel-primary); margin: 8px 0; }
 
-/* ── Tour Cards ── */
+/* â”€â”€ Tour Cards â”€â”€ */
 .tourGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
 .tourCard {
   background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
@@ -432,7 +432,7 @@
 .tourPriceSub { font-size: 12px; color: #94a3b8; }
 .tourActions { display: flex; gap: 8px; margin-top: 12px; }
 
-/* ── Guest ── */
+/* â”€â”€ Guest â”€â”€ */
 .guestAvatar {
   width: 44px; height: 44px; border-radius: 50%;
   background: linear-gradient(135deg, var(--hotel-primary), #6366f1);
@@ -443,7 +443,7 @@
 .guestPhone { font-size: 13px; color: #64748b; }
 .vipBadge { background: #fef9c3; color: #a16207; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
 
-/* ── Wizard ── */
+/* â”€â”€ Wizard â”€â”€ */
 .wizard { display: flex; flex-direction: column; height: 100%; }
 .wizardSteps {
   display: flex; gap: 0; margin-bottom: 28px;
@@ -468,7 +468,7 @@
 }
 .wizardLabel { font-size: 12px; margin-top: 6px; color: #64748b; font-weight: 600; text-align: center; }
 
-/* ── Checklist / Dashboard items ── */
+/* â”€â”€ Checklist / Dashboard items â”€â”€ */
 .checkoutItem {
   display: flex; align-items: center; gap: 12px;
   padding: 12px; border-radius: 10px; background: #f8fafc;
@@ -481,14 +481,14 @@
 .checkoutTime { font-size: 12px; color: #94a3b8; }
 .checkoutActions { display: flex; gap: 6px; }
 
-/* ── Empty State ── */
+/* â”€â”€ Empty State â”€â”€ */
 .emptyState {
   text-align: center; padding: 48px 24px;
   p { margin-top: 8px; color: #94a3b8; font-size: 14px; }
 }
 .emptyIcon { font-size: 48px; margin-bottom: 12px; }
 
-/* ── Loading ── */
+/* â”€â”€ Loading â”€â”€ */
 .skeleton {
   background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200% 100%;
@@ -497,30 +497,30 @@
 }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* ── Split layout ── */
+/* â”€â”€ Split layout â”€â”€ */
 .splitLayout { display: flex; gap: 20px; }
 .leftPane { flex: 1; min-width: 0; }
 .rightPane { width: 380px; flex-shrink: 0; }
 
-/* ── Overlay backdrop ── */
+/* â”€â”€ Overlay backdrop â”€â”€ */
 .panelBackdrop {
   position: fixed; inset: 0; z-index: 199;
   background: rgba(0,0,0,0.2);
 }
 
-/* ── Chart container ── */
+/* â”€â”€ Chart container â”€â”€ */
 .chartCard {
   background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
   padding: 20px; margin-bottom: 20px;
   h3 { font-size: 15px; font-weight: 700; margin: 0 0 16px; color: #0f172a; }
 }
 
-/* ── Legend ── */
+/* â”€â”€ Legend â”€â”€ */
 .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
 .legendItem { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #475569; }
 .legendDot { width: 10px; height: 10px; border-radius: 50%; }
 
-/* ── Mini map ── */
+/* â”€â”€ Mini map â”€â”€ */
 .miniRoomGrid {
   display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px;
 }
@@ -536,7 +536,7 @@
   &:hover { filter: brightness(0.9); transform: scale(1.08); }
 }
 
-/* ── Activity feed ── */
+/* â”€â”€ Activity feed â”€â”€ */
 .activityFeed { display: flex; flex-direction: column; gap: 0; }
 .activityItem {
   display: flex; gap: 12px; padding: 10px 0;
@@ -547,7 +547,7 @@
 .activityText { font-size: 13px; color: #475569; }
 .activityTime { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
-/* ── Responsive ── */
+/* â”€â”€ Responsive â”€â”€ */
 @media (max-width: 900px) {
   .hotelContainer { padding: 16px; }
   .kpiGrid { grid-template-columns: repeat(2, 1fr); }
@@ -560,3 +560,4 @@
   .formGrid { grid-template-columns: 1fr; }
   .modal { width: 100%; border-radius: 16px 16px 0 0; position: fixed; bottom: 0; left: 0; right: 0; max-height: 85vh; }
 }
+
