@@ -1,4 +1,4 @@
-﻿import api from '../../../core/services/api.service';
+import api from '../../../core/services/api.service';
 
 const HOTEL_CODE = 'HOMEHG';
 
@@ -127,7 +127,7 @@ class HotelService {
   }
 
   async updateRoomStatus(roomNo: string, status: string, cleanDirty?: number) {
-    const r = await api.patch(`/hotel-rooms/${this.code}/rooms/${roomNo}/status`, { status, cleanDirty });
+    const r = await api.patch(`/hotel-rooms/${this.code}/status`, { roomNo, status, cleanDirty });
     return r.data;
   }
 

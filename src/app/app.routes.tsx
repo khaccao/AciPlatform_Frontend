@@ -41,6 +41,8 @@ import { VehiclesPage } from '../features/hotel/pages/VehiclesPage';
 import { ToursPage } from '../features/hotel/pages/ToursPage';
 import { GuestsPage } from '../features/hotel/pages/GuestsPage';
 import { ReportsPage } from '../features/hotel/pages/ReportsPage';
+import { BookingNewPage } from '../features/hotel/pages/BookingNewPage';
+import { BookingDetailPage } from '../features/hotel/pages/BookingDetailPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
@@ -130,6 +132,8 @@ export const AppRoutes = () => {
                     <Route path="dashboard" element={<HotelDashboardPage />} />
                     <Route path="room-map" element={<RoomMapPage />} />
                     <Route path="bookings" element={<BookingsPage />} />
+                    <Route path="bookings/new" element={<BookingNewPage />} />
+                    <Route path="bookings/:id" element={<BookingDetailPage />} />
                     <Route path="vehicles" element={<VehiclesPage />} />
                     <Route path="tours" element={<ToursPage />} />
                     <Route path="guests" element={<GuestsPage />} />
@@ -139,8 +143,12 @@ export const AppRoutes = () => {
                 <Route path="/users" element={<EmployeePage />} />
             </Route>
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/login" />} />
+            {/* Fallback: authenticated users go to dashboard, guests go to login */}
+            <Route path="*" element={
+                localStorage.getItem('token')
+                    ? <Navigate to="/dashboard" replace />
+                    : <Navigate to="/login" replace />
+            } />
         </Routes>
     );
 };
