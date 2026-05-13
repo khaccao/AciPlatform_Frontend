@@ -20,6 +20,7 @@ const BOOKING_TYPES = [
   { value: 'WALKIN', label: 'Walk-in' },
   { value: 'DORM', label: 'Dorm (giường)' },
 ];
+const PAYMENT_METHODS = ['CASH', 'TRANSFER', 'CARD', 'DEBT'];
 const PAYMENT_LABELS: Record<string, string> = { CASH: 'Tiền mặt', TRANSFER: 'Chuyển khoản', CARD: 'Thẻ', DEBT: 'Công nợ' };
 
 export const BookingNewPage: React.FC = () => {
