@@ -20,17 +20,6 @@ const BOOKING_TYPES = [
   { value: 'WALKIN', label: 'Walk-in' },
   { value: 'DORM', label: 'Dorm (giường)' },
 ];
-
-const PAYMENT_METHODS = ['CASH', 'TRANSFER', 'CARD', 'DEBT'];
-const BED_STATUS_LABELS: Record<string, string> = {
-  VC: 'Sach trong',
-  VD: 'Ban trong',
-  OC: 'Sach co khach',
-  OD: 'Ban co khach',
-  EA: 'Du kien den',
-  ED: 'Du kien di',
-  OOS: 'Ngung dung',
-};
 const PAYMENT_LABELS: Record<string, string> = { CASH: 'Tiền mặt', TRANSFER: 'Chuyển khoản', CARD: 'Thẻ', DEBT: 'Công nợ' };
 
 export const BookingNewPage: React.FC = () => {

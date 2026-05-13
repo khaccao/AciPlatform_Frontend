@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../../app/hooks';
-import { Hotel, LogIn, LogOut, TrendingUp, AlertCircle, Plus, RefreshCw, Clock, Network, Package, Layers } from 'lucide-react';
+import { Hotel, LogIn, LogOut, TrendingUp, AlertCircle, Plus, RefreshCw, Clock, Network, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
 import hotelService from '../services/hotel.service';

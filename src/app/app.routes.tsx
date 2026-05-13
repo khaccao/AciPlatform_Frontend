@@ -13,7 +13,6 @@ import { SettingsPage } from '../features/settings/pages/SettingsPage/SettingsPa
 import { RoleManagement } from '../features/system/pages/RoleManagement/RoleManagement';
 import { MenuManagement } from '../features/system/pages/MenuManagement/MenuManagement';
 import { AdvancedSecurityPage } from '../features/security/pages/AdvancedSecurityPage';
-import { TestPage } from '../features/test/pages/TestPage';
 import { FacebookPage } from '../features/multi-channel/pages/FacebookPage/FacebookPage';
 import { FleetManagementPage } from '../features/fleet/pages/FleetManagementPage/FleetManagementPage';
 import FaceAttendancePage from '../features/hr/pages/FaceAttendancePage/FaceAttendancePage';
@@ -50,6 +49,7 @@ import { ServiceManagementPage } from '../features/hotel/pages/ServiceManagement
 import { RoomRackPage } from '../features/hotel/pages/RoomRackPage';
 import { RoomForecastPage } from '../features/hotel/pages/RoomForecastPage';
 import { RoomStatusDashboardPage } from '../features/hotel/pages/RoomStatusDashboardPage';
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -184,4 +184,3 @@ export const AppRoutes = () => {
         </Routes>
     );
 };
-
