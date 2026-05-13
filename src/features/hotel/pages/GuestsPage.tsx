@@ -30,7 +30,7 @@ export const GuestsPage: React.FC = () => {
 
   const filtered = guests.filter(g =>
     !search ||
-    g.guestName?.toLowerCase().includes(search.toLowerCase()) ||
+    g.fullName?.toLowerCase().includes(search.toLowerCase()) ||
     g.phone?.includes(search) ||
     g.idCard?.includes(search) ||
     g.nationality?.toLowerCase().includes(search.toLowerCase())
@@ -85,11 +85,11 @@ export const GuestsPage: React.FC = () => {
                         width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         background: g.isVip ? '#fbbf24' : '#e2e8f0', fontSize: 14, fontWeight: 700, color: g.isVip ? '#92400e' : '#64748b', flexShrink: 0,
                       }}>
-                        {g.guestName?.[0] || '?'}
+                        {g.fullName?.[0] || '?'}
                       </div>
                       <div>
                         <div style={{ fontWeight: 600, color: '#1e293b' }}>
-                          {g.guestName}
+                          {g.fullName}
                           {g.isVip && <span style={{ marginLeft: 6, fontSize: 10, background: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>VIP</span>}
                         </div>
                         <div style={{ fontSize: 12, color: '#94a3b8' }}>{g.email}</div>
@@ -100,9 +100,9 @@ export const GuestsPage: React.FC = () => {
                   <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{g.idCard || '—'}</td>
                   <td>{g.nationality === 'VN' ? '🇻🇳 Việt Nam' : g.nationality || '—'}</td>
                   <td style={{ textAlign: 'center', fontWeight: 700 }}>{g.totalVisits}</td>
-                  <td style={{ fontWeight: 600, color: '#1e6fff' }}>{(g.totalSpent || 0).toLocaleString('vi-VN')}đ</td>
+                  <td style={{ fontWeight: 600, color: '#1e6fff' }}>{(g.totalSpend || 0).toLocaleString('vi-VN')}đ</td>
                   <td style={{ fontSize: 12, color: '#64748b' }}>
-                    {g.lastVisit ? new Date(g.lastVisit).toLocaleDateString('vi-VN') : '—'}
+                    {g.lastVisitDate ? new Date(g.lastVisitDate).toLocaleDateString('vi-VN') : '—'}
                   </td>
                   <td>
                     <button className={styles.btnIcon} title="Xem hồ sơ" onClick={() => setSelected(g === selected ? null : g)}>
@@ -127,11 +127,11 @@ export const GuestsPage: React.FC = () => {
               <div style={{
                 width: 64, height: 64, borderRadius: '50%', background: selected.isVip ? '#fbbf24' : '#e2e8f0',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800,
-                color: selected.isVip ? '#92400e' : '#64748b', margin: '0 auto 10px',
+                color: selected.isVip ? '#92400e' : '#64748b', margin: '0 auto 10px', overflow: 'hidden'
               }}>
-                {selected.guestName?.[0] || '?'}
+                {selected.avatar ? <img src={selected.avatar} alt="avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : selected.fullName?.[0] || '?'}
               </div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: '#0f172a' }}>{selected.guestName}</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: '#0f172a' }}>{selected.fullName}</div>
               {selected.isVip && <span style={{ fontSize: 11, background: '#fef3c7', color: '#92400e', padding: '3px 10px', borderRadius: 12, fontWeight: 700 }}>⭐ VIP</span>}
             </div>
 
@@ -141,10 +141,10 @@ export const GuestsPage: React.FC = () => {
               ['🪪 CCCD/HC', selected.idCard],
               ['🌏 Quốc tịch', selected.nationality === 'VN' ? '🇻🇳 Việt Nam' : selected.nationality],
               ['🛏️ Lượt ở', String(selected.totalVisits)],
-              ['💰 Tổng chi', `${(selected.totalSpent || 0).toLocaleString('vi-VN')}đ`],
-              ['📅 Lần cuối', selected.lastVisit ? new Date(selected.lastVisit).toLocaleDateString('vi-VN') : '—'],
-              ['🛏️ Phòng ưa thích', selected.preferredRoomType],
-              ['🏍️ Xe ưa thích', selected.preferredVehicleType],
+              ['💰 Tổng chi', `${(selected.totalSpend || 0).toLocaleString('vi-VN')}đ`],
+              ['📅 Lần cuối', selected.lastVisitDate ? new Date(selected.lastVisitDate).toLocaleDateString('vi-VN') : '—'],
+              ['🛏️ Phòng ưa thích', selected.preferRoomType],
+              ['🏍️ Xe ưa thích', selected.preferVehicle],
             ].filter(([, v]) => v).map(([l, v]) => (
               <div key={l} className={styles.infoRow}>
                 <span className={styles.infoLabel}>{l}</span>
@@ -155,6 +155,14 @@ export const GuestsPage: React.FC = () => {
             {selected.notes && (
               <div style={{ marginTop: 14, padding: 12, background: '#f8fafc', borderRadius: 8, fontSize: 13, color: '#475569', lineHeight: 1.5 }}>
                 📝 {selected.notes}
+              </div>
+            )}
+            
+            {selected.identityDocumentImage && (
+              <div style={{ marginTop: 14 }}>
+                <a href={selected.identityDocumentImage} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#3b82f6', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Eye size={14} /> Xem hình ảnh giấy tờ tùy thân
+                </a>
               </div>
             )}
           </div>

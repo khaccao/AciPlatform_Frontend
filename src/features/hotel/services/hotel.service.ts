@@ -1,100 +1,54 @@
 import api from '../../../core/services/api.service';
 
-const HOTEL_CODE = 'HOMEHG';
+import type { 
+  RoomDetail, BookingDto, CreateBookingRequest, VehicleDto, 
+  VehicleRentalDto, HotelTourDto, HotelGuest, HotelServiceDto, 
+  HotelTourGuideDto, GuideContractDto, GuideSalaryDto, DashboardData 
+} from './hotel.types';
 
-// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-export interface RoomDetail {
-  id: number; so?: string; ma?: string; ten?: string; floor?: string;
-  khuVucCode?: string; status?: string; cleanDirty?: number;
-  maxPerson?: number; basePrice?: number; roomTypeName?: string;
-  description?: string; isActive: boolean;
-  beds: BedStatus[];
-}
+const getStoredCompanyCode = () => {
+  const selected = localStorage.getItem('selectedCompanyCode')
+    || localStorage.getItem('selectedHotelCode')
+    || localStorage.getItem('dbName');
 
-export interface BedStatus {
-  bedCode: string; bedName?: string; bedType?: string; status?: string;
-}
+  if (selected) return selected;
 
-export interface BookingDto {
-  id: number; bookingCode: string; bookingType: string;
-  guestName: string; guestPhone: string; nationality?: string;
-  checkIn: string; checkOut: string; nightCount: number;
-  roomPrice: number; servicePrice: number; vehiclePrice: number;
-  discountAmount: number; totalAmount: number; paidAmount: number;
-  depositAmount: number; status: string; source?: string;
-  groupName?: string; groupSize: number; notes?: string;
-  createdDate: string;
-  rooms: BookingRoomDetail[];
-  services: BookingServiceDetail[];
-}
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}')?.companyCode || '';
+  } catch {
+    return '';
+  }
+};
 
-export interface BookingRoomDetail {
-  roomNo: string; bedCode?: string; guestName?: string;
-  pricePerNight: number; totalPrice: number; status: string;
-}
-
-export interface BookingServiceDetail {
-  serviceCode: string; serviceName?: string; category?: string;
-  quantity: number; unit?: string; unitPrice: number; totalPrice: number;
-}
-
-export interface CreateBookingRequest {
-  hotelCode: string; bookingType: string; guestName: string;
-  guestPhone: string; guestIdCard?: string; nationality?: string;
-  checkIn: string; checkOut: string;
-  rooms: { roomNo: string; bedCode?: string; guestName?: string; pricePerNight: number; nightCount: number; }[];
-  services: { serviceCode: string; quantity: number; unitPrice: number; serviceDate?: string; notes?: string; }[];
-  discountAmount: number; depositAmount: number;
-  source?: string; groupName?: string; groupSize?: number;
-  notes?: string; specialRequests?: string; createdBy?: number;
-}
-
-export interface VehicleDto {
-  id: number; vehicleCode: string; licensePlate?: string; vehicleName?: string;
-  vehicleType?: string; status?: string; fuelLevel?: number;
-  pricePerDay: number; depositAmount: number; imageUrl?: string;
-  condition?: string; isActive: boolean;
-}
-
-export interface VehicleRentalDto {
-  id: number; rentalCode: string; vehicleCode: string; vehicleName?: string;
-  licensePlate?: string; bookingId?: number; guestName: string;
-  guestPhone?: string; rentFrom: string; rentTo: string;
-  totalDays: number; totalAmount: number; depositAmount: number;
-  depositReturned: number; damageFee: number; status: string;
-}
-
-export interface HotelTourDto {
-  id: number; tourCode: string; tourName: string; tourNameEN?: string;
-  tourType: string; durationDays: number; durationNights: number;
-  maxPerson: number; minPerson: number; pricePerPerson: number;
-  groupPrice: number; groupDiscountFrom?: number;
-  highlights?: string; itinerary?: string; inclusions?: string; exclusions?: string;
-  meetingPoint?: string; difficulty: string;
-  imageUrl?: string; isAvailable: boolean; availableSlots: number; sortOrder?: number;
-}
-
-export interface HotelGuest {
-  id: number; guestName: string; phone?: string; email?: string;
-  idCard?: string; nationality?: string; totalVisits: number;
-  totalSpent: number; lastVisit?: string; isVip: boolean;
-  preferredRoomType?: string; preferredVehicleType?: string; notes?: string;
-}
-
-export interface HotelService {
-  id: number; serviceCode: string; serviceName: string; category: string;
-  subCategory?: string; unit?: string; unitPrice: number; description?: string;
-  isAvailable: boolean; imageUrl?: string;
-}
-
-export interface DashboardData {
-  checkInsToday: number; checkOutsToday: number;
-  inHouse: number; todayRevenue: number;
-}
-
-// â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Service Implementation ---
 class HotelService {
-  private code = HOTEL_CODE;
+  get code() {
+    return getStoredCompanyCode();
+  }
+
+  setHotelCode(code: string) {
+    this.setCompanyCode(code);
+  }
+
+  setCompanyCode(code: string) {
+    localStorage.setItem('selectedCompanyCode', code);
+    localStorage.setItem('selectedHotelCode', code);
+    localStorage.setItem('dbName', code);
+  }
+
+  async getCompanies() {
+    const r = await api.get('/Companies');
+    return (r.data?.data ?? r.data ?? []).map((item: any) => ({
+      ...item,
+      code: item.code ?? item.Code,
+      name: item.name ?? item.Name,
+      isHotel: item.isHotel ?? item.IsHotel,
+    }));
+  }
+
+  async getHotels() {
+    return this.getCompanies();
+  }
 
   // Dashboard
   async getDashboard(): Promise<DashboardData> {
@@ -122,12 +76,66 @@ class HotelService {
   }
 
   async getRoomForecast(from: string, to: string) {
-    const r = await api.get(`/hotel-rooms/${this.code}/forecast?from=${from}&to=${to}`);
+    const r = await api.get(`/hotel-rooms/${this.code}/forecast?fromDate=${from}&toDate=${to}`);
     return r.data?.data ?? r.data ?? [];
+  }
+
+  async getRoomRack(fromDate: string, days: number) {
+    const r = await api.get(`/hotel-rooms/${this.code}/room-rack?fromDate=${fromDate}&days=${days}`);
+    return r.data?.data ?? r.data;
+  }
+
+  async moveRoomRackBooking(data: object) {
+    const r = await api.patch(`/hotel-rooms/${this.code}/room-rack/move`, data);
+    return r.data;
   }
 
   async updateRoomStatus(roomNo: string, status: string, cleanDirty?: number) {
     const r = await api.patch(`/hotel-rooms/${this.code}/status`, { roomNo, status, cleanDirty });
+    return r.data;
+  }
+
+  async upsertRoom(data: any): Promise<RoomDetail> {
+    if (data.id) {
+      const r = await api.put(`/hotel-property/${this.code}/rooms/${data.id}`, { ...data, hotelCode: this.code });
+      return r.data?.data ?? r.data;
+    }
+    const r = await api.post(`/hotel-property/${this.code}/rooms`, { ...data, hotelCode: this.code });
+    return r.data?.data ?? r.data;
+  }
+
+  async deleteRoom(id: number) {
+    await api.delete(`/hotel-property/${this.code}/rooms/${id}`);
+  }
+
+  async getBeds(roomNo: string) {
+    const r = await api.get(`/hotel-rooms/${this.code}/${roomNo}/beds`);
+    return r.data?.data ?? r.data ?? [];
+  }
+
+  async upsertBed(roomNo: string, bedCode: string, bedName: string, bedType: string, status?: string) {
+    const r = await api.put(`/hotel-rooms/${this.code}/${roomNo}/beds/${bedCode}`, { bedName, bedType, status });
+    return r.data?.data ?? r.data;
+  }
+
+  async updateBedStatus(roomNo: string, bedCode: string, status: string) {
+    const r = await api.patch(`/hotel-rooms/${this.code}/${roomNo}/beds/${bedCode}/status`, { status });
+    return r.data;
+  }
+
+  async deleteBed(roomNo: string, bedCode: string) {
+    await api.delete(`/hotel-rooms/${this.code}/${roomNo}/beds/${bedCode}`);
+  }
+
+  async blockRoom(data: any) {
+    const r = await api.post(`/hotel-rooms/${this.code}/block`, { ...data, hotelCode: this.code });
+    return r.data;
+  }
+
+  async unblockRoom(roomNo: string, bedCode: string | undefined, fromDate: string, toDate: string) {
+    const params = new URLSearchParams({ roomNo, fromDate, toDate });
+    if (bedCode) params.append('bedCode', bedCode);
+    const r = await api.delete(`/hotel-rooms/${this.code}/block?${params}`);
     return r.data;
   }
 
@@ -145,8 +153,68 @@ class HotelService {
   }
 
   async createBooking(req: CreateBookingRequest): Promise<BookingDto> {
-    const r = await api.post('/hotel-bookings', { ...req, hotelCode: this.code });
+    const r = await api.post('/hotel-bookings', {
+      ...req,
+      hotelCode: this.code,
+      guestIdCard: req.guestIdCard || (req as any).idCard || '',
+      guestEmail: req.guestEmail || (req as any).guestEmail || '',
+      paidAmount: req.depositAmount || (req as any).paidAmount || 0,
+    });
     return r.data?.data ?? r.data;
+  }
+
+  async addServiceToBooking(bookingId: number, data: { serviceCode: string; serviceName?: string; category?: string; quantity: number; unitPrice: number; }) {
+    const r = await api.post(`/hotel-bookings/${bookingId}/services`, data);
+    return r.data?.data ?? r.data;
+  }
+
+  async deleteBookingService(bookingId: number, serviceCode: string) {
+    const r = await api.delete(`/hotel-bookings/${bookingId}/services/${serviceCode}`);
+    return r.data;
+  }
+
+  // Services Catalog
+  async getServiceCatalog(category?: string) {
+    const qs = category ? `?category=${category}` : '';
+    const r = await api.get(`/hotel-bookings/${this.code}/services${qs}`);
+    return r.data?.data ?? r.data ?? [];
+  }
+  async upsertServiceCatalog(data: any) {
+    const r = await api.post('/hotel-bookings/services', { ...data, hotelCode: this.code });
+    return r.data?.data ?? r.data;
+  }
+  async deleteServiceCatalog(id: number) {
+    await api.delete(`/hotel-bookings/services/${id}`);
+  }
+
+  // Room Map (Areas & Elements)
+  async getAreas() {
+    const r = await api.get(`/hotel-property/${this.code}/areas`);
+    return r.data?.data ?? r.data ?? [];
+  }
+  async upsertArea(data: any) {
+    if (data.id) {
+      const r = await api.put(`/hotel-property/${this.code}/areas/${data.id}`, { ...data, hotelCode: this.code });
+      return r.data?.data ?? r.data;
+    }
+    const r = await api.post(`/hotel-property/${this.code}/areas`, { ...data, hotelCode: this.code });
+    return r.data?.data ?? r.data;
+  }
+  async deleteArea(id: number) {
+    await api.delete(`/hotel-property/${this.code}/areas/${id}`);
+  }
+
+  async getElements(areaId?: number) {
+    if (!areaId) return [];
+    const r = await api.get(`/hotel-property/${this.code}/areas/${areaId}/elements`);
+    return r.data?.data ?? r.data ?? [];
+  }
+  async upsertElement(data: any) {
+    const r = await api.post(`/hotel-property/${this.code}/areas/${data.areaId}/elements`, data);
+    return r.data?.data ?? r.data;
+  }
+  async deleteElement(id: number) {
+    await api.delete(`/hotel-property/${this.code}/areas/0/elements/${id}`);
   }
 
   async updateBookingStatus(id: number, status: string, paidAmount?: number, cancelReason?: string) {
@@ -171,6 +239,11 @@ class HotelService {
     return r.data?.data ?? r.data ?? [];
   }
 
+  async getRentalHistory(): Promise<VehicleRentalDto[]> {
+    const r = await api.get(`/hotel-vehicles/${this.code}/rentals/history`);
+    return r.data?.data ?? r.data ?? [];
+  }
+
   async createRental(req: object): Promise<VehicleRentalDto> {
     const r = await api.post('/hotel-vehicles/rentals', { ...req, hotelCode: this.code });
     return r.data?.data ?? r.data;
@@ -181,9 +254,18 @@ class HotelService {
     return r.data;
   }
 
-  async upsertVehicle(data: object) {
-    const r = await api.post('/hotel-vehicles', { ...data, hotelCode: this.code });
-    return r.data?.data ?? r.data;
+  async upsertVehicle(data: any) {
+    if (data.id) {
+      const r = await api.put(`/hotel-vehicles/${data.id}`, data);
+      return r.data?.data ?? r.data;
+    } else {
+      const r = await api.post('/hotel-vehicles', { ...data, hotelCode: this.code });
+      return r.data?.data ?? r.data;
+    }
+  }
+
+  async deleteVehicle(id: number) {
+    await api.delete(`/hotel-vehicles/${id}`);
   }
 
   // Tours
@@ -202,14 +284,77 @@ class HotelService {
     await api.delete(`/hotel-tours/${id}`);
   }
 
-  async getGuides() {
-    const r = await api.get(`/hotel-tours/${this.code}/guides`);
+  // Guides
+  async getGuides(isActive?: boolean): Promise<HotelTourGuideDto[]> {
+    const qs = isActive !== undefined ? `?isActive=${isActive}` : '';
+    const r = await api.get(`/hotel-guides/${this.code}${qs}`);
     return r.data?.data ?? r.data ?? [];
   }
 
-  async upsertGuide(data: object) {
-    const r = await api.post(`/hotel-tours/${this.code}/guides`, { ...data, hotelCode: this.code });
+  async getGuideById(id: number): Promise<HotelTourGuideDto> {
+    const r = await api.get(`/hotel-guides/${this.code}/${id}`);
     return r.data?.data ?? r.data;
+  }
+
+  async upsertGuide(data: object) {
+    const r = await api.post('/hotel-guides', { ...data, hotelCode: this.code });
+    return r.data?.data ?? r.data;
+  }
+
+  async deleteGuide(id: number) {
+    await api.delete(`/hotel-guides/${id}`);
+  }
+
+  async toggleGuideStatus(id: number, isActive: boolean) {
+    const r = await api.patch(`/hotel-guides/${id}/toggle?isActive=${isActive}`);
+    return r.data;
+  }
+
+  async getGuideStats(id: number, year?: number) {
+    const y = year || new Date().getFullYear();
+    const r = await api.get(`/hotel-guides/${this.code}/${id}/stats?year=${y}`);
+    return r.data?.data ?? r.data;
+  }
+
+  // Guide Contracts
+  async getGuideContracts(guideId?: number): Promise<GuideContractDto[]> {
+    const qs = guideId ? `?guideId=${guideId}` : '';
+    const r = await api.get(`/hotel-guides/${this.code}/contracts${qs}`);
+    return r.data?.data ?? r.data ?? [];
+  }
+
+  async createGuideContract(data: object) {
+    const r = await api.post('/hotel-guides/contracts', { ...data, hotelCode: this.code });
+    return r.data?.data ?? r.data;
+  }
+
+  async updateGuideContractStatus(id: number, status: string) {
+    const r = await api.patch(`/hotel-guides/contracts/${id}/status?status=${status}`);
+    return r.data;
+  }
+
+  // Guide Salaries
+  async getGuideSalaries(month?: number, year?: number): Promise<GuideSalaryDto[]> {
+    const params = new URLSearchParams();
+    if (month) params.append('month', String(month));
+    if (year) params.append('year', String(year));
+    const r = await api.get(`/hotel-guides/${this.code}/salaries?${params}`);
+    return r.data?.data ?? r.data ?? [];
+  }
+
+  async calculateGuideSalary(data: object) {
+    const r = await api.post('/hotel-guides/salaries/calculate', { ...data, hotelCode: this.code });
+    return r.data?.data ?? r.data;
+  }
+
+  async approveGuideSalary(id: number) {
+    const r = await api.patch(`/hotel-guides/salaries/${id}/approve`);
+    return r.data;
+  }
+
+  async markGuideSalaryPaid(id: number) {
+    const r = await api.patch(`/hotel-guides/salaries/${id}/paid`);
+    return r.data;
   }
 
   async getTourSchedules(tourCode?: string, from?: string, to?: string) {
@@ -241,19 +386,19 @@ class HotelService {
   }
 
   // Services catalog
-  async getServices(category?: string): Promise<HotelService[]> {
+  async getServices(category?: string): Promise<HotelServiceDto[]> {
     const qs = category ? `?category=${category}` : '';
-    const r = await api.get(`/hotel-services-catalog/${this.code}${qs}`);
+    const r = await api.get(`/hotel-services/${this.code}${qs}`);
     return r.data?.data ?? r.data ?? [];
   }
 
   async upsertService(data: object) {
-    const r = await api.post('/hotel-services-catalog', { ...data, hotelCode: this.code });
+    const r = await api.post('/hotel-services', { ...data, hotelCode: this.code });
     return r.data?.data ?? r.data;
   }
 
   async deleteService(id: number) {
-    await api.delete(`/hotel-services-catalog/${id}`);
+    await api.delete(`/hotel-services/${id}`);
   }
 
   // Reports
@@ -307,6 +452,7 @@ class HotelService {
   }
 }
 
+export * from './hotel.types';
 export const hotelService = new HotelService();
 export default hotelService;
 

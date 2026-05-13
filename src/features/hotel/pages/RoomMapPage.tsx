@@ -1,18 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, RefreshCw, X, Wrench, Eye } from 'lucide-react';
+import { Plus, RefreshCw, X, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
 import hotelService from '../services/hotel.service';
 import type { RoomDetail } from '../services/hotel.service';
 
 const STATUS_LABEL: Record<string, string> = {
-  VACANT: 'Trống', OCCUPIED: 'Có khách', CHECKED_IN: 'Đang ở',
-  DIRTY: 'Bẩn', OOS: 'Hỏng/Bảo trì',
+  VC: 'Trống - Sạch', VD: 'Trống - Bẩn',
+  OC: 'Có khách - Sạch', OD: 'Có khách - Bẩn',
+  EA: 'Sắp đến', ED: 'Sắp trả', 'ED/EA': 'Trả & Đến',
+  OOS: 'Hỏng/Bảo trì',
+  VACANT: 'Trống - Sạch', // Fallback
 };
 const STATUS_CLASS: Record<string, string> = {
-  VACANT: 'vacant', OCCUPIED: 'occupied', CHECKED_IN: 'occupied',
-  DIRTY: 'dirty', OOS: 'oos',
+  VC: 'vc', VD: 'vd', OC: 'oc', OD: 'od',
+  EA: 'ea', ED: 'ed', 'ED/EA': 'edea',
+  OOS: 'oos',
+  VACANT: 'vc', // Fallback
+};
+const STATUS_COLOR: Record<string, string> = {
+  VC: '#16a34a', VD: '#d97706', OC: '#dc2626', OD: '#991b1b',
+  EA: '#2563eb', ED: '#7c3aed', 'ED/EA': '#6d28d9',
+  OOS: '#64748b',
+};
+
+const normalizeStatus = (status: string | undefined): string => {
+  if (!status) return 'VC';
+  const s = status.toUpperCase();
+  if (s === 'VACANT' || s === 'AVAILABLE' || s === 'SACH TRONG' || s === 'SACH' || s === 'CLEAN') return 'VC';
+  if (s === 'DIRTY' || s === 'VACANT_DIRTY' || s === 'BAN TRONG' || s === 'BAN' || s === 'VACANTDIRTY') return 'VD';
+  if (s === 'OCCUPIED' || s === 'SACH CO KHACH' || s === 'CO KHACH') return 'OC';
+  if (s === 'BAN CO KHACH' || s === 'ODIRTY' || s === 'OCCUPIEDDIRTY') return 'OD';
+  return s;
 };
 
 export const RoomMapPage: React.FC = () => {
@@ -22,9 +42,9 @@ export const RoomMapPage: React.FC = () => {
   const [activeFloor, setActiveFloor] = useState('ALL');
   const [selectedRoom, setSelectedRoom] = useState<RoomDetail | null>(null);
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0]);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; room: RoomDetail } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; room: RoomDetail; bedCode?: string } | null>(null);
 
-  const floors = ['ALL', '1', '2', '3'];
+  const floors = ['ALL', ...Array.from(new Set(rooms.map(r => r.floor).filter(Boolean) as string[])).sort()];
 
   useEffect(() => { fetchRooms(); }, []);
 
@@ -35,12 +55,25 @@ export const RoomMapPage: React.FC = () => {
     finally { setLoading(false); }
   };
 
-  const getStatusClass = (r: RoomDetail) => STATUS_CLASS[r.status || 'VACANT'] || 'vacant';
+  const getStatusClass = (r: RoomDetail) => STATUS_CLASS[normalizeStatus(r.status)] || 'vc';
 
-  const handleUpdateStatus = async (room: RoomDetail, status: string, cleanDirty?: number) => {
+  const handleUpdateStatus = async (room: RoomDetail, status: string, cleanDirty?: number, bedCode?: string) => {
+    const currentStatus = bedCode ? (room.beds?.find(b => b.bedCode === bedCode)?.status) : room.status;
+    const current = normalizeStatus(currentStatus);
+    
+    if ((current === 'OC' || current === 'OD') && (status === 'VC' || status === 'VD')) {
+      toast.error('Đối tượng đang có khách, vui lòng thực hiện Check-out trước.');
+      return;
+    }
+    
     try {
-      await hotelService.updateRoomStatus(room.so!, status, cleanDirty);
-      toast.success(`Phòng ${room.so} → ${STATUS_LABEL[status] || status}`);
+      if (bedCode) {
+        await hotelService.updateBedStatus(room.so!, bedCode, status);
+        toast.success(`Giường ${bedCode} (P.${room.so}) → ${STATUS_LABEL[status] || status}`);
+      } else {
+        await hotelService.updateRoomStatus(room.so!, status, cleanDirty);
+        toast.success(`Phòng ${room.so} → ${STATUS_LABEL[status] || status}`);
+      }
       setContextMenu(null); setSelectedRoom(null); fetchRooms();
     } catch { toast.error('Lỗi cập nhật trạng thái'); }
   };
@@ -71,14 +104,13 @@ export const RoomMapPage: React.FC = () => {
       </div>
 
       {/* Chú thích */}
-      <div className={styles.legend} style={{ marginBottom: 20 }}>
-        {[
-          { color: '#22c55e', label: '🟢 Trống' },
-          { color: '#ef4444', label: '🔴 Có khách' },
-          { color: '#f59e0b', label: '🟡 Bẩn' },
-          { color: '#6b7280', label: '⚫ OOS' },
-          { color: '#3b82f6', label: '🔵 Checkout hôm nay' },
-        ].map(l => <div key={l.label} className={styles.legendItem}>{l.label}</div>)}
+      <div className={styles.legend} style={{ marginBottom: 20, gap: 12 }}>
+        {Object.entries(STATUS_LABEL).map(([code, label]) => (
+          <div key={code} className={styles.legendItem} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: STATUS_COLOR[code] }} />
+            <span style={{ fontSize: 12, fontWeight: 600 }}>{code}: {label}</span>
+          </div>
+        ))}
       </div>
 
       {/* Tabs tầng */}
@@ -103,7 +135,7 @@ export const RoomMapPage: React.FC = () => {
                 <div className={styles.floorTitle}>
                   🏢 Tầng {floor}
                   <span style={{ fontSize: 13, fontWeight: 500, color: '#64748b', marginLeft: 8 }}>
-                    ({floorRooms.length} phòng · {floorRooms.filter(r => getStatusClass(r) === 'vacant').length} trống)
+                    ({floorRooms.length} phòng · {floorRooms.filter(r => normalizeStatus(r.status) === 'VC').length} trống)
                   </span>
                 </div>
 
@@ -118,10 +150,8 @@ export const RoomMapPage: React.FC = () => {
                           onContextMenu={e => handleRightClick(e, r)}>
                           <div className={styles.roomCardNo}>{r.so}</div>
                           <div className={styles.roomCardType}>{r.roomTypeName || r.ma}</div>
-                          <div className={styles.roomCardStatus} style={{
-                            color: getStatusClass(r) === 'vacant' ? '#16a34a' : getStatusClass(r) === 'occupied' ? '#dc2626' : '#d97706'
-                          }}>
-                            {STATUS_LABEL[r.status || 'VACANT']}
+                          <div className={styles.roomCardStatus} style={{ color: STATUS_COLOR[normalizeStatus(r.status)] }}>
+                            {STATUS_LABEL[normalizeStatus(r.status)]}
                           </div>
                           {r.basePrice && <div style={{ fontSize: 11, color: '#94a3b8' }}>{(r.basePrice / 1000).toFixed(0)}k/đêm</div>}
                         </div>
@@ -143,12 +173,28 @@ export const RoomMapPage: React.FC = () => {
                     </div>
                     <div className={styles.bedGrid}>
                       {r.beds?.length > 0 ? r.beds.map(bed => {
-                        const bedClass = bed.status === 'OCCUPIED' ? 'occupied' : bed.status === 'DIRTY' ? 'dirty' : 'available';
+                        const s = normalizeStatus(bed.status);
+                        const bedClass = s.toLowerCase();
+                        const isVC = s === 'VC';
                         return (
-                          <div key={bed.bedCode} className={`${styles.bedCell} ${styles[bedClass]}`}>
+                          <div key={bed.bedCode} 
+                            className={`${styles.bedCell} ${styles[bedClass]}`}
+                            onClick={() => {
+                              if (!isVC) {
+                                toast.warning(`Giường ${bed.bedCode} đang ở trạng thái ${STATUS_LABEL[s] || s}, không thể đặt phòng.`);
+                                return;
+                              }
+                              navigate(`/hotel/bookings/new?room=${r.so}&bed=${bed.bedCode}`);
+                            }}
+                            onContextMenu={e => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setContextMenu({ x: e.clientX, y: e.clientY, room: r, bedCode: bed.bedCode });
+                            }}
+                            style={{ cursor: isVC ? 'pointer' : 'not-allowed', opacity: isVC ? 1 : 0.7 }}>
                             <div className={styles.bedCode}>{bed.bedCode}</div>
                             <div className={styles.bedGuest}>
-                              {bed.status === 'OCCUPIED' ? '🔴' : bed.status === 'DIRTY' ? '🟡' : '🟢'}
+                              {STATUS_LABEL[s] || s}
                             </div>
                           </div>
                         );
@@ -173,13 +219,30 @@ export const RoomMapPage: React.FC = () => {
         <div style={{ position: 'fixed', left: contextMenu.x, top: contextMenu.y, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 500, minWidth: 180, overflow: 'hidden' }}
           onClick={e => e.stopPropagation()}>
           <div style={{ padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#64748b', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-            Phòng {contextMenu.room.so}
+            {contextMenu.bedCode ? `Giường ${contextMenu.bedCode} (P.${contextMenu.room.so})` : `Phòng ${contextMenu.room.so}`}
           </div>
           {[
-            { icon: '✏️', label: 'Đặt phòng nhanh', action: () => navigate(`/hotel/bookings/new?room=${contextMenu.room.so}`) },
-            { icon: '🧹', label: 'Đánh dấu Bẩn', action: () => handleUpdateStatus(contextMenu.room, 'DIRTY') },
-            { icon: '✅', label: 'Đánh dấu Sạch', action: () => handleUpdateStatus(contextMenu.room, 'VACANT', 1) },
-            { icon: '🔧', label: 'Bảo trì (OOS)', action: () => handleUpdateStatus(contextMenu.room, 'OOS') },
+            { icon: '✏️', label: 'Đặt phòng nhanh', action: () => {
+              const status = contextMenu.bedCode 
+                ? contextMenu.room.beds?.find(b => b.bedCode === contextMenu.bedCode)?.status 
+                : contextMenu.room.status;
+              const s = normalizeStatus(status);
+              const isVC = s === 'VC';
+              if (!isVC) {
+                toast.warning(`Đối tượng đang ở trạng thái ${STATUS_LABEL[s] || s}, không thể đặt phòng.`);
+                return;
+              }
+              const qs = contextMenu.bedCode ? `?room=${contextMenu.room.so}&bed=${contextMenu.bedCode}` : `?room=${contextMenu.room.so}`;
+              navigate(`/hotel/bookings/new${qs}`);
+            } },
+            { icon: '🧽', label: 'VC (Trống Sạch)', action: () => handleUpdateStatus(contextMenu.room, 'VC', undefined, contextMenu.bedCode) },
+            { icon: '🧹', label: 'VD (Trống Bẩn)', action: () => handleUpdateStatus(contextMenu.room, 'VD', undefined, contextMenu.bedCode) },
+            { icon: '🔴', label: 'OC (Khách Sạch)', action: () => handleUpdateStatus(contextMenu.room, 'OC', undefined, contextMenu.bedCode) },
+            { icon: '🆘', label: 'OD (Khách Bẩn)', action: () => handleUpdateStatus(contextMenu.room, 'OD', undefined, contextMenu.bedCode) },
+            { icon: '🔜', label: 'EA (Sắp đến)', action: () => handleUpdateStatus(contextMenu.room, 'EA', undefined, contextMenu.bedCode) },
+            { icon: '🔚', label: 'ED (Sắp trả)', action: () => handleUpdateStatus(contextMenu.room, 'ED', undefined, contextMenu.bedCode) },
+            { icon: '🔄', label: 'ED/EA', action: () => handleUpdateStatus(contextMenu.room, 'ED/EA', undefined, contextMenu.bedCode) },
+            { icon: '🔧', label: 'OOS (Bảo trì)', action: () => handleUpdateStatus(contextMenu.room, 'OOS', undefined, contextMenu.bedCode) },
             { icon: '👁️', label: 'Xem chi tiết', action: () => { setSelectedRoom(contextMenu.room); setContextMenu(null); } },
           ].map((item, i) => (
             <div key={i}
@@ -206,9 +269,9 @@ export const RoomMapPage: React.FC = () => {
               <button className={styles.btnIcon} onClick={() => setSelectedRoom(null)}><X size={20} /></button>
             </div>
             <div className={styles.sidePanelBody}>
-              <div style={{ marginBottom: 20 }}>
+               <div style={{ marginBottom: 20 }}>
                 <span className={`${styles.badge} ${styles[getStatusClass(selectedRoom)]}`} style={{ fontSize: 14, padding: '6px 16px' }}>
-                  {STATUS_LABEL[selectedRoom.status || 'VACANT']}
+                  {STATUS_LABEL[normalizeStatus(selectedRoom.status)]}
                 </span>
               </div>
               {[
@@ -228,21 +291,50 @@ export const RoomMapPage: React.FC = () => {
                 <div style={{ marginTop: 20 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>🛏️ Giường ({selectedRoom.beds.length})</div>
                   <div className={styles.bedGrid}>
-                    {selectedRoom.beds.map(bed => (
-                      <div key={bed.bedCode} className={`${styles.bedCell} ${styles[bed.status === 'OCCUPIED' ? 'occupied' : 'available']}`}>
-                        <div className={styles.bedCode}>{bed.bedCode}</div>
-                        <div className={styles.bedGuest}>{bed.bedType}</div>
-                      </div>
-                    ))}
+                    {selectedRoom.beds.map(bed => {
+                      const s = normalizeStatus(bed.status);
+                      const isVC = s === 'VC';
+                      return (
+                        <div key={bed.bedCode} 
+                          className={`${styles.bedCell} ${styles[s.toLowerCase()] || styles.available}`}
+                          onClick={() => {
+                            if (!isVC) {
+                              toast.warning(`Giường ${bed.bedCode} không ở trạng thái trống sạch.`);
+                              return;
+                            }
+                            navigate(`/hotel/bookings/new?room=${selectedRoom.so}&bed=${bed.bedCode}`);
+                          }}
+                          style={{ cursor: isVC ? 'pointer' : 'not-allowed', opacity: isVC ? 1 : 0.7 }}>
+                          <div className={styles.bedCode}>{bed.bedCode}</div>
+                          <div className={styles.bedGuest}>{bed.bedType} · {STATUS_LABEL[s] || s}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
-            <div className={styles.sidePanelFooter}>
-              <button className={styles.btnPrimary} onClick={() => navigate(`/hotel/bookings/new?room=${selectedRoom.so}`)}>Đặt phòng</button>
-              <button className={styles.btnSecondary} onClick={() => handleUpdateStatus(selectedRoom, 'DIRTY')}>🧹 Bẩn</button>
-              <button className={styles.btnSecondary} onClick={() => handleUpdateStatus(selectedRoom, 'VACANT', 1)}>✅ Sạch</button>
-              <button className={styles.btnSecondary} onClick={() => handleUpdateStatus(selectedRoom, 'OOS')}><Wrench size={14} /> OOS</button>
+             <div className={styles.sidePanelFooter} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+               <button 
+                className={styles.btnPrimary} 
+                style={{ gridColumn: '1 / -1', opacity: normalizeStatus(selectedRoom.status) === 'VC' ? 1 : 0.6 }} 
+                onClick={() => {
+                  const s = normalizeStatus(selectedRoom.status);
+                  if (s !== 'VC') {
+                    toast.warning(`Phòng ${selectedRoom.so} hiện đang là ${STATUS_LABEL[s] || s}, không thể đặt mới.`);
+                    return;
+                  }
+                  navigate(`/hotel/bookings/new?room=${selectedRoom.so}`);
+                }}
+              >
+                Đặt phòng
+              </button>
+              <button className={styles.btnSecondary} onClick={() => handleUpdateStatus(selectedRoom, 'VC')}>VC</button>
+              <button className={styles.btnSecondary} onClick={() => handleUpdateStatus(selectedRoom, 'VD')}>VD</button>
+              <button className={styles.btnSecondary} onClick={() => handleUpdateStatus(selectedRoom, 'OC')}>OC</button>
+              <button className={styles.btnSecondary} onClick={() => handleUpdateStatus(selectedRoom, 'OD')}>OD</button>
+              <button className={styles.btnSecondary} onClick={() => handleUpdateStatus(selectedRoom, 'EA')}>EA</button>
+              <button className={styles.btnSecondary} onClick={() => handleUpdateStatus(selectedRoom, 'ED')}>ED</button>
             </div>
           </div>
         </>

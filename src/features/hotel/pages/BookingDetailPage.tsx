@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, Mail, CreditCard, LogIn, LogOut, X, FileText, Printer } from 'lucide-react';
+import { ArrowLeft, LogIn, LogOut, X, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
 import hotelService from '../services/hotel.service';
@@ -23,7 +23,15 @@ export const BookingDetailPage: React.FC = () => {
   const [payAmount, setPayAmount] = useState(0);
   const [payMethod, setPayMethod] = useState('CASH');
 
-  useEffect(() => { fetchBooking(); }, [id]);
+  const [servicesList, setServicesList] = useState<any[]>([]);
+  const [addingService, setAddingService] = useState(false);
+  const [selectedSvc, setSelectedSvc] = useState<any>(null);
+  const [svcQuantity, setSvcQuantity] = useState(1);
+
+  useEffect(() => { 
+    fetchBooking(); 
+    hotelService.getServiceCatalog().then(setServicesList);
+  }, [id]);
 
   const fetchBooking = async () => {
     if (!id) return;
@@ -38,8 +46,31 @@ export const BookingDetailPage: React.FC = () => {
 
   const handleStatus = async (status: string) => {
     if (!booking) return;
+    if (status === 'CHECKED_OUT') {
+      if (booking.paidAmount < booking.totalAmount) {
+         toast.error('Vui lòng thanh toán đủ trước khi Check-out!');
+         return;
+      }
+      if (!window.confirm(`Xác nhận Check-out? Vui lòng kiểm tra kỹ Minibar và Dịch vụ phát sinh.\nTổng tiền: ${booking.totalAmount.toLocaleString('vi-VN')}đ\nĐã thu: ${booking.paidAmount.toLocaleString('vi-VN')}đ`)) {
+         return;
+      }
+    }
     try {
       await hotelService.updateBookingStatus(booking.id, status, undefined);
+      
+      // Auto update room/bed status
+      if (status === 'CHECKED_IN') {
+        for (const r of (booking.rooms || [])) {
+          if (r.bedCode) await hotelService.updateBedStatus(r.roomNo, r.bedCode, 'OC');
+          else await hotelService.updateRoomStatus(r.roomNo, 'OC');
+        }
+      } else if (status === 'CHECKED_OUT') {
+        for (const r of (booking.rooms || [])) {
+          if (r.bedCode) await hotelService.updateBedStatus(r.roomNo, r.bedCode, 'VD');
+          else await hotelService.updateRoomStatus(r.roomNo, 'VD');
+        }
+      }
+
       toast.success(`→ ${STATUS_MAP[status]?.label}`);
       fetchBooking();
     } catch { toast.error('Lỗi cập nhật'); }
@@ -47,6 +78,7 @@ export const BookingDetailPage: React.FC = () => {
 
   const handlePay = async () => {
     if (!booking) return;
+    if (payAmount <= 0) return toast.error('Số tiền phải > 0');
     try {
       await hotelService.updateBookingStatus(booking.id, booking.status, booking.paidAmount + payAmount);
       toast.success(`Đã ghi nhận ${payAmount.toLocaleString('vi-VN')}đ`);
@@ -54,13 +86,36 @@ export const BookingDetailPage: React.FC = () => {
     } catch { toast.error('Lỗi thanh toán'); }
   };
 
-  const handleInvoice = async () => {
-    if (!booking) return;
+  const handlePostService = async () => {
+    if (!booking || !selectedSvc) return;
     try {
-      await hotelService.generateInvoice(booking.id, payMethod);
-      toast.success('Đã xuất hóa đơn');
+      await hotelService.addServiceToBooking(booking.id, {
+        serviceCode: selectedSvc.serviceCode,
+        serviceName: selectedSvc.serviceName,
+        category: selectedSvc.category,
+        quantity: svcQuantity,
+        unitPrice: selectedSvc.unitPrice,
+      });
+      toast.success('Đã thêm dịch vụ/phụ phí');
+      setAddingService(false);
+      setSelectedSvc(null);
+      setSvcQuantity(1);
       fetchBooking();
-    } catch { toast.error('Lỗi xuất hóa đơn'); }
+    } catch { toast.error('Lỗi thêm dịch vụ'); }
+  };
+
+  const handleDeleteService = async (serviceCode: string) => {
+    if (!booking || !window.confirm('Xóa dịch vụ này?')) return;
+    try {
+      await hotelService.deleteBookingService(booking.id, serviceCode);
+      toast.success('Đã xóa dịch vụ');
+      fetchBooking();
+    } catch { toast.error('Lỗi xóa dịch vụ'); }
+  };
+
+  const handleInvoice = () => {
+    if (!booking) return;
+    navigate(`/hotel/bookings/${booking.id}/invoice`);
   };
 
   if (loading) return <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}>Đang tải...</div>;
@@ -118,8 +173,6 @@ export const BookingDetailPage: React.FC = () => {
               {[
                 ['Họ tên', booking.guestName],
                 ['SĐT', booking.guestPhone],
-                ['Email', booking.guestEmail],
-                ['CCCD/HC', booking.idCard],
                 ['Quốc tịch', booking.nationality],
                 ['Nguồn', booking.source || 'Direct'],
               ].map(([l, v]) => (
@@ -128,6 +181,14 @@ export const BookingDetailPage: React.FC = () => {
                   <span className={styles.infoValue}>{v || '—'}</span>
                 </div>
               ))}
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>CCCD/HC</span>
+                <span className={styles.infoValue}>{(booking as any).idCard || (booking as any).guestIdCard || '—'}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Email</span>
+                <span className={styles.infoValue}>{booking.guestEmail || (booking as any).email || '—'}</span>
+              </div>
             </div>
           </div>
 
@@ -155,28 +216,74 @@ export const BookingDetailPage: React.FC = () => {
           </div>
 
           {/* Dịch vụ */}
-          {booking.services?.length > 0 && (
-            <div className={styles.card}>
-              <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700 }}>🔧 Dịch Vụ</h3>
+          <div className={styles.card}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>🔧 Dịch Vụ / Minibar</h3>
+              {(booking.status === 'CONFIRMED' || booking.status === 'CHECKED_IN') && !addingService && (
+                <button className={styles.btnSecondary} style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => setAddingService(true)}>
+                  + Thêm dịch vụ
+                </button>
+              )}
+            </div>
+
+            {addingService && (
+              <div style={{ padding: 12, background: '#f8fafc', borderRadius: 8, marginBottom: 16, border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                  <div className={styles.formGroup} style={{ flex: 2, marginBottom: 0 }}>
+                    <label style={{ fontSize: 12 }}>Chọn dịch vụ</label>
+                    <select value={selectedSvc?.serviceCode || ''} onChange={e => {
+                      const svc = servicesList.find(s => s.serviceCode === e.target.value);
+                      setSelectedSvc(svc);
+                    }}>
+                      <option value="">-- Chọn --</option>
+                      {servicesList.map(s => (
+                        <option key={s.serviceCode} value={s.serviceCode}>
+                          {s.serviceName} ({(s.unitPrice || 0).toLocaleString('vi-VN')}đ)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className={styles.formGroup} style={{ width: 80, marginBottom: 0 }}>
+                    <label style={{ fontSize: 12 }}>SL</label>
+                    <input type="number" min="1" value={svcQuantity} onChange={e => setSvcQuantity(Number(e.target.value))} />
+                  </div>
+                  <button className={styles.btnPrimary} style={{ padding: '8px 16px', height: 38 }} onClick={handlePostService}>Thêm</button>
+                  <button className={styles.btnSecondary} style={{ padding: '8px 12px', height: 38 }} onClick={() => setAddingService(false)}>Hủy</button>
+                </div>
+              </div>
+            )}
+
+            {booking.services?.length > 0 ? (
               <div className={styles.tableWrapper}>
                 <table className={styles.dataTable}>
                   <thead>
-                    <tr><th>Dịch vụ</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th></tr>
+                    <tr><th>Dịch vụ</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th><th></th></tr>
                   </thead>
                   <tbody>
-                    {booking.services.map(s => (
-                      <tr key={s.serviceCode}>
+                    {booking.services.map((s, idx) => (
+                      <tr key={`${s.serviceCode}-${idx}`}>
                         <td>{s.serviceName || s.serviceCode}</td>
                         <td>{(s.unitPrice || 0).toLocaleString('vi-VN')}đ</td>
                         <td style={{ textAlign: 'center' }}>{s.quantity}</td>
                         <td style={{ fontWeight: 700 }}>{(s.totalPrice || 0).toLocaleString('vi-VN')}đ</td>
+                        <td style={{ width: 40 }}>
+                           <button 
+                            className={styles.btnIcon} 
+                            style={{ color: '#dc2626' }} 
+                            onClick={() => handleDeleteService(s.serviceCode)}
+                           >
+                            <X size={14} />
+                           </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
+            ) : (
+              <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: 12 }}>Chưa có dịch vụ nào</div>
+            )}
+          </div>
 
           {/* Ghi chú */}
           {booking.notes && (
@@ -258,8 +365,9 @@ export const BookingDetailPage: React.FC = () => {
               {[
                 { label: 'Tạo booking', time: booking.createdAt, icon: '📝' },
                 { label: 'Xác nhận', time: booking.status !== 'PENDING' ? booking.updatedAt : null, icon: '✅' },
-                { label: 'Check-in', time: booking.status === 'CHECKED_IN' || booking.status === 'CHECKED_OUT' ? booking.checkIn : null, icon: '🏨' },
-                { label: 'Check-out', time: booking.status === 'CHECKED_OUT' ? booking.checkOut : null, icon: '🚪' },
+                { label: 'Check-in (Thực tế)', time: booking.status === 'CHECKED_IN' || booking.status === 'CHECKED_OUT' ? booking.checkIn : null, icon: '🏨' },
+                { label: 'Check-out (Dự kiến)', time: booking.checkOut, icon: '⏳' },
+                { label: 'Check-out (Thực tế)', time: booking.status === 'CHECKED_OUT' ? booking.updatedAt : null, icon: '🚪' },
               ].filter(t => t.time).map(t => (
                 <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
                   <span style={{ fontSize: 16 }}>{t.icon}</span>

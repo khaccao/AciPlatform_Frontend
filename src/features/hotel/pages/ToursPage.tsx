@@ -211,7 +211,7 @@ export const ToursPage: React.FC = () => {
       {/* Modal tạo/sửa tour */}
       {showModal && editing && (
         <div className={styles.modalBackdrop} onClick={() => { setShowModal(false); setEditing(null); }}>
-          <div className={styles.modal} style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
+          <div className={`${styles.modal} ${styles.modalLg}`} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3>{editing.id ? 'Chỉnh sửa tour' : 'Tạo tour mới'}</h3>
               <button className={styles.btnIcon} onClick={() => { setShowModal(false); setEditing(null); }}><X size={20} /></button>

@@ -3,17 +3,25 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 interface Menu {
     id: number;
     menuCode: string;
+    code?: string;
+    Code?: string;
     name: string;
+    Name?: string;
     nameEN: string;
     nameKO: string;
     order: number;
+    Order?: number;
     view: boolean;
     add: boolean;
     edit: boolean;
     delete: boolean;
     approve: boolean;
     isParent: boolean;
+    IsParent?: boolean;
     codeParent?: string;
+    CodeParent?: string;
+    url?: string;
+    Url?: string;
 }
 
 interface User {

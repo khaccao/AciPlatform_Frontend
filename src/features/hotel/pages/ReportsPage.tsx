@@ -33,6 +33,8 @@ export const ReportsPage: React.FC = () => {
   };
 
   const fmtMoney = (v: number) => (v / 1000000).toFixed(1) + 'M';
+  const fmtTooltipMoney = (value: unknown) => [`${(Number(value ?? 0) / 1000000).toFixed(1)}M đ`];
+  const fmtTooltipPercent = (value: unknown) => [`${Number(value ?? 0)}%`, 'Công suất'];
   const totalRevenue = revenue.reduce((s, r) => s + (r.totalRevenue || 0), 0);
   const avgOccupancy = occupancy.length > 0 ? Math.round(occupancy.reduce((s, o) => s + (o.occupancyRate || 0), 0) / occupancy.length) : 0;
 
@@ -88,7 +90,7 @@ export const ReportsPage: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis tickFormatter={fmtMoney} tick={{ fontSize: 11 }} width={50} />
-                <Tooltip formatter={(v: number) => [`${(v / 1000000).toFixed(1)}M đ`]} />
+                <Tooltip formatter={fmtTooltipMoney} />
                 <Legend />
                 <Bar dataKey="roomRevenue" name="Phòng" fill="#1e6fff" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="vehicleRevenue" name="Xe máy" fill="#22c55e" radius={[4, 4, 0, 0]} />
@@ -106,10 +108,10 @@ export const ReportsPage: React.FC = () => {
           ) : (
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
-                <Pie data={revenueBreakdown} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                <Pie data={revenueBreakdown} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}>
                   {revenueBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip formatter={(v: number) => [`${(v / 1000000).toFixed(1)}M đ`]} />
+                <Tooltip formatter={fmtTooltipMoney} />
               </PieChart>
             </ResponsiveContainer>
           )}
@@ -127,7 +129,7 @@ export const ReportsPage: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
               <YAxis domain={[0, 100]} tickFormatter={v => `${v}%`} tick={{ fontSize: 11 }} width={40} />
-              <Tooltip formatter={(v: number) => [`${v}%`, 'Công suất']} />
+              <Tooltip formatter={fmtTooltipPercent} />
               <Line type="monotone" dataKey="occupancyRate" name="Công suất" stroke="#1e6fff" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>

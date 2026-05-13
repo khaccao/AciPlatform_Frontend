@@ -43,7 +43,13 @@ import { GuestsPage } from '../features/hotel/pages/GuestsPage';
 import { ReportsPage } from '../features/hotel/pages/ReportsPage';
 import { BookingNewPage } from '../features/hotel/pages/BookingNewPage';
 import { BookingDetailPage } from '../features/hotel/pages/BookingDetailPage';
-
+import { InvoicePage } from '../features/hotel/pages/InvoicePage';
+import { GuideManagementPage } from '../features/hotel/pages/GuideManagementPage';
+import { RoomMapManagementPage } from '../features/hotel/pages/RoomMapManagementPage';
+import { ServiceManagementPage } from '../features/hotel/pages/ServiceManagementPage';
+import { RoomRackPage } from '../features/hotel/pages/RoomRackPage';
+import { RoomForecastPage } from '../features/hotel/pages/RoomForecastPage';
+import { RoomStatusDashboardPage } from '../features/hotel/pages/RoomStatusDashboardPage';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -131,11 +137,18 @@ export const AppRoutes = () => {
                     <Route index element={<Navigate to="dashboard" replace />} />
                     <Route path="dashboard" element={<HotelDashboardPage />} />
                     <Route path="room-map" element={<RoomMapPage />} />
+                    <Route path="room-rack" element={<RoomRackPage />} />
+                    <Route path="room-forecast" element={<RoomForecastPage />} />
+                    <Route path="room-status" element={<RoomStatusDashboardPage />} />
                     <Route path="bookings" element={<BookingsPage />} />
                     <Route path="bookings/new" element={<BookingNewPage />} />
                     <Route path="bookings/:id" element={<BookingDetailPage />} />
+                    <Route path="bookings/:id/invoice" element={<InvoicePage />} />
                     <Route path="vehicles" element={<VehiclesPage />} />
                     <Route path="tours" element={<ToursPage />} />
+                    <Route path="guides" element={<GuideManagementPage />} />
+                    <Route path="room-map-mgmt" element={<RoomMapManagementPage />} />
+                    <Route path="services-mgmt" element={<ServiceManagementPage />} />
                     <Route path="guests" element={<GuestsPage />} />
                     <Route path="reports" element={<ReportsPage />} />
                 </Route>

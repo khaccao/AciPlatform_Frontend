@@ -22,7 +22,6 @@ import {
     Camera,
     X,
     Package,
-    CheckSquare,
     FileText,
     ClipboardCheck,
     PackagePlus,
@@ -34,7 +33,11 @@ import {
     Home,
     Layers,
     Warehouse,
-    ChevronDown
+    ChevronDown,
+    Compass,
+    BarChart,
+    UserCheck,
+    Map
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout, updateUser } from '../../features/auth/store/auth.slice';
@@ -42,6 +45,24 @@ import { authService } from '../../features/auth/services/auth.service';
 import { useMediaQuery } from '../../shared/hooks/useMediaQuery';
 import styles from './MainLayout.module.scss';
 import { toast } from 'sonner';
+import hotelService from '../../features/hotel/services/hotel.service';
+
+interface CompanyOption {
+    code?: string;
+    name?: string;
+    isHotel?: boolean;
+}
+
+const getInitialCompanyCode = () => {
+    const stored = localStorage.getItem('selectedCompanyCode') || localStorage.getItem('selectedHotelCode') || localStorage.getItem('dbName');
+    if (stored) return stored;
+
+    try {
+        return JSON.parse(localStorage.getItem('user') || '{}')?.companyCode || '';
+    } catch {
+        return '';
+    }
+};
 
 export const MainLayout: React.FC = () => {
     const navigate = useNavigate();
@@ -55,6 +76,8 @@ export const MainLayout: React.FC = () => {
     
     const [isSidebarOpen, setSidebarOpen] = useState(!isMobile && !isTablet);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [companies, setCompanies] = useState<CompanyOption[]>([]);
+    const [selectedCompanyCode, setSelectedCompanyCode] = useState(getInitialCompanyCode());
     const [expandedMenus, setExpandedMenus] = useState<string[]>(() => {
         try {
             const saved = localStorage.getItem('expandedMenus');
@@ -68,6 +91,18 @@ export const MainLayout: React.FC = () => {
     useEffect(() => {
         localStorage.setItem('expandedMenus', JSON.stringify(expandedMenus));
     }, [expandedMenus]);
+
+    useEffect(() => {
+        hotelService.getCompanies()
+            .then((items) => {
+                setCompanies(items);
+                if (!getInitialCompanyCode() && items?.[0]?.code) {
+                    setSelectedCompanyCode(items[0].code);
+                    hotelService.setCompanyCode(items[0].code);
+                }
+            })
+            .catch(() => setCompanies([]));
+    }, []);
 
     // Sync sidebar state on screen size change
     useEffect(() => {
@@ -123,6 +158,14 @@ export const MainLayout: React.FC = () => {
 
     const menus = user?.menus || [];
 
+    const handleCompanyChange = (code: string) => {
+        setSelectedCompanyCode(code);
+        hotelService.setCompanyCode(code);
+        window.dispatchEvent(new CustomEvent('companyCodeChanged', { detail: code }));
+        window.dispatchEvent(new Event('hotelCodeChanged'));
+        window.location.reload();
+    };
+
     const IconMap: Record<string, React.ReactNode> = {
         'dashboard': <LayoutDashboard size={18} />,
         'hr': <Users size={18} />,
@@ -149,6 +192,16 @@ export const MainLayout: React.FC = () => {
         '/customer': <Users size={18} />,
         'goods': <Package size={18} />,
         '/goods': <Package size={18} />,
+        'hotel': <Home size={18} />,
+        'hotel/dashboard': <LayoutDashboard size={18} />,
+        'hotel/room-map': <Map size={18} />,
+        'hotel/room-rack': <Layers size={18} />,
+        'hotel/bookings': <BookOpen size={18} />,
+        'hotel/vehicles': <Truck size={18} />,
+        'hotel/tours': <Compass size={18} />,
+        'hotel/guides': <UserCheck size={18} />,
+        'hotel/guests': <Users size={18} />,
+        'hotel/reports': <BarChart size={18} />,
         'accounting/payment-voucher': <FileText size={18} />,
         '/accounting/payment-voucher': <FileText size={18} />,
         'accounting/approve-voucher': <ClipboardCheck size={18} />,
@@ -183,7 +236,12 @@ export const MainLayout: React.FC = () => {
         'Wallet': <Wallet size={18} />,
         'Home': <Home size={18} />,
         'Layers': <Layers size={18} />,
-        'Warehouse': <Warehouse size={18} />
+        'Warehouse': <Warehouse size={18} />,
+        'Compass': <Compass size={18} />,
+        'BarChart': <BarChart size={18} />,
+        'UserCheck': <UserCheck size={18} />,
+        'Map': <Map size={18} />,
+        'Hotel': <Home size={18} />,
     };
 
     const getIcon = (menu: any, cleanPath: string) => {
@@ -194,23 +252,34 @@ export const MainLayout: React.FC = () => {
     };
 
     const renderMenuItems = () => {
-        const sortedMenus = [...menus].sort((a, b) => (a.order || 0) - (b.order || 0));
-        const parentMenus = sortedMenus.filter(m => m.isParent || (!m.codeParent && !m.menuCode.includes('/')));
+        const sortedMenus = [...menus].sort((a, b) => ((a.order || a.Order || 0) - (b.order || b.Order || 0)));
+        
+        const parentMenus = sortedMenus.filter(m => {
+            const isP = m.isParent || m.IsParent;
+            const codeP = m.codeParent || m.CodeParent;
+            const mCode = m.menuCode || m.Code || '';
+            return isP || (!codeP && !mCode.includes('/'));
+        });
 
         return parentMenus.map(menu => {
-            const children = sortedMenus.filter(m => m.codeParent === menu.menuCode && m.id !== menu.id);
+            const mCode = menu.menuCode || menu.Code || '';
+            const mName = menu.name || menu.Name || '';
+            const children = sortedMenus.filter(m => {
+                const codeP = m.codeParent || m.CodeParent;
+                return codeP === mCode && m.id !== menu.id;
+            });
             const hasChildren = children.length > 0;
-            const isExpanded = expandedMenus.includes(menu.menuCode);
-            const cleanPath = menu.menuCode.startsWith('/') ? menu.menuCode : `/${menu.menuCode}`;
+            const isExpanded = expandedMenus.includes(mCode);
+            const cleanPath = mCode.startsWith('/') ? mCode : `/${mCode}`;
 
             if (hasChildren) {
                 return (
                     <div key={menu.id} className={`${styles.navGroup} ${isSidebarOpen ? '' : styles.navGroupCollapsed}`}>
                         <div 
                             className={`${styles.navItem} ${styles.navGroupToggle} ${isExpanded ? styles.navGroupToggleActive : ''}`} 
-                            onClick={() => toggleGroup(menu.menuCode)}
+                            onClick={() => toggleGroup(mCode)}
                         >
-                            <span className={styles.parentName}>{menu.name}</span>
+                            <span className={styles.parentName}>{mName}</span>
                             {isSidebarOpen && (
                                 <div className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ''}`}>
                                     <ChevronDown size={14} />
@@ -221,18 +290,20 @@ export const MainLayout: React.FC = () => {
                         <div className={`${styles.navChildren} ${isExpanded ? styles.navChildrenOpen : ''}`}>
                             <div className={styles.verticalLine} />
                             {children.map(child => {
-                                const childPath = child.menuCode.startsWith('/') ? child.menuCode : `/${child.menuCode}`;
+                                const cCode = child.menuCode || child.Code || '';
+                                const cName = child.name || child.Name || '';
+                                const childPath = cCode.startsWith('/') ? cCode : `/${cCode}`;
                                 return (
                                     <Link
                                         key={child.id}
                                         to={childPath}
                                         className={`${styles.navItem} ${styles.navSubItem} ${isActive(childPath) ? styles.active : ''}`}
-                                        title={child.name}
+                                        title={cName}
                                     >
                                         <div className={styles.subItemIcon}>
                                             {getIcon(child, childPath)}
                                         </div>
-                                        <span>{child.name}</span>
+                                        <span>{cName}</span>
                                     </Link>
                                 );
                             })}
@@ -246,10 +317,10 @@ export const MainLayout: React.FC = () => {
                     key={menu.id}
                     to={cleanPath}
                     className={`${styles.navItem} ${isActive(cleanPath) ? styles.active : ''}`}
-                    title={menu.name}
+                    title={mName}
                 >
                     {getIcon(menu, cleanPath)}
-                    <span>{menu.name}</span>
+                    <span>{mName}</span>
                 </Link>
             );
         });
@@ -304,6 +375,18 @@ export const MainLayout: React.FC = () => {
                             <X size={20} />
                         </button>
                     )}
+                </div>
+
+                <div className={styles.companySwitcher}>
+                    <select value={selectedCompanyCode} onChange={(e) => handleCompanyChange(e.target.value)} title="Chọn công ty">
+                        {companies.length === 0 ? (
+                            <option value={selectedCompanyCode}>{selectedCompanyCode || 'Chọn công ty'}</option>
+                        ) : companies.map(company => (
+                            <option key={company.code} value={company.code}>
+                                {company.code} - {company.name}{company.isHotel ? ' (Hotel)' : ''}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <nav className={styles.nav}>

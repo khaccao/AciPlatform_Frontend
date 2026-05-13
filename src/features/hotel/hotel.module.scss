@@ -1,4 +1,4 @@
-﻿/* Hotel Management Module - AciPlatform */
+/* Hotel Management Module - AciPlatform */
 :root {
   --hotel-primary: #1e6fff;
   --hotel-primary-dark: #1558e8;
@@ -128,6 +128,17 @@
   transition: all 0.15s;
   &:hover { background: #f1f5f9; color: #0f172a; }
 }
+.btnIconSm {
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s;
+  &:hover { background: #f1f5f9; color: #1e293b; }
+}
 
 /* â”€â”€ Cards / KPI â”€â”€ */
 .card {
@@ -221,9 +232,13 @@
   &.checkout, &.active { background: #eff6ff; color: #2563eb; }
   &.checkedIn { background: #f0fdf4; color: #16a34a; }
   &.checkedOut { background: #f1f5f9; color: #475569; }
-  &.easy { background: #f0fdf4; color: #16a34a; }
-  &.moderate { background: #fffbeb; color: #d97706; }
-  &.hard { background: #fef2f2; color: #dc2626; }
+  &.vc { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+  &.vd { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  &.oc { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  &.od { background: #fff1f2; color: #991b1b; border: 1px solid #fda4af; }
+  &.ea { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+  &.ed { background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+  &.edea { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
 }
 .dot {
   width: 8px; height: 8px; border-radius: 50%;
@@ -259,11 +274,50 @@
   &.dirty { border-color: var(--hotel-dirty); background: #fffef0; }
   &.oos { border-color: var(--hotel-oos); background: #f8f9fa; opacity: 0.7; }
   &.checkout { border-color: var(--hotel-checkout); background: #f0f7ff; }
+  &.vc { border-color: var(--hotel-vacant); background: #fff; }
+  &.vd { border-color: var(--hotel-dirty); background: #fffbeb; }
+  &.oc { border-color: var(--hotel-occupied); background: #fef2f2; }
+  &.od { border-color: #f43f5e; background: #fff1f2; }
+  &.ea { border-color: #3b82f6; background: #eff6ff; }
+  &.ed { border-color: #8b5cf6; background: #faf5ff; }
+  &.edea { border-color: #6d28d9; background: #f5f3ff; }
 }
 .roomCardNo { font-size: 18px; font-weight: 800; color: #0f172a; }
 .roomCardType { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
 .roomCardGuest { font-size: 12px; font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .roomCardStatus { font-size: 11px; font-weight: 600; margin-top: 2px; }
+
+/* ── Room Map Management (Tree View) ── */
+.treeScroll {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 4px;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+}
+.treeNode {
+  transition: all 0.2s;
+  &:hover {
+    background: #f8fafc;
+    .nodeActions { opacity: 1; }
+  }
+  &.active {
+    background: #eff6ff !important;
+    border-color: #1e6fff !important;
+  }
+}
+.nodeActions {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.elementCard {
+  transition: all 0.2s;
+  &:hover {
+    border-color: #1e6fff !important;
+    box-shadow: 0 4px 12px rgba(30,111,255,0.08);
+    transform: translateY(-2px);
+  }
+}
 
 /* â”€â”€ Bed Grid â”€â”€ */
 .bedGrid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -278,6 +332,13 @@
   &.available { border-color: var(--hotel-vacant); background: #f0fdf4; }
   &.occupied { border-color: var(--hotel-occupied); background: #fff5f5; }
   &.dirty { border-color: var(--hotel-dirty); background: #fffef0; }
+  &.vc { border-color: var(--hotel-vacant); background: #f0fdf4; }
+  &.vd { border-color: var(--hotel-dirty); background: #fffbeb; }
+  &.oc { border-color: var(--hotel-occupied); background: #fef2f2; }
+  &.od { border-color: #f43f5e; background: #fff1f2; }
+  &.ea { border-color: #3b82f6; background: #eff6ff; }
+  &.ed { border-color: #8b5cf6; background: #faf5ff; }
+  &.oos { border-color: var(--hotel-oos); background: #f1f5f9; opacity: .7; }
   &:hover { transform: scale(1.03); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 }
 .bedCode { font-size: 12px; font-weight: 700; color: #334155; }
@@ -307,43 +368,63 @@
   display: flex; gap: 10px; flex-wrap: wrap;
 }
 
-/* â”€â”€ Modals â”€â”€ */
-.overlay {
+/* ── Modals & Overlays ── */
+.overlay, .modalBackdrop, .modalOverlay {
   position: fixed; inset: 0;
-  background: rgba(15,23,42,0.5);
+  background: rgba(15, 23, 42, 0.45);
   display: flex; align-items: center; justify-content: center;
-  z-index: 300;
-  backdrop-filter: blur(2px);
-  animation: fadeIn 0.2s;
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.modal {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  width: 560px;
-  max-width: 95vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  display: flex; flex-direction: column;
-}
-.modalLg { width: 780px; }
-.modalHeader {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex; justify-content: space-between; align-items: center;
-  position: sticky; top: 0; background: #fff; z-index: 1;
-  h2 { font-size: 18px; font-weight: 700; margin: 0; color: #0f172a; }
-}
-.modalBody { padding: 24px; }
-.modalFooter {
-  padding: 16px 24px;
-  border-top: 1px solid #e2e8f0;
-  display: flex; justify-content: flex-end; gap: 10px;
-  position: sticky; bottom: 0; background: #fff;
+  z-index: 1000;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 20px;
 }
 
-/* â”€â”€ Forms â”€â”€ */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal, .modalContent {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0,0,0,0.05);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes modalScaleUp { 
+  from { opacity: 0; transform: scale(0.95) translateY(10px); } 
+  to { opacity: 1; transform: scale(1) translateY(0); } 
+}
+
+.modalLg { max-width: 850px; }
+
+.modalHeader {
+  padding: 24px 28px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex; justify-content: space-between; align-items: center;
+  h2, h3 { font-size: 20px; font-weight: 800; margin: 0; color: #0f172a; letter-spacing: -0.02em; }
+}
+
+.modalBody { 
+  padding: 28px; 
+  overflow-y: auto; 
+  flex: 1;
+  /* Custom scrollbar */
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+}
+
+.modalFooter {
+  padding: 20px 28px;
+  border-top: 1px solid #f1f5f9;
+  display: flex; justify-content: flex-end; gap: 12px;
+  background: #f8fafc;
+}
+
+/* ── Forms ── */
 .formGrid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
   &.col1 { grid-template-columns: 1fr; }
@@ -353,6 +434,8 @@
   display: flex; flex-direction: column; gap: 6px;
   label { font-size: 13px; font-weight: 600; color: #475569; }
   input, select, textarea {
+    width: 100%;
+    box-sizing: border-box;
     padding: 9px 12px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
@@ -498,9 +581,20 @@
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* â”€â”€ Split layout â”€â”€ */
-.splitLayout { display: flex; gap: 20px; }
-.leftPane { flex: 1; min-width: 0; }
-.rightPane { width: 380px; flex-shrink: 0; }
+.splitLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  gap: 20px;
+  align-items: start;
+}
+.leftPane { min-width: 0; }
+.rightPane {
+  min-width: 0;
+  position: sticky;
+  top: 84px;
+
+  .card { min-width: 0; }
+}
 
 /* â”€â”€ Overlay backdrop â”€â”€ */
 .panelBackdrop {
@@ -551,8 +645,8 @@
 @media (max-width: 900px) {
   .hotelContainer { padding: 16px; }
   .kpiGrid { grid-template-columns: repeat(2, 1fr); }
-  .splitLayout { flex-direction: column; }
-  .rightPane { width: 100%; }
+  .splitLayout { grid-template-columns: 1fr; }
+  .rightPane { width: 100%; position: static; }
   .sidePanel { width: 100%; }
 }
 @media (max-width: 600px) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { X, User, Phone, Mail, CreditCard, BedDouble, Plus, Minus, Calendar, ChevronRight } from 'lucide-react';
+import { X, User, Phone, Mail, CreditCard, Plus, Minus, Calendar, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
 import hotelService from '../services/hotel.service';
@@ -8,26 +8,36 @@ import hotelService from '../services/hotel.service';
 type Step = 'guest' | 'room' | 'service' | 'payment';
 
 const STEPS: { key: Step; label: string; icon: string }[] = [
-  { key: 'guest',   label: 'Thông tin khách', icon: '👤' },
-  { key: 'room',    label: 'Chọn phòng',       icon: '🛏️' },
-  { key: 'service', label: 'Dịch vụ',          icon: '🔧' },
-  { key: 'payment', label: 'Thanh toán',        icon: '💳' },
+  { key: 'guest', label: 'Thông tin khách', icon: '👤' },
+  { key: 'room', label: 'Chọn phòng', icon: '🛏️' },
+  { key: 'service', label: 'Dịch vụ', icon: '🔧' },
+  { key: 'payment', label: 'Thanh toán', icon: '💳' },
 ];
 
 const BOOKING_TYPES = [
-  { value: 'FIT',    label: 'Cá nhân (FIT)' },
-  { value: 'GIT',    label: 'Đoàn (GIT)' },
+  { value: 'FIT', label: 'Cá nhân (FIT)' },
+  { value: 'GIT', label: 'Đoàn (GIT)' },
   { value: 'WALKIN', label: 'Walk-in' },
-  { value: 'DORM',   label: 'Dorm (giường)' },
+  { value: 'DORM', label: 'Dorm (giường)' },
 ];
 
 const PAYMENT_METHODS = ['CASH', 'TRANSFER', 'CARD', 'DEBT'];
+const BED_STATUS_LABELS: Record<string, string> = {
+  VC: 'Sach trong',
+  VD: 'Ban trong',
+  OC: 'Sach co khach',
+  OD: 'Ban co khach',
+  EA: 'Du kien den',
+  ED: 'Du kien di',
+  OOS: 'Ngung dung',
+};
 const PAYMENT_LABELS: Record<string, string> = { CASH: 'Tiền mặt', TRANSFER: 'Chuyển khoản', CARD: 'Thẻ', DEBT: 'Công nợ' };
 
 export const BookingNewPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const presetRoom = searchParams.get('room') || '';
+  const presetBed = searchParams.get('bed') || '';
 
   const [step, setStep] = useState<Step>('guest');
   const [loading, setLoading] = useState(false);
@@ -39,7 +49,7 @@ export const BookingNewPage: React.FC = () => {
     bookingType: 'FIT',
     checkIn: new Date().toISOString().slice(0, 16),
     checkOut: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
-    rooms: presetRoom ? [{ roomNo: presetRoom, bedCode: '', pricePerNight: 0 }] : [] as any[],
+    rooms: presetRoom ? [{ roomNo: presetRoom, bedCode: presetBed, pricePerNight: 0 }] : [] as any[],
     services: [] as any[],
     paidAmount: 0,
     paymentMethod: 'CASH',
@@ -54,12 +64,30 @@ export const BookingNewPage: React.FC = () => {
   useEffect(() => {
     if (step === 'room') fetchRooms();
     if (step === 'service') fetchServices();
-  }, [step]);
+  }, [step, form.checkIn, form.checkOut]);
 
   const fetchRooms = async () => {
     try {
-      const rooms = await hotelService.getRooms();
-      setAvailableRooms(rooms.filter((r: any) => r.status === 'VACANT' || !r.status));
+      const data = await hotelService.getRoomAvailability(form.checkIn, form.checkOut);
+      setAvailableRooms(data);
+      // Auto fill price for preset room
+      if (presetRoom) {
+        setForm(f => {
+          const newRooms = f.rooms.map(r => {
+            if (r.roomNo === presetRoom && !r.pricePerNight) {
+              const matchedRoom = data.find((x: any) => (x.roomNo || x.so) === presetRoom);
+              let price = matchedRoom?.pricePerNight || matchedRoom?.basePrice || 200000;
+              if (presetBed && matchedRoom?.beds) {
+                // Adjust bed price if needed, or default
+                price = 100000;
+              }
+              return { ...r, pricePerNight: price };
+            }
+            return r;
+          });
+          return { ...f, rooms: newRooms };
+        });
+      }
     } catch { toast.error('Lỗi tải danh sách phòng'); }
   };
 
@@ -75,17 +103,50 @@ export const BookingNewPage: React.FC = () => {
 
   const calcTotal = () => {
     const nights = calcNights();
-    const roomTotal = form.rooms.reduce((s, r) => s + (r.pricePerNight || 0) * nights, 0);
-    const svcTotal = form.services.reduce((s, sv) => s + (sv.unitPrice || 0) * (sv.quantity || 1), 0);
+    const roomTotal = form.rooms.reduce((s, r) => s + (Number(r.pricePerNight) || 0) * nights, 0);
+    const svcTotal = form.services.reduce((s, sv) => s + (Number(sv.unitPrice) || 0) * (sv.quantity || 1), 0);
     return roomTotal + svcTotal;
   };
 
   const toggleRoom = (room: any) => {
-    const exists = form.rooms.find(r => r.roomNo === room.so);
+    const roomNo = room.roomNo || room.so;
+    const status = (room.status || 'VC').toUpperCase();
+    if (status !== 'VC') {
+      toast.warning(`Phòng ${roomNo} hiện đang ở trạng thái ${status}, không thể đặt phòng.`);
+      return;
+    }
+    const exists = form.rooms.find(r => r.roomNo === roomNo && !r.bedCode);
     if (exists) {
-      setForm(f => ({ ...f, rooms: f.rooms.filter(r => r.roomNo !== room.so) }));
+      setForm(f => ({ ...f, rooms: f.rooms.filter(r => !(r.roomNo === roomNo && !r.bedCode)) }));
     } else {
-      setForm(f => ({ ...f, rooms: [...f.rooms, { roomNo: room.so, bedCode: '', pricePerNight: room.basePrice || 200000 }] }));
+      setForm(f => ({
+        ...f,
+        rooms: [
+          ...f.rooms.filter(r => r.roomNo !== roomNo),
+          { roomNo, bedCode: '', pricePerNight: room.pricePerNight || room.basePrice || 200000 }
+        ]
+      }));
+    }
+  };
+
+  const toggleBed = (room: any, bed: any) => {
+    const status = (bed.status || 'VC').toUpperCase();
+    if (status !== 'VC') {
+      toast.warning(`Giường ${bed.bedCode} hiện đang ở trạng thái ${status}, không thể đặt phòng.`);
+      return;
+    }
+    const roomNo = room.roomNo || room.so;
+    const exists = form.rooms.find(r => r.roomNo === roomNo && r.bedCode === bed.bedCode);
+    if (exists) {
+      setForm(f => ({ ...f, rooms: f.rooms.filter(r => !(r.roomNo === roomNo && r.bedCode === bed.bedCode)) }));
+    } else {
+      setForm(f => ({
+        ...f,
+        rooms: [
+          ...f.rooms.filter(r => !(r.roomNo === roomNo && !r.bedCode)),
+          { roomNo, bedCode: bed.bedCode, pricePerNight: room.pricePerNight || room.basePrice || 100000 }
+        ]
+      }));
     }
   };
 
@@ -105,8 +166,15 @@ export const BookingNewPage: React.FC = () => {
     try {
       const booking = await hotelService.createBooking({
         ...form,
+        guestEmail: form.guestEmail,
+        guestIdCard: form.idCard,
+        groupSize: form.totalPerson,
+        depositAmount: form.paidAmount,
+        paidAmount: form.paidAmount,
+        discountAmount: 0,
         totalAmount: calcTotal(),
         nightCount: calcNights(),
+        rooms: form.rooms.map(r => ({ ...r, bedCode: r.bedCode || undefined, nightCount: calcNights() })),
       } as any);
       toast.success(`Đặt phòng thành công! Mã: ${booking.bookingCode}`);
       navigate(`/hotel/bookings/${booking.id}`);
@@ -146,19 +214,38 @@ export const BookingNewPage: React.FC = () => {
       </div>
 
       {/* Step indicator */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 32, background: '#f8fafc', borderRadius: 12, padding: 4 }}>
+      {/* Step indicator */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 32, padding: '0 10px' }}>
         {STEPS.map((s, i) => (
-          <button key={s.key}
-            style={{
-              flex: 1, padding: '12px 8px', border: 'none', borderRadius: 10, cursor: 'pointer', transition: 'all .2s',
-              background: step === s.key ? '#1e6fff' : 'transparent',
-              color: step === s.key ? '#fff' : i < currentStepIndex ? '#16a34a' : '#94a3b8',
-              fontWeight: step === s.key ? 700 : 500, fontSize: 13,
-            }}
-            onClick={() => i <= currentStepIndex && setStep(s.key)}>
-            {s.icon} {s.label}
-            {i < currentStepIndex && <span style={{ marginLeft: 6 }}>✓</span>}
-          </button>
+          <React.Fragment key={s.key}>
+            <div
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, position: 'relative', zIndex: 2, flex: 1,
+                cursor: i <= currentStepIndex ? 'pointer' : 'default'
+              }}
+              onClick={() => i <= currentStepIndex && setStep(s.key)}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: step === s.key ? '#1e6fff' : i < currentStepIndex ? '#16a34a' : '#fff',
+                border: step === s.key || i < currentStepIndex ? 'none' : '2px solid #e2e8f0',
+                color: step === s.key || i < currentStepIndex ? '#fff' : '#94a3b8',
+                boxShadow: step === s.key ? '0 0 0 4px rgba(30, 111, 255, 0.15)' : 'none',
+                transition: 'all .3s ease', fontSize: 14, fontWeight: 700
+              }}>
+                {i < currentStepIndex ? '✓' : i + 1}
+              </div>
+              <span style={{
+                fontWeight: step === s.key ? 700 : 500, fontSize: 12,
+                color: step === s.key ? '#1e6fff' : i < currentStepIndex ? '#16a34a' : '#94a3b8'
+              }}>{s.label}</span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div style={{
+                flex: 1, height: 3, margin: '0 -20px', transform: 'translateY(-14px)',
+                background: i < currentStepIndex ? '#16a34a' : '#e2e8f0', zIndex: 1
+              }} />
+            )}
+          </React.Fragment>
         ))}
       </div>
 
@@ -226,7 +313,7 @@ export const BookingNewPage: React.FC = () => {
                 <div className={styles.formGroup}>
                   <label>📡 Nguồn đặt</label>
                   <select value={form.source} onChange={e => setForm(f => ({ ...f, source: e.target.value }))}>
-                    {['DIRECT','BOOKING_COM','AGODA','AIRBNB','PHONE','WALK_IN'].map(s => <option key={s} value={s}>{s}</option>)}
+                    {['DIRECT', 'BOOKING_COM', 'AGODA', 'AIRBNB', 'PHONE', 'WALK_IN'].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div className={styles.formGroup} style={{ gridColumn: '1/-1' }}>
@@ -249,21 +336,86 @@ export const BookingNewPage: React.FC = () => {
               ) : (
                 <div className={styles.roomGrid}>
                   {availableRooms.map(r => {
-                    const selected = form.rooms.some(sel => sel.roomNo === r.so);
+                    const roomNo = r.roomNo || r.so;
+                    const selectedRoomObj = form.rooms.find(sel => sel.roomNo === roomNo && !sel.bedCode);
+                    const selected = !!selectedRoomObj;
+                    const selectedBeds = form.rooms.filter(sel => sel.roomNo === roomNo && sel.bedCode);
                     return (
-                      <div key={r.id}
+                      <div key={roomNo}
                         className={`${styles.roomCard} ${selected ? styles.selected : styles.vacant}`}
                         onClick={() => toggleRoom(r)}
-                        style={{ cursor: 'pointer', border: selected ? '2px solid #1e6fff' : undefined }}>
+                        style={{ cursor: r.isAvailable === false ? 'not-allowed' : 'pointer', opacity: r.isAvailable === false ? .65 : 1, border: selected ? '2px solid #1e6fff' : undefined, width: 220 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div className={styles.roomCardNo}>{r.so}</div>
+                          <div className={styles.roomCardNo}>{roomNo}</div>
                           {selected && <span style={{ color: '#1e6fff', fontWeight: 700 }}>✓ Đã chọn</span>}
                         </div>
-                        <div className={styles.roomCardType}>{r.roomTypeName || r.ma}</div>
+                        <div className={styles.roomCardType}>{r.roomTypeName || r.roomType || r.ma}</div>
                         <div style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>Tầng {r.floor} · {r.maxPerson} người</div>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: '#1e6fff', marginTop: 8 }}>
-                          {(r.basePrice || 0).toLocaleString('vi-VN')}đ/đêm
-                        </div>
+
+                        {!selected && selectedBeds.length === 0 && (
+                          <div style={{ fontSize: 15, fontWeight: 800, color: '#1e6fff', marginTop: 8 }}>
+                            {(r.pricePerNight || r.basePrice || 0).toLocaleString('vi-VN')}đ/đêm
+                          </div>
+                        )}
+
+                        {selected && (
+                          <div style={{ marginTop: 8 }} onClick={e => e.stopPropagation()}>
+                            <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 2 }}>Giá phòng/đêm (đ)</label>
+                            <input
+                              type="number"
+                              value={selectedRoomObj.pricePerNight}
+                              onChange={e => {
+                                const val = Number(e.target.value);
+                                setForm(f => ({ ...f, rooms: f.rooms.map(x => x.roomNo === roomNo && !x.bedCode ? { ...x, pricePerNight: val } : x) }));
+                              }}
+                              style={{ width: '100%', padding: '4px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 14 }}
+                            />
+                          </div>
+                        )}
+
+                        {r.beds?.length > 0 && (
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
+                            {r.beds.map((bed: any) => {
+                              const selectedBedObj = selectedBeds.find(sel => sel.bedCode === bed.bedCode);
+                              const bedSelected = !!selectedBedObj;
+                              const disabled = !bed.isAvailable || selected;
+                              return (
+                                <div key={bed.bedCode} style={{ display: 'flex', flexDirection: 'column', gap: 4 }} onClick={e => e.stopPropagation()}>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleBed(r, bed)}
+                                    disabled={disabled}
+                                    title={`${bed.bedName || bed.bedCode} - ${BED_STATUS_LABELS[bed.status] || bed.status}`}
+                                    style={{
+                                      border: `1px solid ${bedSelected ? '#1e6fff' : disabled ? '#e2e8f0' : '#cbd5e1'}`,
+                                      background: bedSelected ? '#eff6ff' : disabled ? '#f8fafc' : '#fff',
+                                      color: disabled ? '#94a3b8' : '#1e293b',
+                                      borderRadius: 6,
+                                      padding: '6px 4px',
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                      cursor: disabled ? 'not-allowed' : 'pointer',
+                                    }}
+                                  >
+                                    {bed.bedCode} · {bed.status || 'VC'}
+                                  </button>
+                                  {bedSelected && (
+                                    <input
+                                      type="number"
+                                      placeholder="Giá giường/đêm"
+                                      value={selectedBedObj.pricePerNight}
+                                      onChange={e => {
+                                        const val = Number(e.target.value);
+                                        setForm(f => ({ ...f, rooms: f.rooms.map(x => x.roomNo === roomNo && x.bedCode === bed.bedCode ? { ...x, pricePerNight: val } : x) }));
+                                      }}
+                                      style={{ width: '100%', padding: '2px 4px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 11 }}
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -295,17 +447,25 @@ export const BookingNewPage: React.FC = () => {
                           <div style={{ fontSize: 12, color: '#64748b' }}>{svc.category} · {(svc.price || 0).toLocaleString('vi-VN')}đ/{svc.unit || 'lần'}</div>
                         </div>
                         {sel ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <button className={styles.btnIcon} onClick={e => { e.stopPropagation(); setForm(f => ({ ...f, services: f.services.map(s => s.serviceCode === svc.serviceCode ? { ...s, quantity: Math.max(1, s.quantity - 1) } : s) })); }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <button className={styles.btnIcon} onClick={e => {
+                              e.stopPropagation();
+                              const newQty = sel.quantity - 1;
+                              if (newQty <= 0) {
+                                setForm(f => ({ ...f, services: f.services.filter(s => s.serviceCode !== svc.serviceCode) }));
+                              } else {
+                                setForm(f => ({ ...f, services: f.services.map(s => s.serviceCode === svc.serviceCode ? { ...s, quantity: newQty } : s) }));
+                              }
+                            }}>
                               <Minus size={14} />
                             </button>
-                            <span style={{ fontWeight: 700, minWidth: 24, textAlign: 'center' }}>{sel.quantity}</span>
+                            <span style={{ fontWeight: 700, minWidth: 24, textAlign: 'center', fontSize: 16 }}>{sel.quantity}</span>
                             <button className={styles.btnIcon} onClick={e => { e.stopPropagation(); setForm(f => ({ ...f, services: f.services.map(s => s.serviceCode === svc.serviceCode ? { ...s, quantity: s.quantity + 1 } : s) })); }}>
                               <Plus size={14} />
                             </button>
                           </div>
                         ) : (
-                          <span style={{ fontSize: 12, color: '#94a3b8' }}>+ Thêm</span>
+                          <span className={styles.btnSecondary} style={{ fontSize: 12, padding: '6px 12px' }}>+ Thêm</span>
                         )}
                       </div>
                     );
@@ -377,8 +537,8 @@ export const BookingNewPage: React.FC = () => {
               <>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '12px 0 6px', textTransform: 'uppercase' }}>Phòng đã chọn</div>
                 {form.rooms.map(r => (
-                  <div key={r.roomNo} className={styles.infoRow}>
-                    <span className={styles.infoLabel}>🛏️ {r.roomNo}</span>
+                  <div key={`${r.roomNo}-${r.bedCode || 'room'}`} className={styles.infoRow}>
+                    <span className={styles.infoLabel}>🛏️ {r.roomNo}{r.bedCode ? ` / ${r.bedCode}` : ''}</span>
                     <span className={styles.infoValue}>{((r.pricePerNight || 0) * nights).toLocaleString('vi-VN')}đ</span>
                   </div>
                 ))}

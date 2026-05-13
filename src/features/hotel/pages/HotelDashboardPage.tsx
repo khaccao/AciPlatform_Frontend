@@ -1,13 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Hotel, LogIn, LogOut, TrendingUp, AlertCircle, Plus, RefreshCw, Clock } from 'lucide-react';
+import { useAppSelector } from '../../../app/hooks';
+import { Hotel, LogIn, LogOut, TrendingUp, AlertCircle, Plus, RefreshCw, Clock, Network, Package, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
 import hotelService from '../services/hotel.service';
-import type { BookingDto, VehicleRentalDto } from '../services/hotel.service';
+import type { BookingDto, VehicleRentalDto } from '../services/hotel.types';
 
 export const HotelDashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const user = useAppSelector(state => state.auth.user);
+  const menus = user?.menus || [];
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<any>(null);
   const [checkouts, setCheckouts] = useState<BookingDto[]>([]);
@@ -27,13 +30,19 @@ export const HotelDashboardPage: React.FC = () => {
         hotelService.getRevenueToday(),
         hotelService.getRoomMap(),
       ]);
-      if (dash.status === 'fulfilled') setDashboard(dash.value);
+      if (dash.status === 'fulfilled') {
+        setDashboard(dash.value);
+        // Fallback revenue from dashboard if partial call fails or to ensure consistency
+        if (!todayRevenue) setTodayRevenue({ totalRevenue: dash.value.todayRevenue });
+      }
       if (revenue.status === 'fulfilled') setTodayRevenue(revenue.value);
       if (map.status === 'fulfilled') setRoomMap(map.value?.floors || []);
       if (bkData.status === 'fulfilled') {
         const items = bkData.value.items || [];
-        setCheckouts(items.filter((b: BookingDto) => new Date(b.checkOut).toDateString() === new Date().toDateString() && b.status === 'CHECKED_IN'));
-        setCheckins(items.filter((b: BookingDto) => new Date(b.checkIn).toDateString() === new Date().toDateString() && b.status === 'CONFIRMED'));
+        // Show today's actions
+        const todayStr = new Date().toDateString();
+        setCheckouts(items.filter((b: BookingDto) => new Date(b.checkOut).toDateString() === todayStr && b.status === 'CHECKED_IN'));
+        setCheckins(items.filter((b: BookingDto) => new Date(b.checkIn).toDateString() === todayStr && b.status === 'CONFIRMED'));
       }
       if (rentals.status === 'fulfilled') {
         const now = new Date();
@@ -63,10 +72,10 @@ export const HotelDashboardPage: React.FC = () => {
   const fmtTime = (dt: string) => new Date(dt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
   const kpis = [
-    { label: 'Phòng đang ở', value: dashboard?.inHouse ?? '—', icon: Hotel, color: 'blue', sub: 'khách đang ở' },
-    { label: 'Check-in hôm nay', value: dashboard?.checkInsToday ?? '—', icon: LogIn, color: 'green', sub: 'lượt đến' },
-    { label: 'Check-out hôm nay', value: dashboard?.checkOutsToday ?? '—', icon: LogOut, color: 'orange', sub: 'lượt đi' },
-    { label: 'Doanh thu hôm nay', value: todayRevenue ? fmtMoney(todayRevenue.totalRevenue || 0) : '—', icon: TrendingUp, color: 'purple', sub: 'tổng thu' },
+    { label: 'Phòng đang ở', value: dashboard?.inHouse ?? dashboard?.InHouse ?? '—', icon: Hotel, color: 'blue', sub: 'khách đang ở' },
+    { label: 'Check-in hôm nay', value: dashboard?.checkInsToday ?? dashboard?.CheckInsToday ?? '—', icon: LogIn, color: 'green', sub: 'lượt đến' },
+    { label: 'Check-out hôm nay', value: dashboard?.checkOutsToday ?? dashboard?.CheckOutsToday ?? '—', icon: LogOut, color: 'orange', sub: 'lượt đi' },
+    { label: 'Doanh thu hôm nay', value: todayRevenue ? fmtMoney(todayRevenue.totalRevenue || todayRevenue.TodayRevenue || 0) : '—', icon: TrendingUp, color: 'purple', sub: 'tổng thu' },
   ];
 
   const getRoomStatusClass = (r: any) => {
@@ -88,6 +97,9 @@ export const HotelDashboardPage: React.FC = () => {
           </p>
         </div>
         <div className={styles.headerActions}>
+          <button className={styles.btnSecondary} onClick={() => navigate('/hotel/room-map-mgmt')}><Network size={15} /> Quản lý sơ đồ</button>
+          <button className={styles.btnSecondary} onClick={() => navigate('/hotel/room-rack')}><Layers size={15} /> Room Rack</button>
+          <button className={styles.btnSecondary} onClick={() => navigate('/hotel/services-mgmt')}><Package size={15} /> Quản lý dịch vụ</button>
           <button className={styles.btnSecondary} onClick={fetchAll}><RefreshCw size={15} /> Làm mới</button>
           <button className={styles.btnPrimary} onClick={() => navigate('/hotel/bookings/new')}><Plus size={15} /> Đặt phòng mới</button>
         </div>
@@ -237,20 +249,22 @@ export const HotelDashboardPage: React.FC = () => {
           <div className={styles.card}>
             <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700 }}>⚡ Thao Tác Nhanh</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[
-                { label: '+ Đặt phòng mới', icon: '🛏️', path: '/hotel/bookings/new', bg: '#eff6ff' },
-                { label: '+ Cho thuê xe', icon: '🏍️', path: '/hotel/vehicles', bg: '#f0fdf4' },
-                { label: '+ Walk-in', icon: '🚶', path: '/hotel/bookings/new?type=WALKIN', bg: '#faf5ff' },
-                { label: 'Sơ đồ phòng', icon: '🗺️', path: '/hotel/room-map', bg: '#fff7ed' },
-                { label: 'Báo cáo hôm nay', icon: '📊', path: '/hotel/reports', bg: '#f0fdf4' },
-              ].map(a => (
-                <button key={a.path} onClick={() => navigate(a.path)}
-                  style={{ padding: '10px 14px', background: a.bg, border: '1px solid #e2e8f0', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600, color: '#1e293b', textAlign: 'left', transition: 'transform 0.15s' }}
-                  onMouseOver={e => (e.currentTarget.style.transform = 'translateX(3px)')}
-                  onMouseOut={e => (e.currentTarget.style.transform = 'translateX(0)')}>
-                  <span style={{ fontSize: 18 }}>{a.icon}</span>{a.label}
-                </button>
-              ))}
+              {menus.filter(m => (m.codeParent || m.CodeParent) === 'hotel' && (m.menuCode || m.Code) !== 'hotel/dashboard').map(m => {
+                const mCode = m.menuCode || m.Code;
+                const mName = m.name || m.Name;
+                const mUrl = m.url || m.Url || `/${mCode}`;
+                return (
+                  <button key={mCode} onClick={() => navigate(mUrl)}
+                    style={{ padding: '10px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600, color: '#1e293b', textAlign: 'left', transition: 'transform 0.15s' }}
+                    onMouseOver={e => (e.currentTarget.style.transform = 'translateX(3px)')}
+                    onMouseOut={e => (e.currentTarget.style.transform = 'translateX(0)')}>
+                    <span style={{ fontSize: 18 }}>⚡</span>{mName}
+                  </button>
+                );
+              })}
+              {menus.filter(m => (m.codeParent || m.CodeParent) === 'hotel' && (m.menuCode || m.Code) !== 'hotel/dashboard').length === 0 && (
+                <p style={{ fontSize: 12, color: '#94a3b8' }}>Không có phím tắt khả dụng</p>
+              )}
             </div>
           </div>
 

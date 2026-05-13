@@ -22,6 +22,12 @@ api.interceptors.request.use(
             config.headers['dbName'] = dbName;
         }
 
+        const selectedCompanyCode = localStorage.getItem('selectedCompanyCode') || localStorage.getItem('selectedHotelCode') || dbName;
+        if (selectedCompanyCode) {
+            config.headers['CompanyCode'] = selectedCompanyCode;
+            config.headers['companyCode'] = selectedCompanyCode;
+        }
+
         return config;
     },
     (error) => Promise.reject(error)
