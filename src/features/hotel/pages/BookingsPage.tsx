@@ -28,13 +28,25 @@ export const BookingsPage: React.FC = () => {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [sortCol, setSortCol] = useState<string>('checkIn');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1100);
   
   // Pagination & Date Filter
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1100;
+      setIsMobile(mobile);
+      if (mobile) setViewMode('cards');
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => { fetchBookings(); }, [statusFilter, typeFilter, page, fromDate, toDate]);
 
@@ -94,47 +106,57 @@ export const BookingsPage: React.FC = () => {
   return (
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
-        <div>
+        <div className={styles.titleSection}>
           <h1>📅 Quản Lý Đặt Phòng</h1>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{total} booking tổng cộng</p>
+          <p className={styles.subtitle}>{total} booking tổng cộng</p>
         </div>
         <div className={styles.headerActions}>
-          <div style={{ display: 'flex', background: '#f1f5f9', padding: 3, borderRadius: 8, marginRight: 12 }}>
-            <button 
-              style={{ padding: '6px 12px', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: viewMode === 'table' ? '#fff' : 'transparent', boxShadow: viewMode === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}
-              onClick={() => setViewMode('table')}>Bảng</button>
-            <button 
-              style={{ padding: '6px 12px', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: viewMode === 'cards' ? '#fff' : 'transparent', boxShadow: viewMode === 'cards' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}
-              onClick={() => setViewMode('cards')}>Thẻ</button>
-          </div>
-          <button className={styles.btnSecondary}><Download size={15} /> Export</button>
-          <button className={styles.btnPrimary} onClick={() => navigate('/hotel/bookings/new')}><Plus size={15} /> Tạo booking</button>
+          {!isMobile && (
+            <div className={styles.viewToggle}>
+              <button 
+                className={`${styles.toggleItem} ${viewMode === 'table' ? styles.toggleActive : ''}`}
+                onClick={() => setViewMode('table')}>Bảng</button>
+              <button 
+                className={`${styles.toggleItem} ${viewMode === 'cards' ? styles.toggleActive : ''}`}
+                onClick={() => setViewMode('cards')}>Thẻ</button>
+            </div>
+          )}
+          <button className={styles.btnSecondary} title="Xuất dữ liệu"><Download size={15} /> <span>Export</span></button>
+          <button className={styles.btnPrimary} onClick={() => navigate('/hotel/bookings/new')}><Plus size={15} /> <span>Tạo mới</span></button>
         </div>
       </div>
 
       {/* Bộ lọc */}
-      <div className={styles.searchBar} style={{ flexWrap: 'wrap' }}>
-        <div className={styles.searchInput}>
-          <Search size={16} color="#94a3b8" />
-          <input placeholder="Tìm khách, SĐT, mã..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && fetchBookings()} />
+      <div className={styles.filterBar}>
+        <div className={styles.searchSection}>
+          <div className={styles.searchInput}>
+            <Search size={16} color="#94a3b8" />
+            <input placeholder="Tìm khách, SĐT, mã..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && fetchBookings()} />
+          </div>
+          <button className={styles.btnFilterAction} onClick={() => { setPage(1); fetchBookings(); }}><Filter size={15} /> Lọc</button>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', padding: '0 12px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-          <span style={{ fontSize: 12, color: '#64748b' }}>Từ:</span>
-          <input type="date" style={{ border: 'none', fontSize: 13, padding: '8px 0' }} value={fromDate} onChange={e => { setFromDate(e.target.value); setPage(1); }} />
-          <span style={{ fontSize: 12, color: '#64748b' }}>Đến:</span>
-          <input type="date" style={{ border: 'none', fontSize: 13, padding: '8px 0' }} value={toDate} onChange={e => { setToDate(e.target.value); setPage(1); }} />
+        <div className={styles.dateSection}>
+          <div className={styles.dateGroup}>
+            <span className={styles.dateLabel}>Từ:</span>
+            <input type="date" className={styles.dateInput} value={fromDate} onChange={e => { setFromDate(e.target.value); setPage(1); }} />
+          </div>
+          <div className={styles.dateGroup}>
+            <span className={styles.dateLabel}>Đến:</span>
+            <input type="date" className={styles.dateInput} value={toDate} onChange={e => { setToDate(e.target.value); setPage(1); }} />
+          </div>
         </div>
 
-        <select className={styles.filterSelect} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}>
-          <option value="">Tất cả trạng thái</option>
-          {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-        </select>
-        <select className={styles.filterSelect} value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1); }}>
-          <option value="">Tất cả loại</option>
-          {Object.entries(TYPE_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        <button className={styles.btnPrimary} onClick={() => { setPage(1); fetchBookings(); }}><Filter size={15} /> Lọc</button>
+        <div className={styles.selectSection}>
+          <select className={styles.filterSelect} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}>
+            <option value="">Tất cả trạng thái</option>
+            {Object.entries(STATUS_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+          <select className={styles.filterSelect} value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1); }}>
+            <option value="">Tất cả loại</option>
+            {Object.entries(TYPE_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        </div>
       </div>
 
       {/* Bảng dữ liệu / Danh sách thẻ */}

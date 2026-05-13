@@ -202,6 +202,9 @@ export const MainLayout: React.FC = () => {
         'hotel/guides': <UserCheck size={18} />,
         'hotel/guests': <Users size={18} />,
         'hotel/reports': <BarChart size={18} />,
+        'hotel/services-mgmt': <Package size={18} />,
+        'hotel/room-status': <BarChart size={18} />,
+        'hotel/room-map-mgmt': <Map size={18} />,
         'accounting/payment-voucher': <FileText size={18} />,
         '/accounting/payment-voucher': <FileText size={18} />,
         'accounting/approve-voucher': <ClipboardCheck size={18} />,
@@ -448,7 +451,7 @@ export const MainLayout: React.FC = () => {
                         <div className={styles.userProfile}>
                             <div className={styles.userInfo}>
                                 <span className={styles.userName}>{isMobile ? (user?.fullName?.split(' ').pop()) : (user?.fullName || 'Admin User')}</span>
-                                {!isMobile && <span className={styles.userRole}>Super Admin</span>}
+                                {!isMobile && <span className={styles.userRole}>{user?.roleName?.join(', ') || 'User'}</span>}
                             </div>
                             <div className={styles.avatar}>
                                 <UserIcon size={20} />

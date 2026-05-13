@@ -89,19 +89,18 @@ export const HotelDashboardPage: React.FC = () => {
   return (
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
-        <div>
+        <div className={styles.titleSection}>
           <h1>🏨 Dashboard Khách Sạn</h1>
-          <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
+          <p className={styles.subtitle}>
             <Clock size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
             Cập nhật lúc {lastRefresh.toLocaleTimeString('vi-VN')}
           </p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.btnSecondary} onClick={() => navigate('/hotel/room-map-mgmt')}><Network size={15} /> Quản lý sơ đồ</button>
-          <button className={styles.btnSecondary} onClick={() => navigate('/hotel/room-rack')}><Layers size={15} /> Room Rack</button>
-          <button className={styles.btnSecondary} onClick={() => navigate('/hotel/services-mgmt')}><Package size={15} /> Quản lý dịch vụ</button>
-          <button className={styles.btnSecondary} onClick={fetchAll}><RefreshCw size={15} /> Làm mới</button>
-          <button className={styles.btnPrimary} onClick={() => navigate('/hotel/bookings/new')}><Plus size={15} /> Đặt phòng mới</button>
+          <button className={styles.btnSecondary} onClick={() => navigate('/hotel/room-map-mgmt')} title="Quản lý sơ đồ"><Network size={15} /> <span>Sơ đồ</span></button>
+          <button className={styles.btnSecondary} onClick={() => navigate('/hotel/room-rack')} title="Room Rack"><Layers size={15} /> <span>Rack</span></button>
+          <button className={styles.btnSecondary} onClick={fetchAll} title="Làm mới"><RefreshCw size={15} /> <span>Làm mới</span></button>
+          <button className={styles.btnPrimary} onClick={() => navigate('/hotel/bookings/new')}><Plus size={15} /> <span>Đặt phòng</span></button>
         </div>
       </div>
 
@@ -110,180 +109,176 @@ export const HotelDashboardPage: React.FC = () => {
         {kpis.map((k, i) => (
           <div className={styles.kpiCard} key={i}>
             <div className={`${styles.kpiIcon} ${styles[k.color]}`}><k.icon size={20} /></div>
-            <div className={styles.kpiLabel}>{k.label}</div>
-            <div className={styles.kpiValue}>{loading ? '...' : k.value}</div>
-            <div className={styles.kpiSub}>{k.sub}</div>
+            <div className={styles.kpiContent}>
+              <div className={styles.kpiLabel}>{k.label}</div>
+              <div className={styles.kpiValue}>{loading ? '...' : k.value}</div>
+              <div className={styles.kpiSub}>{k.sub}</div>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* 3 cột */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 300px', gap: 20 }}>
+      {/* Main Content Layout */}
+      <div className={styles.dashboardGrid}>
 
-        {/* CỘT TRÁI — Hành động hôm nay */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-          {/* Check-out */}
-          <div className={styles.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>
-                <LogOut size={16} style={{ verticalAlign: 'middle', marginRight: 6, color: '#ef4444' }} />
-                Check-out hôm nay ({checkouts.length})
-              </h3>
-            </div>
-            {checkouts.length === 0 ? (
-              <div className={styles.emptyState}><div className={styles.emptyIcon}>✅</div><p>Không có ai check-out hôm nay</p></div>
-            ) : checkouts.map(b => (
-              <div key={b.id} className={styles.checkoutItem}>
-                <div className={styles.checkoutRoom}>{b.rooms?.[0]?.roomNo || '?'}</div>
-                <div className={styles.checkoutInfo}>
-                  <div className={styles.checkoutName}>{b.guestName}</div>
-                  <div className={styles.checkoutTime}>
-                    {fmtTime(b.checkOut)} ·{' '}
-                    {b.paidAmount < b.totalAmount
-                      ? <span style={{ color: '#ef4444' }}>⚠️ Còn nợ {fmtMoney(b.totalAmount - b.paidAmount)}</span>
-                      : <span style={{ color: '#16a34a' }}>✅ Đã thanh toán</span>}
+        {/* CỘT TRÁI & GIỮA — Hoạt động chính */}
+        <div className={styles.mainColumn}>
+          <div className={styles.actionsGrid}>
+            {/* Check-out */}
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h3 className={styles.cardTitle}>
+                  <LogOut size={16} className={styles.iconOut} />
+                  Check-out hôm nay ({checkouts.length})
+                </h3>
+              </div>
+              <div className={styles.cardBody}>
+                {checkouts.length === 0 ? (
+                  <div className={styles.emptyState}><div className={styles.emptyIcon}>✅</div><p>Không có ai check-out</p></div>
+                ) : checkouts.map(b => (
+                  <div key={b.id} className={styles.checkoutItem}>
+                    <div className={styles.checkoutRoom}>{b.rooms?.[0]?.roomNo || '?'}</div>
+                    <div className={styles.checkoutInfo}>
+                      <div className={styles.checkoutName}>{b.guestName}</div>
+                      <div className={styles.checkoutTime}>
+                        {fmtTime(b.checkOut)} ·{' '}
+                        {b.paidAmount < b.totalAmount
+                          ? <span className={styles.debtText}>⚠️ Còn nợ {fmtMoney(b.totalAmount - b.paidAmount)}</span>
+                          : <span className={styles.paidText}>✅ Đã xong</span>}
+                      </div>
+                    </div>
+                    <div className={styles.checkoutActions}>
+                      <button className={styles.btnActionOut} onClick={() => handleCheckOut(b.id)}>Out</button>
+                      <button className={styles.btnActionView} onClick={() => navigate(`/hotel/bookings/${b.id}`)}>Xem</button>
+                    </div>
                   </div>
-                </div>
-                <div className={styles.checkoutActions}>
-                  <button className={styles.btnDanger} style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => handleCheckOut(b.id)}>Check-out</button>
-                  <button className={styles.btnSecondary} style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => navigate(`/hotel/bookings/${b.id}`)}>Xem</button>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Check-in */}
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <h3 className={styles.cardTitle}>
+                  <LogIn size={16} className={styles.iconIn} />
+                  Check-in hôm nay ({checkins.length})
+                </h3>
+              </div>
+              <div className={styles.cardBody}>
+                {checkins.length === 0 ? (
+                  <div className={styles.emptyState}><div className={styles.emptyIcon}>🛎️</div><p>Chưa có booking mới</p></div>
+                ) : checkins.map(b => (
+                  <div key={b.id} className={styles.checkoutItem}>
+                    <div className={`${styles.checkoutRoom} ${styles.roomIn}`}>{b.rooms?.[0]?.roomNo || '?'}</div>
+                    <div className={styles.checkoutInfo}>
+                      <div className={styles.checkoutName}>{b.guestName}</div>
+                      <div className={styles.checkoutTime}>{fmtTime(b.checkIn)} · {b.source || 'Direct'}</div>
+                    </div>
+                    <div className={styles.checkoutActions}>
+                      <button className={styles.btnActionIn} onClick={() => handleCheckIn(b.id)}>In</button>
+                      <button className={styles.btnActionView} onClick={() => navigate(`/hotel/bookings/${b.id}`)}>Xem</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Check-in */}
-          <div className={styles.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>
-                <LogIn size={16} style={{ verticalAlign: 'middle', marginRight: 6, color: '#22c55e' }} />
-                Check-in hôm nay ({checkins.length})
-              </h3>
+          {/* Sơ đồ phòng Mini */}
+          <div className={`${styles.card} ${styles.mt16}`}>
+            <div className={styles.cardHeader}>
+              <h3 className={styles.cardTitle}>Sơ Đồ Phòng</h3>
+              <button className={styles.btnLink} onClick={() => navigate('/hotel/room-map')}>Xem đầy đủ</button>
             </div>
-            {checkins.length === 0 ? (
-              <div className={styles.emptyState}><div className={styles.emptyIcon}>🛎️</div><p>Chưa có booking check-in hôm nay</p></div>
-            ) : checkins.map(b => (
-              <div key={b.id} className={styles.checkoutItem}>
-                <div className={styles.checkoutRoom} style={{ background: '#f0fdf4', color: '#16a34a' }}>{b.rooms?.[0]?.roomNo || '?'}</div>
-                <div className={styles.checkoutInfo}>
-                  <div className={styles.checkoutName}>{b.guestName}</div>
-                  <div className={styles.checkoutTime}>{fmtTime(b.checkIn)} · {b.source || 'Direct'}</div>
-                </div>
-                <div className={styles.checkoutActions}>
-                  <button className={styles.btnSuccess} style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => handleCheckIn(b.id)}>Check-in</button>
-                  <button className={styles.btnSecondary} style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => navigate(`/hotel/bookings/${b.id}`)}>Xem</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CỘT GIỮA — Mini sơ đồ phòng */}
-        <div className={styles.card}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Sơ Đồ Phòng</h3>
-            <button className={styles.btnSecondary} style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => navigate('/hotel/room-map')}>Xem đầy đủ</button>
-          </div>
-          <div className={styles.legend}>
-            {[
-              { color: '#22c55e', label: 'Trống' },
-              { color: '#ef4444', label: 'Có khách' },
-              { color: '#f59e0b', label: 'Bẩn' },
-              { color: '#6b7280', label: 'OOS' },
-              { color: '#3b82f6', label: 'Checkout' },
-            ].map(l => (
-              <div className={styles.legendItem} key={l.label}>
-                <div className={styles.legendDot} style={{ background: l.color }} />
-                {l.label}
-              </div>
-            ))}
-          </div>
-          {roomMap.length > 0 ? roomMap.map((floor: any) => (
-            <div key={floor.floorCode} style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8, textTransform: 'uppercase' }}>{floor.floorName}</div>
-              <div className={styles.miniRoomGrid}>
-                {floor.rooms?.map((r: any) => (
-                  <div key={r.roomNo}
-                    className={`${styles.miniRoomCell} ${styles[getRoomStatusClass(r)]}`}
-                    title={`${r.roomNo} - ${r.status}`}
-                    onClick={() => navigate('/hotel/room-map')}
-                  >{r.roomNo}</div>
+            <div className={styles.cardBody}>
+              <div className={styles.legend}>
+                {[
+                  { color: '#22c55e', label: 'Trống' },
+                  { color: '#ef4444', label: 'Có khách' },
+                  { color: '#f59e0b', label: 'Bẩn' },
+                  { color: '#6b7280', label: 'OOS' },
+                  { color: '#3b82f6', label: 'Checkout' },
+                ].map(l => (
+                  <div className={styles.legendItem} key={l.label}>
+                    <div className={styles.legendDot} style={{ background: l.color }} />
+                    {l.label}
+                  </div>
                 ))}
               </div>
-            </div>
-          )) : (
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>Tầng 1</div>
-              <div className={styles.miniRoomGrid}>
-                {['101', '102', '103', '104', '105'].map(n => (
-                  <div key={n} className={`${styles.miniRoomCell} ${styles.vacant}`}>{n}</div>
-                ))}
+              <div className={styles.miniMapScroll}>
+                {roomMap.length > 0 ? roomMap.map((floor: any) => (
+                  <div key={floor.floorCode} className={styles.floorGroup}>
+                    <div className={styles.floorLabel}>{floor.floorName}</div>
+                    <div className={styles.miniRoomGrid}>
+                      {floor.rooms?.map((r: any) => (
+                        <div key={r.roomNo}
+                          className={`${styles.miniRoomCell} ${styles[getRoomStatusClass(r)]}`}
+                          onClick={() => navigate('/hotel/room-map')}
+                        >{r.roomNo}</div>
+                      ))}
+                    </div>
+                  </div>
+                )) : (
+                  <p className={styles.loadingText}>Đang tải sơ đồ...</p>
+                )}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', margin: '12px 0 8px' }}>Tầng 2-3</div>
-              <div className={styles.miniRoomGrid}>
-                {['201', '301', '302', '303', '304', '305'].map(n => (
-                  <div key={n} className={`${styles.miniRoomCell} ${styles.vacant}`}>{n}</div>
-                ))}
-              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* CỘT PHẢI — Cảnh báo & Thao tác nhanh */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className={styles.sideColumn}>
           {overdueRentals.length > 0 && (
-            <div className={styles.card} style={{ borderLeft: '4px solid #ef4444' }}>
-              <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className={`${styles.card} ${styles.alertCard}`}>
+              <h3 className={styles.alertTitle}>
                 <AlertCircle size={16} /> Xe quá hạn ({overdueRentals.length})
               </h3>
-              {overdueRentals.map(r => (
-                <div key={r.id} style={{ padding: 8, background: '#fef2f2', borderRadius: 8, marginBottom: 6 }}>
-                  <div style={{ fontWeight: 600, fontSize: 13 }}>{r.vehicleCode} — {r.guestName}</div>
-                  <div style={{ fontSize: 12, color: '#dc2626' }}>Quá hạn: {new Date(r.rentTo).toLocaleDateString('vi-VN')}</div>
-                </div>
-              ))}
+              <div className={styles.alertList}>
+                {overdueRentals.map(r => (
+                  <div key={r.id} className={styles.alertItem}>
+                    <div className={styles.alertMain}>{r.vehicleCode} — {r.guestName}</div>
+                    <div className={styles.alertSub}>Hết hạn: {new Date(r.rentTo).toLocaleDateString('vi-VN')}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           <div className={styles.card}>
-            <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700 }}>⚡ Thao Tác Nhanh</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <h3 className={styles.cardTitleSm}>⚡ Thao Tác Nhanh</h3>
+            <div className={styles.quickActions}>
               {menus.filter(m => (m.codeParent || m.CodeParent) === 'hotel' && (m.menuCode || m.Code) !== 'hotel/dashboard').map(m => {
                 const mCode = m.menuCode || m.Code;
                 const mName = m.name || m.Name;
                 const mUrl = m.url || m.Url || `/${mCode}`;
                 return (
-                  <button key={mCode} onClick={() => navigate(mUrl)}
-                    style={{ padding: '10px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600, color: '#1e293b', textAlign: 'left', transition: 'transform 0.15s' }}
-                    onMouseOver={e => (e.currentTarget.style.transform = 'translateX(3px)')}
-                    onMouseOut={e => (e.currentTarget.style.transform = 'translateX(0)')}>
-                    <span style={{ fontSize: 18 }}>⚡</span>{mName}
+                  <button key={mCode} onClick={() => navigate(mUrl)} className={styles.quickActionBtn}>
+                    <span className={styles.quickActionIcon}>⚡</span>
+                    <span className={styles.quickActionLabel}>{mName}</span>
                   </button>
                 );
               })}
-              {menus.filter(m => (m.codeParent || m.CodeParent) === 'hotel' && (m.menuCode || m.Code) !== 'hotel/dashboard').length === 0 && (
-                <p style={{ fontSize: 12, color: '#94a3b8' }}>Không có phím tắt khả dụng</p>
-              )}
             </div>
           </div>
 
           {todayRevenue && (
             <div className={styles.card}>
-              <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700 }}>💰 Doanh Thu Hôm Nay</h3>
-              {[
-                ['Phòng', todayRevenue.roomRevenue],
-                ['Xe máy', todayRevenue.vehicleRevenue],
-                ['Dịch vụ', todayRevenue.serviceRevenue],
-              ].map(([l, v]) => (
-                <div key={l as string} className={styles.infoRow}>
-                  <span className={styles.infoLabel}>{l as string}</span>
-                  <span className={styles.infoValue}>{fmtMoney(v as number || 0)}</span>
+              <h3 className={styles.cardTitleSm}>💰 Doanh Thu</h3>
+              <div className={styles.revenueList}>
+                {[
+                  ['Phòng', todayRevenue.roomRevenue],
+                  ['Xe máy', todayRevenue.vehicleRevenue],
+                  ['Dịch vụ', todayRevenue.serviceRevenue],
+                ].map(([l, v]) => (
+                  <div key={l as string} className={styles.infoRow}>
+                    <span className={styles.infoLabel}>{l as string}</span>
+                    <span className={styles.infoValue}>{fmtMoney(v as number || 0)}</span>
+                  </div>
+                ))}
+                <div className={`${styles.infoRow} ${styles.totalRow}`}>
+                  <span className={styles.totalLabel}>Tổng cộng</span>
+                  <span className={styles.totalValue}>{fmtMoney(todayRevenue.totalRevenue || 0)}</span>
                 </div>
-              ))}
-              <div className={styles.infoRow} style={{ borderTop: '2px solid #e2e8f0', paddingTop: 10, marginTop: 4 }}>
-                <span style={{ fontWeight: 700, fontSize: 14 }}>Tổng cộng</span>
-                <span style={{ fontWeight: 800, fontSize: 16, color: '#1e6fff' }}>{fmtMoney(todayRevenue.totalRevenue || 0)}</span>
               </div>
             </div>
           )}

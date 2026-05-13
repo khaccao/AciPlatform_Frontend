@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, X, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, X, Search, Edit, Trash2, MapPin, Users, Clock, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
 import hotelService from '../services/hotel.service';
@@ -109,43 +109,74 @@ export const ToursPage: React.FC = () => {
             </select>
           </div>
 
-          {loading ? <div style={{ textAlign: 'center', padding: 48, color: '#94a3b8' }}>Đang tải...</div> : (
-            <div className={styles.tourGrid}>
+          {loading ? <div className={styles.loadingContainer}><div className={styles.spinner}></div><p>Đang tải danh sách tour...</p></div> : (
+            <div className={styles.tourModernGrid}>
               {filtered.length === 0 ? (
                 <div className={styles.emptyState} style={{ gridColumn: '1/-1' }}>
                   <div className={styles.emptyIcon}>🗺️</div><p>Chưa có tour nào. Hãy thêm tour đầu tiên!</p>
                 </div>
               ) : filtered.map(t => (
-                <div key={t.id} className={styles.tourCard}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{t.tourName}</div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>{t.tourCode} · {TOUR_TYPES[t.tourType] || t.tourType}</div>
-                    </div>
-                    <span className={`${styles.badge} ${t.isAvailable ? styles.confirmed : styles.cancelled}`}>
-                      {t.isAvailable ? 'Hoạt động' : 'Dừng'}
+                <div key={t.id} className={styles.tourModernCard}>
+                  {/* Tour Image / Header */}
+                  <div className={styles.tourCardImage}>
+                    <div className={styles.tourTypeBadge}>{TOUR_TYPES[t.tourType] || t.tourType}</div>
+                    <span className={`${styles.statusBadge} ${t.isAvailable ? styles.statusActive : styles.statusStopped}`}>
+                      {t.isAvailable ? '● Hoạt động' : '○ Dừng'}
                     </span>
-                  </div>
-                  {t.highlights && <p style={{ fontSize: 13, color: '#475569', marginBottom: 12, lineHeight: 1.5 }}>{t.highlights.slice(0, 120)}...</p>}
-                  <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#64748b', marginBottom: 12, flexWrap: 'wrap' }}>
-                    <span>⏱️ {t.durationDays}N{t.durationNights > 0 ? `${t.durationNights}Đ` : ''}</span>
-                    <span>👥 {t.minPerson}–{t.maxPerson} người</span>
-                    <span>💪 {DIFFICULTY_LABELS[t.difficulty] || t.difficulty}</span>
-                    {t.availableSlots > 0 && <span>✅ {t.availableSlots} chỗ</span>}
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: '#1e6fff' }}>{(t.pricePerPerson || 0).toLocaleString('vi-VN')}đ</div>
-                      <div style={{ fontSize: 12, color: '#94a3b8' }}>/ người · Đoàn: {(t.groupPrice || 0).toLocaleString('vi-VN')}đ</div>
+                    <div className={styles.imagePlaceholder}>
+                      <MapPin size={40} strokeWidth={1} />
                     </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className={styles.btnSecondary} style={{ padding: '6px 10px' }}
-                        onClick={() => { setEditing({ ...t }); setShowModal(true); }}>
-                        <Edit size={14} />
-                      </button>
-                      <button className={styles.btnDanger} style={{ padding: '6px 10px' }} onClick={() => handleDelete(t.id)}>
-                        <Trash2 size={14} />
-                      </button>
+                  </div>
+
+                  {/* Tour Body */}
+                  <div className={styles.tourCardBody}>
+                    <div className={styles.tourMainInfo}>
+                      <div className={styles.tourCode}>{t.tourCode}</div>
+                      <h3 className={styles.tourNameTitle}>{t.tourName}</h3>
+                      {t.tourNameEN && <div className={styles.tourNameEN}>{t.tourNameEN}</div>}
+                    </div>
+
+                    <div className={styles.tourHighlights}>
+                       {t.highlights ? (t.highlights.length > 80 ? t.highlights.slice(0, 80) + '...' : t.highlights) : 'Chưa có mô tả nổi bật cho tour này.'}
+                    </div>
+
+                    <div className={styles.tourStatsRow}>
+                      <div className={styles.statItem} title="Thời gian">
+                        <Clock size={14} />
+                        <span>{t.durationDays}N{t.durationNights > 0 ? `${t.durationNights}Đ` : ''}</span>
+                      </div>
+                      <div className={styles.statItem} title="Số lượng khách">
+                        <Users size={14} />
+                        <span>{t.minPerson}-{t.maxPerson} khách</span>
+                      </div>
+                      <div className={styles.statItem} title="Độ khó">
+                        <BarChart3 size={14} />
+                        <span className={`${styles.difficultyText} ${styles[t.difficulty?.toLowerCase()]}`}>
+                          {DIFFICULTY_LABELS[t.difficulty] || t.difficulty}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.tourPricingSection}>
+                      <div className={styles.priceContainer}>
+                        <div className={styles.priceMain}>
+                          <span className={styles.currency}>₫</span>
+                          <span className={styles.amount}>{(t.pricePerPerson || 0).toLocaleString('vi-VN')}</span>
+                          <span className={styles.unit}>/khách</span>
+                        </div>
+                        <div className={styles.priceSecondary}>
+                          Đoàn: <strong>{(t.groupPrice || 0).toLocaleString('vi-VN')}đ</strong>
+                        </div>
+                      </div>
+
+                      <div className={styles.tourCardActions}>
+                        <button className={styles.btnActionEdit} onClick={() => { setEditing({ ...t }); setShowModal(true); }} title="Chỉnh sửa">
+                          <Edit size={16} />
+                        </button>
+                        <button className={styles.btnActionDelete} onClick={() => handleDelete(t.id)} title="Xóa">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

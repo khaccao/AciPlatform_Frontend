@@ -58,6 +58,27 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return children;
 };
 
+const useHasMenuPermission = (path: string): boolean => {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const menus: any[] = user?.menus || [];
+        if (!menus || menus.length === 0) return false;
+        const cleanPath = path.toLowerCase().replace(/^\//, '');
+        return menus.some((m: any) => {
+            const code = (m.menuCode || m.Code || '').toLowerCase().replace(/^\//, '');
+            return cleanPath === code || cleanPath.startsWith(code + '/') || code.startsWith(cleanPath);
+        });
+    } catch {
+        return true;
+    }
+};
+
+const PermissionRoute = ({ children, menuCode }: { children: React.ReactNode; menuCode: string }) => {
+    const allowed = useHasMenuPermission(menuCode);
+    if (!allowed) return <Navigate to="/dashboard" replace />;
+    return <>{children}</>;
+};
+
 export const AppRoutes = () => {
     return (
         <Routes>
@@ -77,12 +98,12 @@ export const AppRoutes = () => {
 
                 {/* HR Module Routes */}
                 <Route path="/hr">
-                    <Route path="employees" element={<EmployeePage />} />
-                    <Route path="organization" element={<OrganizationPage />} />
-                    <Route path="contracts" element={<ContractPage />} />
-                    <Route path="timekeeping" element={<TimekeepingPage />} />
-                    <Route path="face-attendance" element={<FaceAttendancePage />} />
-                    <Route path="salary" element={<SalaryPage />} />
+                    <Route path="employees" element={<PermissionRoute menuCode="hr/employees"><EmployeePage /></PermissionRoute>} />
+                    <Route path="organization" element={<PermissionRoute menuCode="hr/organization"><OrganizationPage /></PermissionRoute>} />
+                    <Route path="contracts" element={<PermissionRoute menuCode="hr/contracts"><ContractPage /></PermissionRoute>} />
+                    <Route path="timekeeping" element={<PermissionRoute menuCode="hr/timekeeping"><TimekeepingPage /></PermissionRoute>} />
+                    <Route path="face-attendance" element={<PermissionRoute menuCode="hr/face-attendance"><FaceAttendancePage /></PermissionRoute>} />
+                    <Route path="salary" element={<PermissionRoute menuCode="hr/salary"><SalaryPage /></PermissionRoute>} />
                 </Route>
 
                 <Route path="/users" element={<EmployeePage />} />
@@ -90,23 +111,21 @@ export const AppRoutes = () => {
 
                 {/* System Routes */}
                 <Route path="/system">
-                    <Route path="roles" element={<RoleManagement />} />
-                    <Route path="security" element={<AdvancedSecurityPage />} />
+                    <Route path="roles" element={<PermissionRoute menuCode="system/roles"><RoleManagement /></PermissionRoute>} />
+                    <Route path="security" element={<PermissionRoute menuCode="system/security"><AdvancedSecurityPage /></PermissionRoute>} />
                 </Route>
 
-                <Route path="/menus" element={<MenuManagement />} />
-                
-                <Route path="/test/demo" element={<TestPage />} />
+                <Route path="/menus" element={<PermissionRoute menuCode="menus"><MenuManagement /></PermissionRoute>} />
 
                 {/* Multi-Channel Routes */}
-                <Route path="/dakenh/facebook" element={<FacebookPage />} />
+                <Route path="/dakenh/facebook" element={<PermissionRoute menuCode="dakenh/facebook"><FacebookPage /></PermissionRoute>} />
 
-                <Route path="/fleet" element={<FleetManagementPage />} />
+                <Route path="/fleet" element={<PermissionRoute menuCode="fleet"><FleetManagementPage /></PermissionRoute>} />
 
-                {/* Ecommerce Routes (Matching DB codes /customer and /goods) */}
-                <Route path="/customer" element={<CustomerPage />} />
-                <Route path="/goods" element={<GoodsPage />} />
-                <Route path="/sell" element={<SellPage />} />
+                {/* Ecommerce Routes */}
+                <Route path="/customer" element={<PermissionRoute menuCode="customer"><CustomerPage /></PermissionRoute>} />
+                <Route path="/goods" element={<PermissionRoute menuCode="goods"><GoodsPage /></PermissionRoute>} />
+                <Route path="/sell" element={<PermissionRoute menuCode="sell"><SellPage /></PermissionRoute>} />
 
                 {/* R&D Project Management Routes */}
                 <Route path="/projects" element={<ProjectList />} />
@@ -116,14 +135,14 @@ export const AppRoutes = () => {
                 {/* Accounting Routes */}
                 <Route path="/accounting">
                     <Route index element={<Navigate to="general-ledger" replace />} />
-                    <Route path="payment-voucher" element={<PaymentVoucherPage />} />
-                    <Route path="approve-voucher" element={<ApproveVoucherPage />} />
-                    <Route path="warehouse-receipt" element={<WarehouseReceiptPage />} />
-                    <Route path="chart-of-accounts" element={<ChartOfAccountsPage />} />
-                    <Route path="general-ledger" element={<GeneralLedgerPage />} />
-                    <Route path="suppliers" element={<SupplierManagementPage />} />
-                    <Route path="receipt-voucher" element={<ReceiptVoucherPage />} />
-                    <Route path="customer-debt" element={<CustomerDebtPage />} />
+                    <Route path="payment-voucher" element={<PermissionRoute menuCode="accounting/payment-voucher"><PaymentVoucherPage /></PermissionRoute>} />
+                    <Route path="approve-voucher" element={<PermissionRoute menuCode="accounting/approve-voucher"><ApproveVoucherPage /></PermissionRoute>} />
+                    <Route path="warehouse-receipt" element={<PermissionRoute menuCode="accounting/warehouse-receipt"><WarehouseReceiptPage /></PermissionRoute>} />
+                    <Route path="chart-of-accounts" element={<PermissionRoute menuCode="accounting/chart-of-accounts"><ChartOfAccountsPage /></PermissionRoute>} />
+                    <Route path="general-ledger" element={<PermissionRoute menuCode="accounting/general-ledger"><GeneralLedgerPage /></PermissionRoute>} />
+                    <Route path="suppliers" element={<PermissionRoute menuCode="accounting/suppliers"><SupplierManagementPage /></PermissionRoute>} />
+                    <Route path="receipt-voucher" element={<PermissionRoute menuCode="accounting/receipt-voucher"><ReceiptVoucherPage /></PermissionRoute>} />
+                    <Route path="customer-debt" element={<PermissionRoute menuCode="accounting/customer-debt"><CustomerDebtPage /></PermissionRoute>} />
                 </Route>
 
                 <Route path="/warehouse">
@@ -135,22 +154,22 @@ export const AppRoutes = () => {
                 {/* Hotel Management Routes */}
                 <Route path="/hotel">
                     <Route index element={<Navigate to="dashboard" replace />} />
-                    <Route path="dashboard" element={<HotelDashboardPage />} />
-                    <Route path="room-map" element={<RoomMapPage />} />
-                    <Route path="room-rack" element={<RoomRackPage />} />
-                    <Route path="room-forecast" element={<RoomForecastPage />} />
-                    <Route path="room-status" element={<RoomStatusDashboardPage />} />
-                    <Route path="bookings" element={<BookingsPage />} />
-                    <Route path="bookings/new" element={<BookingNewPage />} />
-                    <Route path="bookings/:id" element={<BookingDetailPage />} />
-                    <Route path="bookings/:id/invoice" element={<InvoicePage />} />
-                    <Route path="vehicles" element={<VehiclesPage />} />
-                    <Route path="tours" element={<ToursPage />} />
-                    <Route path="guides" element={<GuideManagementPage />} />
-                    <Route path="room-map-mgmt" element={<RoomMapManagementPage />} />
-                    <Route path="services-mgmt" element={<ServiceManagementPage />} />
-                    <Route path="guests" element={<GuestsPage />} />
-                    <Route path="reports" element={<ReportsPage />} />
+                    <Route path="dashboard" element={<PermissionRoute menuCode="hotel/dashboard"><HotelDashboardPage /></PermissionRoute>} />
+                    <Route path="room-map" element={<PermissionRoute menuCode="hotel/room-map"><RoomMapPage /></PermissionRoute>} />
+                    <Route path="room-rack" element={<PermissionRoute menuCode="hotel/room-rack"><RoomRackPage /></PermissionRoute>} />
+                    <Route path="room-forecast" element={<PermissionRoute menuCode="hotel/room-forecast"><RoomForecastPage /></PermissionRoute>} />
+                    <Route path="room-status" element={<PermissionRoute menuCode="hotel/room-status"><RoomStatusDashboardPage /></PermissionRoute>} />
+                    <Route path="bookings" element={<PermissionRoute menuCode="hotel/bookings"><BookingsPage /></PermissionRoute>} />
+                    <Route path="bookings/new" element={<PermissionRoute menuCode="hotel/bookings"><BookingNewPage /></PermissionRoute>} />
+                    <Route path="bookings/:id" element={<PermissionRoute menuCode="hotel/bookings"><BookingDetailPage /></PermissionRoute>} />
+                    <Route path="bookings/:id/invoice" element={<PermissionRoute menuCode="hotel/bookings"><InvoicePage /></PermissionRoute>} />
+                    <Route path="vehicles" element={<PermissionRoute menuCode="hotel/vehicles"><VehiclesPage /></PermissionRoute>} />
+                    <Route path="tours" element={<PermissionRoute menuCode="hotel/tours"><ToursPage /></PermissionRoute>} />
+                    <Route path="guides" element={<PermissionRoute menuCode="hotel/guides"><GuideManagementPage /></PermissionRoute>} />
+                    <Route path="room-map-mgmt" element={<PermissionRoute menuCode="hotel/room-map-mgmt"><RoomMapManagementPage /></PermissionRoute>} />
+                    <Route path="services-mgmt" element={<PermissionRoute menuCode="hotel/services-mgmt"><ServiceManagementPage /></PermissionRoute>} />
+                    <Route path="guests" element={<PermissionRoute menuCode="hotel/guests"><GuestsPage /></PermissionRoute>} />
+                    <Route path="reports" element={<PermissionRoute menuCode="hotel/reports"><ReportsPage /></PermissionRoute>} />
                 </Route>
 
                 <Route path="/users" element={<EmployeePage />} />
@@ -165,3 +184,4 @@ export const AppRoutes = () => {
         </Routes>
     );
 };
+
