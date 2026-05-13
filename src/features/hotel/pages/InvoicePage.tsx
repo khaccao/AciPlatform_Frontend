@@ -110,7 +110,7 @@ export const InvoicePage: React.FC = () => {
           </thead>
           <tbody>
             {/* Rooms */}
-            {booking.rooms?.map(r => (
+            {booking.rooms?.map((r: any) => (
               <tr key={r.roomNo} style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '12px', fontSize: 14 }}>Phòng {r.roomNo}</td>
                 <td style={{ padding: '12px', textAlign: 'center', fontSize: 14 }}>{nights}</td>
@@ -119,7 +119,7 @@ export const InvoicePage: React.FC = () => {
               </tr>
             ))}
             {/* Services */}
-            {booking.services?.map((s, idx) => (
+            {booking.services?.map((s: any, idx: number) => (
               <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '12px', fontSize: 14 }}>{s.serviceName || s.serviceCode}</td>
                 <td style={{ padding: '12px', textAlign: 'center', fontSize: 14 }}>{s.quantity}</td>

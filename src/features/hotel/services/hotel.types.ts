@@ -117,6 +117,38 @@ export interface GuideSalaryDto {
 export interface DashboardData {
   checkInsToday: number; checkOutsToday: number;
   inHouse: number; todayRevenue: number;
+  revenue?: number; Revenue?: number;
+  adr?: number; Adr?: number;
+  occupancy?: number; Occupancy?: number;
+  inHouseRooms?: number; InHouseRooms?: number;
+  vacantTonight?: number; VacantTonight?: number;
+  readyToCkin?: number; ReadyToCkin?: number;
+  oos?: number; Oos?: number;
+  totalRooms?: number; TotalRooms?: number;
+  availableToSell?: number; AvailableToSell?: number;
+  ooo?: number; Ooo?: number;
+  hkInspected?: number; HkInspected?: number;
+  hkUninspected?: number; HkUninspected?: number;
+  hkVc?: number; HkVc?: number;
+  hkVd?: number; HkVd?: number;
+  movExpectedDepRooms?: number; MovExpectedDepRooms?: number;
+  movExpectedDepPax?: number; MovExpectedDepPax?: number;
+  movActualDepRooms?: number; MovActualDepRooms?: number;
+  movActualDepPax?: number; MovActualDepPax?: number;
+  movStayOverRooms?: number; MovStayOverRooms?: number;
+  movStayOverPax?: number; MovStayOverPax?: number;
+  movExpectedArrRooms?: number; MovExpectedArrRooms?: number;
+  movExpectedArrPax?: number; MovExpectedArrPax?: number;
+  movExtendedRooms?: number; MovExtendedRooms?: number;
+  movExtendedPax?: number; MovExtendedPax?: number;
+  movWalkInRooms?: number; MovWalkInRooms?: number;
+  movWalkInPax?: number; MovWalkInPax?: number;
+  movSameDayResRooms?: number; MovSameDayResRooms?: number;
+  movSameDayResPax?: number; MovSameDayResPax?: number;
+  mixFit?: number; MixFit?: number;
+  mixGit?: number; MixGit?: number;
+  mixCompany?: number; MixCompany?: number;
+  mixOta?: number; MixOta?: number;
 }
 
 export interface HotelAreaDto {

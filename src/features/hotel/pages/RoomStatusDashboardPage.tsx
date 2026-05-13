@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, LogOut, CheckCircle, Clock, Calendar, PieChart, Activity, RefreshCw } from 'lucide-react';
+import { Users, CheckCircle, Clock, Calendar, PieChart, Activity, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
 import hotelService from '../services/hotel.service';

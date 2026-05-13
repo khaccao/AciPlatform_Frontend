@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, RefreshCw, Eye } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
 import hotelService from '../services/hotel.service';
