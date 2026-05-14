@@ -31,23 +31,28 @@ export const VehiclesPage: React.FC = () => {
   const [returnModal, setReturnModal] = useState<VehicleRentalDto | null>(null);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState({
-    vehicleCode: '', guestName: '', guestPhone: '', rentFrom: '', rentTo: '', depositAmount: 0, notes: '',
+    vehicleCode: '', guestName: '', guestPhone: '', rentFrom: new Date().toISOString().slice(0, 16), rentTo: new Date(Date.now() + 86400000).toISOString().slice(0, 16), depositAmount: 0, notes: '',
+    guestType: 'EXTERNAL' as 'IN_HOUSE' | 'EXTERNAL',
+    bookingId: undefined as number | undefined
   });
   const [returnForm, setReturnForm] = useState<ReturnVehicleForm>({ fuelLevel: 100, damageFee: 0, depositReturned: 0, paidAmount: 0, notes: '' });
+  const [inHouseGuests, setInHouseGuests] = useState<any[]>([]);
 
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [v, r, h] = await Promise.all([
+      const [v, r, h, inHouse] = await Promise.all([
         hotelService.getVehicles(), 
         hotelService.getActiveRentals(),
-        hotelService.getRentalHistory()
+        hotelService.getRentalHistory(),
+        hotelService.getBookings({ status: 'CHECKED_IN' })
       ]);
       setVehicles(v);
       setRentals(r);
       setHistory(h);
+      setInHouseGuests(inHouse.items || []);
     } catch { toast.error('Lỗi tải dữ liệu xe'); }
     finally { setLoading(false); }
   };
@@ -56,10 +61,18 @@ export const VehiclesPage: React.FC = () => {
     if (!form.vehicleCode || !form.guestName || !form.rentFrom || !form.rentTo)
       return toast.error('Vui lòng điền đầy đủ thông tin');
     try {
-      await hotelService.createRental(form);
+      await hotelService.createRental({
+        ...form,
+        bookingId: form.guestType === 'IN_HOUSE' ? form.bookingId : undefined
+      });
       toast.success('Cho thuê xe thành công!');
       setShowModal(false);
-      setForm({ vehicleCode: '', guestName: '', guestPhone: '', rentFrom: '', rentTo: '', depositAmount: 0, notes: '' });
+      setForm({ 
+        vehicleCode: '', guestName: '', guestPhone: '', 
+        rentFrom: new Date().toISOString().slice(0, 16), 
+        rentTo: new Date(Date.now() + 86400000).toISOString().slice(0, 16), 
+        depositAmount: 0, notes: '', guestType: 'EXTERNAL', bookingId: undefined 
+      });
       fetchAll();
     } catch { toast.error('Lỗi tạo phiếu thuê xe'); }
   };
@@ -280,23 +293,52 @@ export const VehiclesPage: React.FC = () => {
               <div className={styles.formGrid}>
                 <div className={styles.formGroup}>
                   <label>Mã xe *</label>
-                  <select value={form.vehicleCode} onChange={e => setForm(f => ({ ...f, vehicleCode: e.target.value }))}>
+                  <select value={form.vehicleCode} onChange={e => {
+                    const v = vehicles.find(x => x.vehicleCode === e.target.value);
+                    setForm(f => ({ ...f, vehicleCode: e.target.value, depositAmount: v?.depositAmount || 0 }));
+                  }}>
                     <option value="">-- Chọn xe --</option>
-                    {vehicles.filter(v => v.status === 'AVAILABLE').map(v => (
+                    {vehicles.filter(v => v.status === 'AVAILABLE' || v.vehicleCode === form.vehicleCode).map(v => (
                       <option key={v.vehicleCode} value={v.vehicleCode}>
                         {v.vehicleCode} — {v.licensePlate} ({v.vehicleName})
                       </option>
                     ))}
                   </select>
                 </div>
-                <div className={styles.formGroup}>
-                  <label>Tên khách *</label>
-                  <input value={form.guestName} onChange={e => setForm(f => ({ ...f, guestName: e.target.value }))} placeholder="Nguyễn Văn A" />
+                <div className={`${styles.formGroup} ${styles.colFull}`}>
+                  <label>Đối tượng thuê</label>
+                  <div className={styles.segmentedControl}>
+                    <button className={form.guestType === 'IN_HOUSE' ? styles.active : ''} onClick={() => setForm(f => ({ ...f, guestType: 'IN_HOUSE' }))}>Khách đang ở</button>
+                    <button className={form.guestType === 'EXTERNAL' ? styles.active : ''} onClick={() => setForm(f => ({ ...f, guestType: 'EXTERNAL' }))}>Khách vãng lai</button>
+                  </div>
                 </div>
-                <div className={styles.formGroup}>
-                  <label>Số điện thoại</label>
-                  <input value={form.guestPhone} onChange={e => setForm(f => ({ ...f, guestPhone: e.target.value }))} placeholder="0912345678" />
-                </div>
+                {form.guestType === 'IN_HOUSE' ? (
+                  <div className={`${styles.formGroup} ${styles.colFull}`}>
+                    <label>Chọn khách lưu trú *</label>
+                    <select value={form.bookingId || ''} onChange={e => {
+                      const b = inHouseGuests.find(x => x.id === Number(e.target.value));
+                      if (b) setForm(f => ({ ...f, bookingId: b.id, guestName: b.guestName, guestPhone: b.guestPhone }));
+                    }}>
+                      <option value="">-- Chọn khách đang ở --</option>
+                      {inHouseGuests.map(g => (
+                        <option key={g.id} value={g.id}>
+                          {g.guestName} - {g.guestPhone} ({g.rooms?.map((r:any) => r.roomNo).join(', ')})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <>
+                    <div className={styles.formGroup}>
+                      <label>Tên khách *</label>
+                      <input value={form.guestName} onChange={e => setForm(f => ({ ...f, guestName: e.target.value }))} placeholder="Nguyễn Văn A" />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label>Số điện thoại</label>
+                      <input value={form.guestPhone} onChange={e => setForm(f => ({ ...f, guestPhone: e.target.value }))} placeholder="0912345678" />
+                    </div>
+                  </>
+                )}
                 <div className={styles.formGroup}>
                   <label>Tiền đặt cọc (đ)</label>
                   <input type="number" value={form.depositAmount} onChange={e => setForm(f => ({ ...f, depositAmount: Number(e.target.value) }))} />

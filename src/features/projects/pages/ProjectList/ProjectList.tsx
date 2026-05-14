@@ -5,7 +5,6 @@ import {
     FileText, 
     Users, 
     Clock, 
-    FlaskConical, 
     BarChart3,
     Trash2,
     CheckCircle2

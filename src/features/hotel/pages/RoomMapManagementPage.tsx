@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Bed, Building2, Edit2, Layers, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
+import { Bed, Edit2, Layers, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import styles from '../hotel.module.scss';
 import hotelService from '../services/hotel.service';

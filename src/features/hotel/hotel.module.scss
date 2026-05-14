@@ -115,6 +115,10 @@
   gap: 6px;
   &:hover { background: #dcfce7; }
 }
+.btnSecondarySmall { @extend .btnSecondary; padding: 4px 10px; font-size: 12px; }
+.btnSuccessSmall { @extend .btnSuccess; padding: 4px 10px; font-size: 12px; }
+.btnPrimarySmall { @extend .btnPrimary; padding: 4px 10px; font-size: 12px; }
+
 .btnIcon {
   padding: 6px;
   background: none;
@@ -1456,6 +1460,41 @@
   }
   .filterSelect {
     flex: 1;
+  }
+}
+
+.segmentedControl {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 8px;
+  gap: 4px;
+  margin: 8px 0;
+  width: fit-content;
+
+  button {
+    border: none !important;
+    background: transparent !important;
+    padding: 6px 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+
+    &:hover {
+      color: #1e293b !important;
+      background: rgba(255,255,255,0.5) !important;
+    }
+
+    &.active {
+      background: white !important;
+      color: #1e6fff !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    }
   }
 }
 

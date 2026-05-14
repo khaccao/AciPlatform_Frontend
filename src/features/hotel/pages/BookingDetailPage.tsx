@@ -24,13 +24,18 @@ export const BookingDetailPage: React.FC = () => {
   const [payMethod, setPayMethod] = useState('CASH');
 
   const [servicesList, setServicesList] = useState<any[]>([]);
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [guides, setGuides] = useState<any[]>([]);
   const [addingService, setAddingService] = useState(false);
   const [selectedSvc, setSelectedSvc] = useState<any>(null);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<any>(null);
   const [svcQuantity, setSvcQuantity] = useState(1);
 
   useEffect(() => { 
     fetchBooking(); 
     hotelService.getServiceCatalog().then(setServicesList);
+    hotelService.getVehicles('AVAILABLE').then(setVehicles);
+    hotelService.getGuides(true).then(setGuides);
   }, [id]);
 
   const fetchBooking = async () => {
@@ -88,17 +93,31 @@ export const BookingDetailPage: React.FC = () => {
 
   const handlePostService = async () => {
     if (!booking || !selectedSvc) return;
+    
+    let note = "";
+    if (selectedSvc.category === 'VEHICLE' && selectedInventoryItem) {
+      note = `Xe: ${selectedInventoryItem.vehicleCode} (${selectedInventoryItem.licensePlate})`;
+    } else if (selectedSvc.category === 'TOUR' && selectedInventoryItem) {
+      const gName = selectedInventoryItem.name || selectedInventoryItem.fullName || selectedInventoryItem.guideName || 'HDV';
+      note = `HDV: ${gName}`;
+    }
+
     try {
       await hotelService.addServiceToBooking(booking.id, {
         serviceCode: selectedSvc.serviceCode,
-        serviceName: selectedSvc.serviceName,
+        serviceName: selectedSvc.serviceName + (note ? ` [${note}]` : ''),
         category: selectedSvc.category,
         quantity: svcQuantity,
         unitPrice: selectedSvc.unitPrice,
       });
+
+      // If it's a vehicle, we might want to create a rental record too, 
+      // but for now, the user just wants to "select from inventory" to ensure consistency.
+      
       toast.success('Đã thêm dịch vụ/phụ phí');
       setAddingService(false);
       setSelectedSvc(null);
+      setSelectedInventoryItem(null);
       setSvcQuantity(1);
       fetchBooking();
     } catch { toast.error('Lỗi thêm dịch vụ'); }
@@ -230,28 +249,74 @@ export const BookingDetailPage: React.FC = () => {
 
             <div className={styles.cardBody}>
               {addingService && (
-                <div className={styles.quickAddService}>
-                  <div className={styles.formGroup}>
-                    <label>Dịch vụ</label>
-                    <select value={selectedSvc?.serviceCode || ''} onChange={e => {
-                      const svc = servicesList.find(s => s.serviceCode === e.target.value);
-                      setSelectedSvc(svc);
-                    }}>
-                      <option value="">-- Chọn --</option>
-                      {servicesList.map(s => (
-                        <option key={s.serviceCode} value={s.serviceCode}>
-                          {s.serviceName} ({(s.unitPrice || 0).toLocaleString('vi-VN')}đ)
-                        </option>
-                      ))}
-                    </select>
+                <div className={styles.quickAddService} style={{ background: '#f8fafc', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 16 }}>
+                  <div className={styles.formGrid}>
+                    <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+                      <label>Dịch vụ / Phụ phí</label>
+                      <select value={selectedSvc?.serviceCode || ''} onChange={e => {
+                        const svc = servicesList.find(s => s.serviceCode === e.target.value);
+                        setSelectedSvc(svc);
+                        setSelectedInventoryItem(null);
+                      }}>
+                        <option value="">-- Chọn dịch vụ --</option>
+                        {servicesList.map(s => (
+                          <option key={s.serviceCode} value={s.serviceCode}>
+                            {s.serviceName} ({(s.unitPrice || 0).toLocaleString('vi-VN')}đ)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {selectedSvc?.category === 'VEHICLE' && (
+                      <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+                        <label>Chọn xe từ kho *</label>
+                        <select value={selectedInventoryItem?.id || ''} onChange={e => {
+                          const v = vehicles.find(x => x.id === Number(e.target.value));
+                          setSelectedInventoryItem(v);
+                        }}>
+                          <option value="">-- Chọn xe sẵn sàng --</option>
+                          {vehicles.map(v => (
+                            <option key={v.id} value={v.id}>
+                              {v.vehicleCode} - {v.licensePlate} ({v.vehicleName})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {selectedSvc?.category === 'TOUR' && (
+                      <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+                        <label>Chọn hướng dẫn viên *</label>
+                        <select value={selectedInventoryItem?.id || ''} onChange={e => {
+                          const g = guides.find(x => x.id === Number(e.target.value));
+                          setSelectedInventoryItem(g);
+                        }}>
+                          <option value="">-- Chọn HDV --</option>
+                          {guides.map(g => (
+                            <option key={g.id} value={g.id}>
+                              {g.name || g.fullName || g.guideName || 'HDV'} ({g.phone})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className={styles.formGroup}>
+                      <label>Đơn giá</label>
+                      <input type="number" value={selectedSvc?.unitPrice || 0} readOnly style={{ background: '#f1f5f9' }} />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>Số lượng</label>
+                      <input type="number" min="1" value={svcQuantity} onChange={e => setSvcQuantity(Number(e.target.value))} />
+                    </div>
                   </div>
-                  <div className={styles.formGroup} style={{ width: 80 }}>
-                    <label>SL</label>
-                    <input type="number" min="1" value={svcQuantity} onChange={e => setSvcQuantity(Number(e.target.value))} />
-                  </div>
-                  <div className={styles.quickAddActions}>
-                    <button className={styles.btnPrimary} onClick={handlePostService}>Thêm</button>
+                  
+                  <div className={styles.quickAddActions} style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'flex-end' }}>
                     <button className={styles.btnSecondary} onClick={() => setAddingService(false)}>Hủy</button>
+                    <button className={styles.btnPrimary} onClick={handlePostService} disabled={!selectedSvc || ((selectedSvc.category === 'VEHICLE' || selectedSvc.category === 'TOUR') && !selectedInventoryItem)}>
+                      ✅ Thêm vào hóa đơn
+                    </button>
                   </div>
                 </div>
               )}

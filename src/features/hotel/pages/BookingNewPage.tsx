@@ -33,6 +33,8 @@ export const BookingNewPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [guides, setGuides] = useState<any[]>([]);
 
   const [form, setForm] = useState({
     guestName: '', guestPhone: '', guestEmail: '', idCard: '', nationality: 'VN',
@@ -82,8 +84,16 @@ export const BookingNewPage: React.FC = () => {
   };
 
   const fetchServices = async () => {
-    try { setServices(await hotelService.getServiceCatalog()); }
-    catch { toast.error('Lỗi tải dịch vụ'); }
+    try { 
+      const [svcs, v, g] = await Promise.all([
+        hotelService.getServiceCatalog(),
+        hotelService.getVehicles('AVAILABLE'),
+        hotelService.getGuides(true)
+      ]);
+      setServices(svcs);
+      setVehicles(v);
+      setGuides(g);
+    } catch { toast.error('Lỗi tải dữ liệu dịch vụ'); }
   };
 
   const calcNights = () => {
@@ -140,13 +150,35 @@ export const BookingNewPage: React.FC = () => {
     }
   };
 
-  const toggleService = (svc: any) => {
-    const exists = form.services.find(s => s.serviceCode === svc.serviceCode);
-    if (exists) {
-      setForm(f => ({ ...f, services: f.services.filter(s => s.serviceCode !== svc.serviceCode) }));
-    } else {
-      setForm(f => ({ ...f, services: [...f.services, { serviceCode: svc.serviceCode, serviceName: svc.serviceName, unitPrice: svc.unitPrice || 0, quantity: 1 }] }));
-    }
+  const toggleService = (svc: any, inventoryId?: number) => {
+    setForm(f => {
+      const exists = f.services.find(s => s.serviceCode === svc.serviceCode && (s as any).inventoryId === inventoryId);
+      if (exists) {
+        return { ...f, services: f.services.filter(s => s.serviceCode !== svc.serviceCode || (s as any).inventoryId !== inventoryId) };
+      }
+      
+      let finalName = svc.serviceName;
+      if (svc.category === 'VEHICLE' && inventoryId) {
+        const v = vehicles.find(x => x.id === inventoryId);
+        if (v) finalName += ` [Xe: ${v.vehicleCode}]`;
+      } else if (svc.category === 'TOUR' && inventoryId) {
+        const g = guides.find(x => x.id === inventoryId);
+        const gName = g?.name || g?.fullName || g?.guideName || 'HDV';
+        if (g) finalName += ` [HDV: ${gName}]`;
+      }
+
+      return {
+        ...f,
+        services: [...f.services, {
+          serviceCode: svc.serviceCode,
+          serviceName: finalName,
+          category: svc.category,
+          quantity: 1,
+          unitPrice: svc.unitPrice || 0,
+          inventoryId: inventoryId
+        } as any]
+      };
+    });
   };
 
   const handleSubmit = async () => {
@@ -403,18 +435,65 @@ export const BookingNewPage: React.FC = () => {
                 ) : (
                   <div className={styles.serviceSelectionList}>
                     {services.map(svc => {
-                      const sel = form.services.find(s => s.serviceCode === svc.serviceCode);
+                      const requiresInventory = svc.category === 'VEHICLE' || svc.category === 'TOUR';
+                      const selectedInstances = form.services.filter(s => s.serviceCode === svc.serviceCode);
+                      
                       return (
-                        <div key={svc.serviceCode}
-                          className={`${styles.serviceSelectItem} ${sel ? styles.serviceActive : ''}`}
-                          onClick={() => toggleService(svc)}>
-                          <div className={styles.serviceInfo}>
-                            <div className={styles.serviceName}>{svc.serviceName}</div>
-                            <div className={styles.serviceMeta}>{svc.category} · {(svc.unitPrice || 0).toLocaleString('vi-VN')}đ</div>
+                        <div key={svc.serviceCode} className={styles.serviceGroupWrapper} style={{ marginBottom: 16, border: '1px solid #e2e8f0', borderRadius: 12, padding: 12 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div className={styles.serviceInfo}>
+                              <div className={styles.serviceName} style={{ fontWeight: 700 }}>{svc.serviceName}</div>
+                              <div className={styles.serviceMeta}>{svc.category} · {(svc.unitPrice || 0).toLocaleString('vi-VN')}đ</div>
+                            </div>
+                            {!requiresInventory && (
+                              <button 
+                                className={selectedInstances.length > 0 ? styles.btnSuccessSmall : styles.btnSecondarySmall}
+                                onClick={() => toggleService(svc)}
+                              >
+                                {selectedInstances.length > 0 ? '✓ Đã chọn' : '+ Thêm'}
+                              </button>
+                            )}
                           </div>
-                          {sel ? (
-                            <div className={styles.serviceQtyControl} onClick={e => e.stopPropagation()}>
+
+                          {requiresInventory && (
+                            <div className={styles.inventorySelector} style={{ marginTop: 10, padding: 10, background: '#f8fafc', borderRadius: 8 }}>
+                              <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 6 }}>
+                                {svc.category === 'VEHICLE' ? 'Chọn xe sẵn sàng:' : 'Chọn hướng dẫn viên:'}
+                              </label>
+                              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                {(svc.category === 'VEHICLE' ? vehicles : guides).map(item => {
+                                  const isItemSelected = form.services.some(s => s.serviceCode === svc.serviceCode && (s as any).inventoryId === item.id);
+                                  return (
+                                    <button
+                                      key={item.id}
+                                      className={`${styles.miniItemBadge} ${isItemSelected ? styles.active : ''}`}
+                                      style={{
+                                        padding: '6px 12px',
+                                        borderRadius: 20,
+                                        fontSize: 12,
+                                        border: '1px solid #cbd5e1',
+                                        background: isItemSelected ? '#1e6fff' : 'white',
+                                        color: isItemSelected ? 'white' : '#475569',
+                                        cursor: 'pointer',
+                                        fontWeight: 600
+                                      }}
+                                      onClick={() => toggleService(svc, item.id)}
+                                    >
+                                      {svc.category === 'VEHICLE' 
+                                        ? `${item.vehicleCode} (${item.licensePlate})` 
+                                        : (item.name || item.fullName || item.guideName || 'HDV')}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {!requiresInventory && selectedInstances.length > 0 && (
+                            <div className={styles.serviceQtyControl} style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                              <label style={{ fontSize: 12, color: '#64748b' }}>Số lượng:</label>
                               <button className={styles.btnIcon} onClick={() => {
+                                const sel = selectedInstances[0];
                                 const newQty = sel.quantity - 1;
                                 if (newQty <= 0) {
                                   setForm(f => ({ ...f, services: f.services.filter(s => s.serviceCode !== svc.serviceCode) }));
@@ -422,11 +501,9 @@ export const BookingNewPage: React.FC = () => {
                                   setForm(f => ({ ...f, services: f.services.map(s => s.serviceCode === svc.serviceCode ? { ...s, quantity: newQty } : s) }));
                                 }
                               }}><Minus size={14} /></button>
-                              <span className={styles.qtyText}>{sel.quantity}</span>
+                              <span className={styles.qtyText} style={{ fontWeight: 700 }}>{selectedInstances[0].quantity}</span>
                               <button className={styles.btnIcon} onClick={() => setForm(f => ({ ...f, services: f.services.map(s => s.serviceCode === svc.serviceCode ? { ...s, quantity: s.quantity + 1 } : s) }))}><Plus size={14} /></button>
                             </div>
-                          ) : (
-                            <button className={styles.btnSecondarySmall}>+ Thêm</button>
                           )}
                         </div>
                       );
