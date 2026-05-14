@@ -144,7 +144,7 @@ export const FacebookPage = () => {
 
     return (
         <div className={styles.container}>
-            <h1><Facebook size={28} style={{ marginRight: 12, verticalAlign: 'middle', color: '#1877F2' }} /> Quản lý Facebook</h1>
+            <h1>Quản lý Facebook</h1>
 
             <div className={styles.tabs}>
                 <div className={`${styles.tab} ${activeTab === 'overview' ? styles.active : ''}`} onClick={() => setActiveTab('overview')}>

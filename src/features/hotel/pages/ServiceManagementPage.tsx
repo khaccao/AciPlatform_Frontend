@@ -86,7 +86,7 @@ export const ServiceManagementPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>🛠️ Quản Lý Danh Mục Dịch Vụ</h1>
+          <h1>Quản Lý Danh Mục Dịch Vụ</h1>
           <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>Cấu hình dịch vụ, giá bán và đơn vị tính</p>
         </div>
         <div className={styles.headerActions}>

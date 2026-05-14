@@ -48,7 +48,7 @@ export const ReportsPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>📊 Báo Cáo & Thống Kê</h1>
+          <h1>Báo Cáo & Thống Kê</h1>
           <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>Tổng quan hoạt động kinh doanh</p>
         </div>
         <div className={styles.headerActions}>

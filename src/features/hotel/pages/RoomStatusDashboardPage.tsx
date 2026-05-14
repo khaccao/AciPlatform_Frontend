@@ -62,7 +62,7 @@ export const RoomStatusDashboardPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>📊 Trạng Thái Phòng Hôm Nay</h1>
+          <h1>Trạng Thái Phòng Hôm Nay</h1>
           <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>{new Date().toLocaleDateString('vi-VN')} · Cập nhật theo thời gian thực</p>
         </div>
         <button className={styles.btnSecondary} onClick={fetchStatus}><RefreshCw size={15}/> Làm mới</button>

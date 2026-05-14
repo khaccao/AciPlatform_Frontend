@@ -90,7 +90,7 @@ export const HotelDashboardPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div className={styles.titleSection}>
-          <h1>🏨 Dashboard Khách Sạn</h1>
+          <h1>Dashboard Khách Sạn</h1>
           <p className={styles.subtitle}>
             <Clock size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
             Cập nhật lúc {lastRefresh.toLocaleTimeString('vi-VN')}

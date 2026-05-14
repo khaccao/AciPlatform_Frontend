@@ -40,7 +40,7 @@ export const GuestsPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>👥 Hồ Sơ Khách</h1>
+          <h1>Hồ Sơ Khách</h1>
           <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
             {guests.length} khách · {guests.filter(g => g.isVip).length} VIP
           </p>

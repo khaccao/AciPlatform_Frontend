@@ -94,7 +94,7 @@ export const RoomMapPage: React.FC = () => {
   return (
     <div className={styles.hotelContainer} onClick={() => setContextMenu(null)}>
       <div className={styles.pageHeader}>
-        <h1>🗺️ Sơ Đồ Phòng</h1>
+        <h1>Sơ Đồ Phòng</h1>
         <div className={styles.headerActions}>
           <input type="date" value={dateFilter} onChange={e => setDateFilter(e.target.value)}
             style={{ padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: 8, fontSize: 14 }} />

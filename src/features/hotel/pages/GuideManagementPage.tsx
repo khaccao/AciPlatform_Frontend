@@ -133,7 +133,7 @@ export const GuideManagementPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>👷 Quản Lý Hướng Dẫn Viên</h1>
+          <h1>Quản Lý Hướng Dẫn Viên</h1>
           <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>Quản lý nhân sự, hợp đồng và lương HDV du lịch</p>
         </div>
         <div className={styles.headerActions}>

@@ -72,7 +72,7 @@ export const ToursPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>🗺️ Quản Lý Tour</h1>
+          <h1>Quản Lý Tour</h1>
           <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
             {tours.length} tour · {tours.filter(t => t.isAvailable).length} đang hoạt động
           </p>

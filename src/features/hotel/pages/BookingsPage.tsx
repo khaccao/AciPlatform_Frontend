@@ -107,7 +107,7 @@ export const BookingsPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div className={styles.titleSection}>
-          <h1>📅 Quản Lý Đặt Phòng</h1>
+          <h1>Quản Lý Đặt Phòng</h1>
           <p className={styles.subtitle}>{total} booking tổng cộng</p>
         </div>
         <div className={styles.headerActions}>

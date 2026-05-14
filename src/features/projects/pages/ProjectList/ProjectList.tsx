@@ -113,10 +113,7 @@ const ProjectList: React.FC = () => {
 
             <div className={styles.header}>
                 <div>
-                    <h1>
-                        <FlaskConical size={28} className={styles.iconBlue} />
-                        Quản lý Dự án Nghiên cứu (R&D)
-                    </h1>
+                    <h1>Quản lý Dự án Nghiên cứu (R&D)</h1>
                     <p>Hệ thống Quản lý Con người – Dự án – Tri thức chuyên biệt</p>
                 </div>
                 <Button onClick={() => setIsModalOpen(true)}>

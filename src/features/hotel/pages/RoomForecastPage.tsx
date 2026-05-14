@@ -54,7 +54,7 @@ export const RoomForecastPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>📊 Room Forecast</h1>
+          <h1>Room Forecast</h1>
           <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>Dự báo công suất và số lượng phòng trống</p>
         </div>
         <div className={styles.headerActions}>

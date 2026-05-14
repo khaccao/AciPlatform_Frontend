@@ -82,7 +82,7 @@ export const BookingNewPage: React.FC = () => {
   };
 
   const fetchServices = async () => {
-    try { setServices(await hotelService.getServices()); }
+    try { setServices(await hotelService.getServiceCatalog()); }
     catch { toast.error('Lỗi tải dịch vụ'); }
   };
 
@@ -145,7 +145,7 @@ export const BookingNewPage: React.FC = () => {
     if (exists) {
       setForm(f => ({ ...f, services: f.services.filter(s => s.serviceCode !== svc.serviceCode) }));
     } else {
-      setForm(f => ({ ...f, services: [...f.services, { serviceCode: svc.serviceCode, serviceName: svc.serviceName, unitPrice: svc.price || 0, quantity: 1 }] }));
+      setForm(f => ({ ...f, services: [...f.services, { serviceCode: svc.serviceCode, serviceName: svc.serviceName, unitPrice: svc.unitPrice || 0, quantity: 1 }] }));
     }
   };
 
@@ -195,7 +195,7 @@ export const BookingNewPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>📋 Tạo Đặt Phòng Mới</h1>
+          <h1>Tạo Đặt Phòng Mới</h1>
           <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>Quy trình 4 bước nhanh chóng</p>
         </div>
         <button className={styles.btnSecondary} onClick={() => navigate('/hotel/bookings')}>
@@ -410,7 +410,7 @@ export const BookingNewPage: React.FC = () => {
                           onClick={() => toggleService(svc)}>
                           <div className={styles.serviceInfo}>
                             <div className={styles.serviceName}>{svc.serviceName}</div>
-                            <div className={styles.serviceMeta}>{svc.category} · {(svc.price || 0).toLocaleString('vi-VN')}đ</div>
+                            <div className={styles.serviceMeta}>{svc.category} · {(svc.unitPrice || 0).toLocaleString('vi-VN')}đ</div>
                           </div>
                           {sel ? (
                             <div className={styles.serviceQtyControl} onClick={e => e.stopPropagation()}>

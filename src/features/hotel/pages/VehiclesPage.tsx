@@ -108,7 +108,7 @@ export const VehiclesPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>🏍️ Cho Thuê Xe Máy</h1>
+          <h1>Cho Thuê Xe Máy</h1>
           <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
             {vehicles.filter(v => v.status === 'AVAILABLE').length}/{vehicles.length} xe sẵn sàng ·{' '}
             {rentals.filter(r => new Date(r.rentTo) < now).length} quá hạn

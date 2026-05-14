@@ -194,7 +194,7 @@ export const RoomMapManagementPage: React.FC = () => {
     <div className={styles.hotelContainer}>
       <div className={styles.pageHeader}>
         <div>
-          <h1><Building2 size={26} style={{ verticalAlign: 'middle', marginRight: 8 }} /> Quản lý sơ đồ phòng</h1>
+          <h1>Quản lý sơ đồ phòng</h1>
           <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 13 }}>CRUD tầng, khu vực, phòng và giường theo dữ liệu PMS_Rooms.</p>
         </div>
         <div className={styles.headerActions}>
