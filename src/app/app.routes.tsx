@@ -32,6 +32,7 @@ import { ReceiptVoucherPage } from '../features/accounting/pages/ReceiptVoucherP
 import { CustomerDebtPage } from '../features/accounting/pages/CustomerDebtPage';
 import { WarehouseManagementPage } from '../features/warehouse/pages/WarehouseManagementPage';
 import { InventoryPage } from '../features/warehouse/pages/InventoryPage';
+import RestaurantErpPage from '../features/restaurant-erp/pages/RestaurantErpPage';
 // Hotel Module
 import { HotelDashboardPage } from '../features/hotel/pages/HotelDashboardPage';
 import { RoomMapPage } from '../features/hotel/pages/RoomMapPage';
@@ -143,6 +144,25 @@ export const AppRoutes = () => {
                     <Route path="suppliers" element={<PermissionRoute menuCode="accounting/suppliers"><SupplierManagementPage /></PermissionRoute>} />
                     <Route path="receipt-voucher" element={<PermissionRoute menuCode="accounting/receipt-voucher"><ReceiptVoucherPage /></PermissionRoute>} />
                     <Route path="customer-debt" element={<PermissionRoute menuCode="accounting/customer-debt"><CustomerDebtPage /></PermissionRoute>} />
+                </Route>
+
+                <Route path="/restaurant-erp">
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<PermissionRoute menuCode="restaurant-erp/dashboard"><RestaurantErpPage kind="dashboard" /></PermissionRoute>} />
+                    <Route path="capital" element={<PermissionRoute menuCode="restaurant-erp/capital"><RestaurantErpPage kind="capital" /></PermissionRoute>} />
+                    <Route path="funds" element={<PermissionRoute menuCode="restaurant-erp/funds"><RestaurantErpPage kind="funds" /></PermissionRoute>} />
+                    <Route path="setup-expenses" element={<PermissionRoute menuCode="restaurant-erp/setup-expenses"><RestaurantErpPage kind="setup-expenses" /></PermissionRoute>} />
+                    <Route path="materials" element={<PermissionRoute menuCode="restaurant-erp/materials"><RestaurantErpPage kind="materials" /></PermissionRoute>} />
+                    <Route path="purchase-requests" element={<PermissionRoute menuCode="restaurant-erp/purchase-requests"><RestaurantErpPage kind="purchase-requests" /></PermissionRoute>} />
+                    <Route path="purchase-approvals" element={<PermissionRoute menuCode="restaurant-erp/purchase-approvals"><RestaurantErpPage kind="purchase-approvals" /></PermissionRoute>} />
+                    <Route path="purchase-orders" element={<PermissionRoute menuCode="restaurant-erp/purchase-orders"><RestaurantErpPage kind="purchase-orders" /></PermissionRoute>} />
+                    <Route path="goods-receipts" element={<PermissionRoute menuCode="restaurant-erp/goods-receipts"><RestaurantErpPage kind="goods-receipts" /></PermissionRoute>} />
+                    <Route path="payment-requests" element={<PermissionRoute menuCode="restaurant-erp/payment-requests"><RestaurantErpPage kind="payment-requests" /></PermissionRoute>} />
+                    <Route path="payment-approvals" element={<PermissionRoute menuCode="restaurant-erp/payment-approvals"><RestaurantErpPage kind="payment-approvals" /></PermissionRoute>} />
+                    <Route path="disbursements" element={<PermissionRoute menuCode="restaurant-erp/disbursements"><RestaurantErpPage kind="disbursements" /></PermissionRoute>} />
+                    <Route path="supplier-debts" element={<PermissionRoute menuCode="restaurant-erp/supplier-debts"><RestaurantErpPage kind="supplier-debts" /></PermissionRoute>} />
+                    <Route path="customer-debts" element={<PermissionRoute menuCode="restaurant-erp/customer-debts"><RestaurantErpPage kind="customer-debts" /></PermissionRoute>} />
+                    <Route path="inventory" element={<PermissionRoute menuCode="restaurant-erp/inventory"><RestaurantErpPage kind="inventory" /></PermissionRoute>} />
                 </Route>
 
                 <Route path="/warehouse">

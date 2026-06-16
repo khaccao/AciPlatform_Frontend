@@ -37,7 +37,16 @@ import {
     Compass,
     BarChart,
     UserCheck,
-    Map
+    Map,
+    Store,
+    Landmark,
+    Receipt,
+    FilePlus2,
+    ShoppingCart,
+    BadgeCheck,
+    Send,
+    CircleDollarSign,
+    HandCoins
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout, updateUser } from '../../features/auth/store/auth.slice';
@@ -211,6 +220,22 @@ export const MainLayout: React.FC = () => {
         '/accounting/approve-voucher': <ClipboardCheck size={18} />,
         'accounting/warehouse-receipt': <PackagePlus size={18} />,
         '/accounting/warehouse-receipt': <PackagePlus size={18} />,
+        'restaurant-erp': <Store size={18} />,
+        'restaurant-erp/dashboard': <LayoutDashboard size={18} />,
+        'restaurant-erp/capital': <Landmark size={18} />,
+        'restaurant-erp/funds': <Wallet size={18} />,
+        'restaurant-erp/setup-expenses': <Receipt size={18} />,
+        'restaurant-erp/materials': <Package size={18} />,
+        'restaurant-erp/purchase-requests': <FilePlus2 size={18} />,
+        'restaurant-erp/purchase-approvals': <ClipboardCheck size={18} />,
+        'restaurant-erp/purchase-orders': <ShoppingCart size={18} />,
+        'restaurant-erp/goods-receipts': <PackagePlus size={18} />,
+        'restaurant-erp/payment-requests': <FileText size={18} />,
+        'restaurant-erp/payment-approvals': <BadgeCheck size={18} />,
+        'restaurant-erp/disbursements': <Send size={18} />,
+        'restaurant-erp/supplier-debts': <CircleDollarSign size={18} />,
+        'restaurant-erp/customer-debts': <HandCoins size={18} />,
+        'restaurant-erp/inventory': <Warehouse size={18} />,
     };
 
     const AllIcons: Record<string, React.ReactNode> = {
@@ -245,6 +270,15 @@ export const MainLayout: React.FC = () => {
         'UserCheck': <UserCheck size={18} />,
         'Map': <Map size={18} />,
         'Hotel': <Home size={18} />,
+        'Store': <Store size={18} />,
+        'Landmark': <Landmark size={18} />,
+        'Receipt': <Receipt size={18} />,
+        'FilePlus2': <FilePlus2 size={18} />,
+        'ShoppingCart': <ShoppingCart size={18} />,
+        'BadgeCheck': <BadgeCheck size={18} />,
+        'Send': <Send size={18} />,
+        'CircleDollarSign': <CircleDollarSign size={18} />,
+        'HandCoins': <HandCoins size={18} />,
     };
 
     const getIcon = (menu: any, cleanPath: string) => {
